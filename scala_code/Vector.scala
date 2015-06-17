@@ -1,0 +1,82 @@
+package ru.biocad.ig.common.structures.geometry
+
+
+import scala.math.sqrt
+
+
+sealed trait GeometryVector {
+  def coordinates : Seq[Double]
+  def length : Double
+  def lengthSquared : Double
+  def dimensions : Int
+
+  def -(v : GeometryVector) : GeometryVector = v match {
+    case vx : Vector => new Vector( (coordinates, v.coordinates).zipped map ( _ - _ ) )
+    case _ => v
+  }
+
+  def +(v : GeometryVector) : GeometryVector = v match {
+    case vx : Vector => new Vector( (coordinates, v.coordinates).zipped map ( _ + _ ) )
+    case _ => v
+  }
+
+  def *(v : GeometryVector) : Double = ((coordinates, v.coordinates).zipped map ( _ * _ )).foldLeft(0.0) ( _ + _ )
+
+  def *(multiplier : Double) : GeometryVector = new Vector( coordinates.map( multiplier * _ ) )
+  def distanceTo(v : GeometryVector) = (this - v).length
+
+  def toSeq : Seq[Double]
+
+  override def equals(other : Any) : Boolean = false
+}
+
+
+case class Vector(val coordinates : Seq[Double]) extends GeometryVector  {
+  override val dimensions = coordinates.size
+
+  override lazy val lengthSquared : Double = (coordinates, coordinates).zipped.map( _ * _ ).foldLeft(0.0) ( _ + _ )
+  override lazy val length : Double = sqrt(lengthSquared)
+
+  override def toSeq : Seq[Double] = Seq(1.0) ++ coordinates ++ Seq(lengthSquared)
+
+  override def equals(other : Any) : Boolean = other match {
+    case v : Vector => (
+      (dimensions == v.dimensions) &&
+      (coordinates == v.coordinates)
+    )
+    case _ => false
+  }
+
+  //override def toString = coordinates.mkString("Vector (", ", ", ")")
+  override def toString = coordinates.mkString("[", ", ", "]")
+}
+
+
+object Vector2d {
+  def apply(x : Double, y : Double) = new Vector(Seq(x, y))
+}
+
+
+case class InfiniteVector(val dimensions : Int) extends GeometryVector {
+  override val coordinates : Seq[Double] = Seq.fill(dimensions)(0)
+  override val lengthSquared : Double = 1.0
+  override val length : Double = 1.0
+
+
+  override def equals(other : Any) : Boolean = other match {
+    case v : InfiniteVector => dimensions == v.dimensions
+    case _ => false
+  }
+
+  override def - (v : GeometryVector) : GeometryVector = this
+  override def + (v : GeometryVector) : GeometryVector = this
+  override def *(v : GeometryVector) : Double = 0.0
+  override def *(multiplier : Double) : GeometryVector = this
+
+  override def toSeq : Seq[Double] = Seq(0.0) ++ coordinates ++ Seq(lengthSquared)
+}
+
+
+object Vector3d {
+  def apply(x : Double, y : Double, z : Double = 0.0) = new Vector(Seq(x, y, z))
+}
