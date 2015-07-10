@@ -2,6 +2,7 @@ package ru.biocad.ig.common.algorithms.geometry
 
 import ru.biocad.ig.common.structures.geometry._
 
+/*this is slowest implementation possible*/
 class DelaunayTesselation {
   val EPSILON = 0.1
 

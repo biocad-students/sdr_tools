@@ -39,9 +39,14 @@ class Simplex(val vertices : Seq[GeometryVector]) {
 
   private lazy val testFunc : Seq[Double] => Double = ManifoldUtils.getCofactors(vertices.map(_.toSeq))
 
+  //FIX: change naming of this later and also return distance instead
+  def getPosition_(v : GeometryVector) : Double = {
+    val result : Double = testFunc(v.toSeq) * math.signum(testFunc(InfiniteVector(v.dimensions).toSeq))
+    result
+  }
   def getPosition(v : GeometryVector) : PointPosition = {
-    val result : Double = testFunc(v.toSeq) * testFunc(InfiniteVector(v.dimensions).toSeq)
-    if ((result).abs <= 0.001)
+    val result : Double = getPosition_(v)
+    if ((result).abs <= 0.001) //FIX: there should be comparision with near-zero value
     LaysOnNSphere
     else {
       if (result > 0) LaysOutside
@@ -64,7 +69,7 @@ class Simplex(val vertices : Seq[GeometryVector]) {
     }}.toSeq
   }
 
-
+  //FIX: rename to ridges - actually this returns ridges set
   def getTriangles() : Seq[Set[GeometryVector]] = {
     vertices.tails.flatMap {
       case Seq() => Seq[Set[GeometryVector]]()

@@ -81,6 +81,8 @@ object SimplexTest {
     val s: Simplex = new Simplex(Seq(a, b, c))
     println(s.getPosition(Vector2d(-30, 40)))
     println(s.getPosition(Vector2d(20, 20)))
+    println(s.getPosition(Vector2d(50, 50)))
+    println(s.getPosition_(Vector2d(50, 50)))
     println("try to iterate")
     s.iterateThroughVertices().foreach(println)
   }

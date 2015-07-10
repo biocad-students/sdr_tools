@@ -8,7 +8,7 @@ import ru.biocad.ig.common.structures.geometry.{
 import ru.biocad.ig.common.algorithms.geometry.{
     ManifoldUtils,
     DelaunayTesselation,
-    DelaunayTesselation3
+    DelaunayTesselationFaster
   }
 /*, DelaunayTesselationFaster*/
 import ru.biocad.ig.common.io.pdb.{PDBStructure, PDBAtomInfo}
@@ -38,6 +38,7 @@ def init() : (Seq[GeometryVector], Seq[GeometryVector]) = {
       case xx:PDBAtomInfo if xx.chainID == 'L' => Vector3d(xx.x, xx.y, xx.z)
     }
     ).toList
+  println(v1)
   val v2 = structure.parse_array.collect({
     case xx:PDBAtomInfo if xx.chainID == 'H' => Vector3d(xx.x, xx.y, xx.z)
     }).toList
@@ -51,7 +52,7 @@ def compare_timing_0(points : Seq[GeometryVector]) : Set[Simplex] = {
 }
 
 def compare_timing_1(points : Seq[GeometryVector]) : Set[Simplex] = {
-  var res = new DelaunayTesselation3()
+  var res = new DelaunayTesselationFaster()
   res.makeTesselation(points)
   res.simplices
 }
@@ -84,13 +85,13 @@ def validate_data(points : Seq[GeometryVector], tetrahedras : Seq[Simplex]) : Bo
     {
       val bordered_set = tetrahedras.filter(t => t.getPosition(point) != PointPosition.LaysOutside)
       val points_set_size = bordered_set.filter(t => t.hasVertex(point)).size
-      println("validation step: " + bordered_set.size + " " + points_set_size)
+      println("validation step: " + bordered_set.size + " " + points_set_size + " " + point)
 
       if (bordered_set.size > points_set_size) {
         println("error! achtung! "+point.toString)
         bordered_set.filter(t => t.getPosition(point) == PointPosition.LaysInside).foreach(
           t => {
-            println(t.toString + " :  " + t.getPosition(point));
+            println(t.toString + " :  " + t.getPosition(point) + " " + point);
             })
         return false
       }
@@ -145,7 +146,7 @@ def call_all(n : Int, logger_file_name : String = "triangulation_n_.txt") = {
   writer.write("amount : " + simplices1.size + "\n")
   simplices1.foreach(x=>writer.write(x.toString+"\n"))
   println("valid: " + validate_data(pointsL.take(n), simplices1.toSeq))
-  println("start to process 2nd set of n points " + simplices1.size)
+  //println("start to process 2nd set of n points " + simplices1.size)
   //simplices1.foreach(s=> writer.write(s.toString + "\n"))
 //simplices1.take(400).foreach(x=>writer.write(x.toString+"\n"))
   /*writer.write("processing 2nd set of points\n")
