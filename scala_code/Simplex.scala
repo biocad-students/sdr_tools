@@ -69,7 +69,6 @@ class Simplex(val vertices : Seq[GeometryVector]) {
     }}.toSeq
   }
 
-  //FIX: rename to ridges - actually this returns ridges set
   def getTriangles() : Seq[Set[GeometryVector]] = {
     vertices.tails.flatMap {
       case Seq() => Seq[Set[GeometryVector]]()
@@ -84,6 +83,11 @@ class Simplex(val vertices : Seq[GeometryVector]) {
         }
     }}.toSeq
   }
+
+  // in common, method differs from getTriangles - for (d+1)-dimensional simplex in d-space, it returns d-dimensional ridge
+  def getRidges() : Iterator[Set[GeometryVector]] = iterateThroughVertices().map({
+    case s : (GeometryVector, Seq[GeometryVector]) => s._2.toSet
+    })
 
   override def equals(other : Any) : Boolean = other match {
     case v : Simplex => {

@@ -2,12 +2,12 @@ package test
 
 import ru.biocad.ig.common.structures.geometry.{
     Vector, Vector2d, Vector3d,
-    Simplex, Tetrahedra, GeometryVector
+    Simplex, Tetrahedra, GeometryVector, Triangle
   }
 
 import ru.biocad.ig.common.algorithms.geometry.{
     ManifoldUtils,
-    DelaunayTesselation, DelaunayTesselationFaster
+    DelaunayTesselation, DelaunayTesselationFaster, DelaunayTesselation3
   }
 
 import ru.biocad.ig.common.io.pdb.{PDBStructure, PDBAtomInfo}
@@ -154,6 +154,46 @@ object TesselationTest2{
   }
 }
 
+/** basic test for Qhull based triangulation*/
+object TesselationTest3{
+    def main(args: Array[String]) = {
+      println("testing tesselation")
+      val res = new DelaunayTesselation3()
+    val a = Vector3d(0, 0, 0)
+    val b = Vector3d(0, 0, 100)
+    val c = Vector3d(100, 0, 0)
+    val d = Vector3d(0, 100, 0)
+    val e = Vector3d(10, 10, 10)
+    val f = Vector3d(100, 100, 100)
+
+    println("testing actual point addition")
+    val points = Seq(a, b, c, e, d, f)
+    res.makeTesselation(points)
+    res.simplices.foreach(println)
+
+  }
+}
+
+/** basic test for Qhull based triangulation*/
+object TesselationTest3_2d{
+    def main(args: Array[String]) = {
+      println("testing tesselation")
+      val res = new DelaunayTesselation3()
+    val a = Vector2d(0, 0)
+    val b = Vector2d(0, 100)
+    val c = Vector2d(100, 0)
+    val d = Vector2d(100, 100)
+    val e = Vector2d(10, 10)
+    val f = Vector2d(50, 120)
+
+    println("testing actual point addition")
+    val points = Seq(a, b, c, e, d, f)
+    res.makeTesselation(points)
+    res.simplices.foreach(println)
+
+  }
+}
+
 object IteratorTest{
   def main(args : Array[String]) = {
     println("testing iteration for simplex parts")
@@ -168,6 +208,22 @@ object IteratorTest{
     tetrahedras.getLineSegments().foreach(println)
     println("triangles: ")
     tetrahedras.getTriangles().foreach(println)
+    println("ridges: ")
+    tetrahedras.getRidges().foreach(println)
+    
+    val a2 = Vector2d( 0, 0)
+    val b2 = Vector2d(0, 100)
+    val c2 = Vector2d(100, 0)
+    val d2 = Vector2d(100, 100)
+    val triangle = new Simplex(Seq(a2, b2, c2))
+    println("vertices:")
+    triangle.vertices.foreach(println)
+    println("pairs of vertices:")
+    triangle.getLineSegments().foreach(println)
+    println("triangles: ")
+    triangle.getTriangles().foreach(println)
+    println("ridges: ")
+    triangle.getRidges().foreach(println)
   }
 }
 
@@ -274,7 +330,7 @@ object CompareTetrahedrizationTest{
   def main(args : Array[String]) = {
     println("start ")
     val (pointsL, pointsH) = init()
-    val n = 15
+    val n = 9
     val dataset = pointsL.take(n)
     println("preparing 1st tesselation")
     val res1 = new DelaunayTesselation()
@@ -283,12 +339,19 @@ object CompareTetrahedrizationTest{
     val res2 = new DelaunayTesselationFaster()
     res2.makeTesselation(dataset)
     val s2 = res2.simplices
-    println("got 2 datasets: " + s1.size + " " + s2.size)
+    val res3 = new DelaunayTesselation3()
+    res3.makeTesselation(dataset)
+    val s3 = res3.simplices
+    println("got 3 datasets: " + s1.size + " " + s2.size + " " + s3.size)
     println("dataset1")
     println(s1)
     println("dataset2")
     println(s2)
+    println("dataset3")
+    println(s3)
     println("diff between them")
     println(s1.toSet.diff(s2.toSet).toSeq)
+    println("1 and 3:")
+    println(s1.toSet.diff(s3.toSet).toSeq)
   }
 }
