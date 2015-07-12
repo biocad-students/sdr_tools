@@ -30,7 +30,11 @@ class DelaunayTesselation3 {
   //shouldn't be degenerate
   def prepareStartSimplex(points : Seq[GeometryVector]) : Seq[Simplex] = {
     (new Simplex(points.take(points.head.dimensions+2))).iterateThroughVertices().map({
-      case s : (GeometryVector, Seq[GeometryVector]) => new Simplex(s._2)
+      case s : (GeometryVector, Seq[GeometryVector]) => {
+        val simplex = new Simplex(s._2)
+        simplex.lowerPoint = s._1
+        simplex
+        }
     }).toSeq
   }
   /**helper method. returns furthest point for given simplex
@@ -69,6 +73,12 @@ class DelaunayTesselation3 {
     val uniqueRidges = allRidges.toSet.toSeq.diff(allRidges.diff(allRidges.toSet.toSeq).toSet.toSeq)
     uniqueRidges
   }
+  def getLowerConvexHull(simplices : collection.mutable.Set[Simplex]) : collection.mutable.Set[Simplex] = {
+    simplices.filter({
+      case s : Simplex => s.getPosition_(new InfiniteVector(s.vertices.head.dimensions)) < - 0.001
+    })
+  }
+
   /**this implementation should be qhull-based*/
   def makeTesselation(points : Seq[GeometryVector]) : Unit = {
     val startSimplices = prepareStartSimplex(points.distinct)
@@ -111,6 +121,7 @@ class DelaunayTesselation3 {
       var newSimplices = collection.mutable.Set[Simplex]()
       for (ridge <- ridges) {
         val simplex = new Simplex(ridge.toSeq :+ point)
+        simplex.lowerPoint = visibleSet.head.lowerPoint
         newSimplices += simplex
 
       }
@@ -124,7 +135,7 @@ class DelaunayTesselation3 {
       for (newSimplex <- newSimplices) {
         for (point <- unprocessedPoints) {
           val dist = newSimplex.getPosition_(point)
-          println(dist)
+          //println(dist)
           //FIX: to small value
           if (dist > 0.001) {
             outerSet.getOrElseUpdate(newSimplex, collection.mutable.Set()) += point
@@ -146,7 +157,9 @@ class DelaunayTesselation3 {
     println("all neighbours after processing")
     adjacentByTriangle.foreach(println)
     println("end of processing")
+    simplices = getLowerConvexHull(simplices)
     //println("removing")
     //simplices = removeBoundingSimplex(startSimplex)
   }
+
 }

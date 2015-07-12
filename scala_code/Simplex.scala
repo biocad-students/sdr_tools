@@ -34,14 +34,15 @@ class GeometryVectorIterator(input_sequence : Seq[GeometryVector]) extends Itera
   }
 }
 
-
 class Simplex(val vertices : Seq[GeometryVector]) {
+  private val dimensions : Int = vertices.head.dimensions
+  var lowerPoint : GeometryVector = InfiniteVector(dimensions)
 
   private lazy val testFunc : Seq[Double] => Double = ManifoldUtils.getCofactors(vertices.map(_.toSeq))
 
   //FIX: change naming of this later and also return distance instead
   def getPosition_(v : GeometryVector) : Double = {
-    val result : Double = testFunc(v.toSeq) * math.signum(testFunc(InfiniteVector(v.dimensions).toSeq))
+    val result : Double = - testFunc(v.toSeq) * math.signum(testFunc(lowerPoint.toSeq))
     result
   }
   def getPosition(v : GeometryVector) : PointPosition = {
