@@ -29,7 +29,17 @@ class DelaunayTesselation3 {
   //returns set of simplices in d+1, wich are ridges of simplex in d+2
   //shouldn't be degenerate
   def prepareStartSimplex(points : Seq[GeometryVector]) : Seq[Simplex] = {
-    (new Simplex(points.take(points.head.dimensions+2))).iterateThroughVertices().map({
+    val pp = Seq(points.maxBy(_.coordinates(0)),
+      points.minBy(_.coordinates(0)),
+      points.maxBy(_.coordinates(1)),
+      points.minBy(_.coordinates(1)),
+      points.maxBy(_.coordinates(2)),
+      points.minBy(_.coordinates(2)),
+      points.maxBy(_.length),
+      points.minBy(_.length)).distinct.take(points.head.dimensions + 2)
+    println("start simplex:")
+    println(pp)
+    (new Simplex(pp)).iterateThroughVertices().map({
       case s : (GeometryVector, Seq[GeometryVector]) => {
         val simplex = new Simplex(s._2)
         simplex.lowerPoint = s._1
@@ -48,6 +58,7 @@ class DelaunayTesselation3 {
     }
   }
 
+  //currently not in use
   def addNeigboursAtInfinity(simplex: Simplex) = {
     val farthest_point = InfiniteVector(simplex.vertices.head.dimensions)
     for (ridge <- simplex.getRidges()) {
@@ -78,6 +89,11 @@ class DelaunayTesselation3 {
       case s : Simplex => s.getPosition_(new InfiniteVector(s.vertices.head.dimensions)) < - 0.001
     })
   }
+  def getUpperConvexHull(simplices : collection.mutable.Set[Simplex]) : collection.mutable.Set[Simplex] = {
+    simplices.filter({
+      case s : Simplex => s.getPosition_(new InfiniteVector(s.vertices.head.dimensions)) > 0.001
+    })
+  }
 
   /**this implementation should be qhull-based*/
   def makeTesselation(points : Seq[GeometryVector]) : Unit = {
@@ -91,7 +107,7 @@ class DelaunayTesselation3 {
     var unprocessedPoints = points.distinct.toSet
     for (simplex <- simplices) {
       for (point <- unprocessedPoints) {
-        val dist = simplex.getPosition_(point)
+        val dist = - simplex.getPosition_(point)
         println(dist)
         //FIX: to small value
         if (dist > 0.001) {
@@ -105,17 +121,17 @@ class DelaunayTesselation3 {
       var (simplex, outerPoints) = outerSet.head
       var point = selectFurthest(simplex, outerPoints.toSeq)
       var visibleSet = collection.mutable.Set[Simplex](simplex)
-      println(1)
+      //println(1)
 //      if (neighbours.contains(simplex)){
         for (neighbour <- getNeighbours(simplex)) {
-          val dist = neighbour.getPosition_(point)
+          val dist = - neighbour.getPosition_(point)
           //FIX: change to comparision with small value
           if (dist > 0.001) {
             visibleSet += neighbour
           }
         }
 //      }
-      println(2)
+      //println(2)
 
       val ridges = getBorderLine(visibleSet.toSeq)
       var newSimplices = collection.mutable.Set[Simplex]()
@@ -134,7 +150,7 @@ class DelaunayTesselation3 {
       }
       for (newSimplex <- newSimplices) {
         for (point <- unprocessedPoints) {
-          val dist = newSimplex.getPosition_(point)
+          val dist = - newSimplex.getPosition_(point)
           //println(dist)
           //FIX: to small value
           if (dist > 0.001) {
@@ -154,9 +170,12 @@ class DelaunayTesselation3 {
     }
     println("all simplices after processing")
     simplices.foreach(println)
-    println("all neighbours after processing")
-    adjacentByTriangle.foreach(println)
+    //println("all neighbours after processing")
+    //adjacentByTriangle.foreach(println)
     println("end of processing")
+    val s1 = getLowerConvexHull(simplices)
+    val s2 = getUpperConvexHull(simplices)
+    println(" " + s1.size + " " + s2.size + " " + simplices.size)
     simplices = getLowerConvexHull(simplices)
     //println("removing")
     //simplices = removeBoundingSimplex(startSimplex)

@@ -1,7 +1,7 @@
 package test
 
 import ru.biocad.ig.common.structures.geometry.{
-    Vector, Vector2d, Vector3d,
+    Vector, Vector2d, Vector3d,InfiniteVector,
     Simplex, Tetrahedra, GeometryVector, Triangle
   }
 
@@ -85,8 +85,31 @@ object SimplexTest {
     println(s.getPosition_(Vector2d(50, 50)))
     println("try to iterate")
     s.iterateThroughVertices().foreach(println)
+    println("the same in 3d")
+    val a1 = Vector3d(0, 0, 0)
+    val b1 = Vector3d(0, 0, 100)
+    val c1 = Vector3d(100, 0, 0)
+    val d1 = Vector3d(0, 100, 0)
+
+    var tetrahedra = new Tetrahedra(a1, b1, c1, d1)
+    println(tetrahedra.getPosition(InfiniteVector(3)))
+    var tetrahedra2 = new Tetrahedra(a1, b1, d1, c1)
+    println(tetrahedra2.getPosition(InfiniteVector(3)))
+
+    val test1 = Seq(Vector3d(21.405, 51.524, -19.856),
+      Vector3d(19.759, 55.712, -24.718),
+      Vector3d(21.946, 52.459, -20.95),
+      Vector3d(18.854, 54.779, -23.918) )
+    val tt1 = new Simplex(test1)
+    val p1 = Vector3d(23.332, 52.901, -20.613)
+    println("3d 2")
+    println(tt1.getPosition_(p1))
+    println(tt1.getPosition(p1))
+    println(tt1.getPosition_(InfiniteVector(3)))
+    println(tt1.getPosition(InfiniteVector(3)))
   }
 }
+
 
 
 object TesselationTest{
@@ -210,7 +233,7 @@ object IteratorTest{
     tetrahedras.getTriangles().foreach(println)
     println("ridges: ")
     tetrahedras.getRidges().foreach(println)
-    
+
     val a2 = Vector2d( 0, 0)
     val b2 = Vector2d(0, 100)
     val c2 = Vector2d(100, 0)
@@ -345,11 +368,11 @@ object CompareTetrahedrizationTest{
     println("got 3 datasets: " + s1.size + " " + s2.size + " " + s3.size)
     println("dataset1")
     println(s1)
-    println("dataset2")
-    println(s2)
+    //println("dataset2")
+    //println(s2)
     println("dataset3")
     println(s3)
-    println("diff between them")
+    println("diff between d2 and d3")
     println(s1.toSet.diff(s2.toSet).toSeq)
     println("1 and 3:")
     println(s1.toSet.diff(s3.toSet).toSeq)

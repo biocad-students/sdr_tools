@@ -8,7 +8,8 @@ import ru.biocad.ig.common.structures.geometry.{
 import ru.biocad.ig.common.algorithms.geometry.{
     ManifoldUtils,
     DelaunayTesselation,
-    DelaunayTesselationFaster
+    DelaunayTesselationFaster,
+    DelaunayTesselation3
   }
 /*, DelaunayTesselationFaster*/
 import ru.biocad.ig.common.io.pdb.{PDBStructure, PDBAtomInfo}
@@ -45,14 +46,14 @@ def init() : (Seq[GeometryVector], Seq[GeometryVector]) = {
   (v1, v2)
 }
 
-def compare_timing_0(points : Seq[GeometryVector]) : Set[Simplex] = {
+def compare_timing_0(points : Seq[GeometryVector]) : Set[Simplex]= {
   var res = new DelaunayTesselation()
   res.makeTesselation(points)
   res.simplices
 }
 
-def compare_timing_1(points : Seq[GeometryVector]) : Set[Simplex] = {
-  var res = new DelaunayTesselationFaster()
+def compare_timing_1(points : Seq[GeometryVector]) = {
+  var res = new DelaunayTesselation3()
   res.makeTesselation(points)
   res.simplices
 }
@@ -91,7 +92,8 @@ def validate_data(points : Seq[GeometryVector], tetrahedras : Seq[Simplex]) : Bo
         println("error! achtung! "+point.toString)
         bordered_set.filter(t => t.getPosition(point) == PointPosition.LaysInside).foreach(
           t => {
-            println(t.toString + " :  " + t.getPosition(point) + " " + point);
+
+            println(t.toString + " :  " + t.getPosition(point) + " " + point + " dist: " + t.getPosition_(point));
             })
         return false
       }
