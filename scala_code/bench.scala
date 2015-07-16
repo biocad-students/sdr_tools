@@ -60,71 +60,41 @@ def compare_timing_1(points : Seq[GeometryVector]) = {
 
 def validate_data(points : Seq[GeometryVector], tetrahedras : Seq[Simplex]) : Boolean = {
   println("input parameters: " + points.size + " " + tetrahedras.size)
-  //1. test if all points are in some triangle
-  /*
-  val validation_result1 = points.foldLeft((0,false)) {
-    case ((orphans_counter, delaunay_false), point) =>
+  val res = points.foldLeft((0, 1)){
+    case (delaunay_false, point) =>
     {
-      val bordered_set = tetrahedras.filter(t => t.getPosition(point) != PointPosition.LaysOutside)
-      val points_set_size = bordered_set.filter(t => t.hasVertex(point)).size
-      println("validation step: " + bordered_set.size + " " + points_set_size)
-
-      if (bordered_set.size > points_set_size) {
-        println("error! achtung! "+point.toString)
-        bordered_set.filter(t => t.getPosition(point) == PointPosition.LaysInside).foreach(
-          t => {
-            println(t.toString + " :  " + t.getPosition(point));
-            })
-        return false
+      val isVertex = tetrahedras.count(t => t.hasVertex(point) )
+      if (isVertex == 0) {
+        println("at " + delaunay_false._2 + " got orphan point " + isVertex + " "+ point)
+        if (tetrahedras.count(t=> t.getPosition(point) == PointPosition.LaysOnNSphere) > 0 )
+        {
+          println("point lays on n-dimensional sphere for some tetrahedras")
+        }
+        (delaunay_false._1 + 1, delaunay_false._2 + 1)
+      } else{
+      (delaunay_false._1, delaunay_false._2 + 1)
       }
-      (orphans_counter, (points_set_size != 0))
-
     }
-  }*/
+  }
+
   val validation_result = points.foldLeft(0){
     case (delaunay_false, point) =>
     {
       val bordered_set = tetrahedras.filter(t => t.getPosition(point) != PointPosition.LaysOutside)
-      val points_set_size = bordered_set.filter(t => t.hasVertex(point)).size
+      val points_set_size = bordered_set.filter(t => t.hasVertex(point) || t.getPosition(point) == PointPosition.LaysOnNSphere).size
       println("validation step: " + bordered_set.size + " " + points_set_size + " " + point)
 
       if (bordered_set.size > points_set_size) {
         println("error! achtung! "+point.toString)
-        bordered_set.filter(t => t.getPosition(point) == PointPosition.LaysInside).foreach(
+        bordered_set.filter(t => t.getPosition_(point) < -0.001).foreach(
           t => {
-
             println(t.toString + " :  " + t.getPosition(point) + " " + point + " dist: " + t.getPosition_(point));
             })
-        return false
+       //return false
       }
-      delaunay_false + (bordered_set.size - points_set_size)
+      delaunay_false + 1 //(bordered_set.size - points_set_size)
     }
-
   }
-  /*
-  val validation_result = points.foldLeft((false, 0)){
-    case ((orphans_counter, delaunay_false), point) =>
-    {
-      val bordered_set = tetrahedras.filter(t => t.getPosition(point) != PointPosition.LaysOutside)
-      val points_set_size = bordered_set.filter(t => t.hasVertex(point)).size
-      println("validation step: " + bordered_set.size + " " + points_set_size)
-
-      if (bordered_set.size > points_set_size) {
-        println("error! achtung! "+point.toString)
-        bordered_set.filter(t => t.getPosition(point) == PointPosition.LaysInside).foreach(
-          t => {
-            println(t.toString + " :  " + t.getPosition(point));
-            })
-        return false
-      }
-
-      (
-        orphans_counter && (points_set_size != 0),
-        delaunay_false + (bordered_set.size - points_set_size)
-        )
-    }
-
-  }*/
   println(validation_result)
   validation_result == 0
 }
@@ -146,29 +116,9 @@ def call_all(n : Int, logger_file_name : String = "triangulation_n_.txt") = {
   writer.write("processing 1st set of points\n")
   val simplices1 = time(compare_timing_1(pointsL.take(n)), writer, "delaunay triangulation")
   writer.write("amount : " + simplices1.size + "\n")
-  simplices1.foreach(x=>writer.write(x.toString+"\n"))
+  //simplices1.foreach(x=>writer.write(x.toString+"\n"))
   println("valid: " + validate_data(pointsL.take(n), simplices1.toSeq))
-  //println("start to process 2nd set of n points " + simplices1.size)
-  //simplices1.foreach(s=> writer.write(s.toString + "\n"))
-//simplices1.take(400).foreach(x=>writer.write(x.toString+"\n"))
-  /*writer.write("processing 2nd set of points\n")
-
-  val simplices2 = time(compare_timing_1(pointsH.take(n)), writer, "delaunay triangulation")
-  println("simplices obtained, getting distance " + simplices2.size)
-  writer.write("amount : " + simplices2.size + "\n")
-
-  writer.write("getting Hausdorff distance\n")
-  val distance = time(ManifoldUtils.getHausdorffDistance(simplices1, simplices2), writer, "getHausdorffDistance")
-  println("having distance")
-  println(distance)
-  writer.write(distance.toString)
-
   writer.close()
-  println("finished")
-  */
-  writer.close()
-  //println(time(compare_timing_1(pointsL.take(n), pointsH.take(n))))
-  //println(time(compare_timing_1(pointsH.take(n), pointsL.take(n))))
 }
 
 def call_all2(n : Int, logger_file_name : String = "triangulation_n_.txt") = {
@@ -195,8 +145,6 @@ def call_all2(n : Int, logger_file_name : String = "triangulation_n_.txt") = {
   writer.write(distance.toString)
   writer.close()
   println("finished")
-  //println(time(compare_timing_1(pointsL.take(n), pointsH.take(n))))
-  //println(time(compare_timing_1(pointsH.take(n), pointsL.take(n))))
 }
 
 }
