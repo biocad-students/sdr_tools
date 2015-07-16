@@ -42,12 +42,11 @@ class Simplex(val vertices : Seq[GeometryVector]) {
 
   //FIX: change naming of this later and also return distance instead
   def getPosition_(v : GeometryVector) : Double = {
-    val result : Double = testFunc(v.toSeq) * math.signum(testFunc(lowerPoint.toSeq))
-    result
+    testFunc(v.toSeq) * math.signum(testFunc(lowerPoint.toSeq))
   }
   def getPosition(v : GeometryVector) : PointPosition = {
     val result : Double = testFunc(v.toSeq) * math.signum(testFunc(InfiniteVector(dimensions).toSeq))
-    println("result in getPosition: " + result)
+    //println("result in getPosition: " + result)
     if ((result).abs <= 0.001) //FIX: there should be comparision with near-zero value
     LaysOnNSphere
     else {

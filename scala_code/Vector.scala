@@ -5,6 +5,7 @@ import scala.math.sqrt
 
 
 sealed trait GeometryVector {
+  val EPSILON = 0.001
   def coordinates : Seq[Double]
   def length : Double
   def lengthSquared : Double
@@ -26,6 +27,13 @@ sealed trait GeometryVector {
   def distanceTo(v : GeometryVector) = (this - v).length
 
   def toSeq : Seq[Double]
+
+  /** the following method returns true if point is above hyperplane defined by given simplex
+  (points below hyperplane are detected with given simplex's lowerPoint)
+  */
+  def isAbove(hyperplane: Simplex) : Boolean = {
+    hyperplane.getPosition_(this) < - EPSILON //FIX: change to comparision with small value
+  }
 
   override def equals(other : Any) : Boolean = false
 }

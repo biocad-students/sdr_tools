@@ -2,7 +2,7 @@ package test
 
 import ru.biocad.ig.common.structures.geometry.{
     Vector, Vector2d, Vector3d,InfiniteVector,
-    Simplex, Tetrahedra, GeometryVector, Triangle
+    Simplex, Tetrahedra, GeometryVector, Triangle, PointPosition
   }
 
 import ru.biocad.ig.common.algorithms.geometry.{
@@ -96,11 +96,11 @@ object SimplexTest {
     var tetrahedra2 = new Tetrahedra(a1, b1, d1, c1)
     println(tetrahedra2.getPosition(InfiniteVector(3)))
 
-    val test1 = Seq(Vector3d(21.405, 51.524, -19.856),
-      Vector3d(19.759, 55.712, -24.718),
-      Vector3d(21.946, 52.459, -20.95),
-      Vector3d(18.854, 54.779, -23.918) )
-    val tt1 = new Simplex(test1)
+    val test1 = Seq(Vector3d(21.075, 55.107, -25.112),
+      Vector3d(14.19, 55.191, -20.796),
+      Vector3d(15.021, 57.151, -21.508),
+      Vector3d(15.291, 56.877, -18.205) )
+    val tt1 = new Simplex(test1)//308.6189274172066
     val p1 = Vector3d(23.332, 52.901, -20.613)
     println("3d 2")
     println(tt1.getPosition_(p1))
@@ -376,5 +376,65 @@ object CompareTetrahedrizationTest{
     println(s1.toSet.diff(s2.toSet).toSeq)
     println("1 and 3:")
     println(s1.toSet.diff(s3.toSet).toSeq)
+  }
+}
+
+
+
+object ValidationTest {
+
+  def validate_data(points : Seq[GeometryVector], tetrahedras : Seq[Simplex]) : Boolean = {
+    println("input parameters: " + points.size + " " + tetrahedras.size)
+    val validation_result = points.foldLeft(0){
+      case (delaunay_false, point) =>
+      {
+        val bordered_set = tetrahedras.filter(t => t.getPosition(point) != PointPosition.LaysOutside)
+        val points_set_size = bordered_set.filter(t => t.hasVertex(point) || t.getPosition(point) == PointPosition.LaysOnNSphere).size
+        println("validation step: " + bordered_set.size + " " + points_set_size + " " + point)
+
+        if (bordered_set.size > points_set_size) {
+          println("error! achtung! "+point.toString)
+          bordered_set.filter(t => t.getPosition(point) == PointPosition.LaysInside).foreach(
+            t => {
+              println(t.toString + " :  " + t.getPosition(point) + " " + point + " dist: " + t.getPosition_(point));
+              })
+          return false
+        }
+        delaunay_false + (bordered_set.size - points_set_size)
+      }
+
+    }
+    println(validation_result)
+    validation_result == 0
+  }
+
+  def init_data() : Seq[GeometryVector]= {
+    Seq(
+      Vector3d(5, 0, 0),
+      Vector3d(0, 5, 0),
+      Vector3d(0, 0, 5),
+      Vector3d(4, 4, 0),
+      Vector3d(-5, 0, 0),
+      Vector3d(-4, 5, 0),
+      Vector3d(-5, -5, 0),
+      Vector3d(10, 10, 0)
+      )
+  }
+  def test1() = {
+    println("testing tesselation")
+    val res = new DelaunayTesselation3()
+    val points = init_data()
+
+    println("testing actual point addition")
+    res.makeTesselation(points)
+    res.simplices.foreach(println)
+    validate_data(points, res.simplices.toSeq)
+  }
+  def test2() = {
+
+  }
+  def main(args : Array[String]) : Unit = {
+    test1()
+    test2()
   }
 }
