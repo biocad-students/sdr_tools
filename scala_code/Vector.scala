@@ -24,33 +24,36 @@ sealed trait GeometryVector {
   def *(v : GeometryVector) : Double = ((coordinates, v.coordinates).zipped map ( _ * _ )).foldLeft(0.0) ( _ + _ )
 
   def *(multiplier : Double) : GeometryVector = new Vector( coordinates.map( multiplier * _ ) )
+  def /(divider : Double) : GeometryVector = new Vector( coordinates.map( _ / divider) )
+
   def distanceTo(v : GeometryVector) = (this - v).length
 
   def toSeq : Seq[Double]
+  def lifted : Seq[Double] = coordinates ++ Seq(lengthSquared)
 
   /** the following method returns true if point is above hyperplane defined by given simplex
   (points below hyperplane are detected with given simplex's lowerPoint)
   */
   def isAbove(hyperplane: Simplex) : Boolean = {
-    hyperplane.getPosition_(this) < - EPSILON //FIX: change to comparision with small value
+    hyperplane.getDistance(this) < -EPSILON //FIX: change to comparision with small value
   }
 
   override def equals(other : Any) : Boolean = false
+  override def hashCode: Int = (math.round(coordinates.reduceLeft(_ + _*100))).toInt + dimensions
 }
 
 
 case class Vector(val coordinates : Seq[Double]) extends GeometryVector  {
   override val dimensions = coordinates.size
 
-  override lazy val lengthSquared : Double = (coordinates, coordinates).zipped.map( _ * _ ).foldLeft(0.0) ( _ + _ )
+  override lazy val lengthSquared : Double = (coordinates, coordinates).zipped.map( _ * _ ).reduceLeft( _ + _ )
   override lazy val length : Double = sqrt(lengthSquared)
 
   override def toSeq : Seq[Double] = Seq(1.0) ++ coordinates ++ Seq(lengthSquared)
 
   override def equals(other : Any) : Boolean = other match {
     case v : Vector => (
-      (dimensions == v.dimensions) &&
-      (coordinates == v.coordinates)
+      (dimensions == v.dimensions) && (coordinates, v.coordinates).zipped.map(_ == _).foldLeft(true)( _ && _ )
     )
     case _ => false
   }

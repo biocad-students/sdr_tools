@@ -26,7 +26,8 @@ object VectorTest {
   def main(args : Array[String]) = {
     println("testing")
     val a : Vector = new Vector(Seq(-3, 4))
-    val b : Vector = new Vector(Seq(1, 0, 1.0))
+    val b : GeometryVector = new Vector(Seq(1, 0, 1.0))
+    val c : GeometryVector = new Vector(Seq(1, 0, 1.0))
     println(a)
     println(b)
     println(a - b)
@@ -34,6 +35,9 @@ object VectorTest {
     println(a == b)
     println(a * b)
     println(a.length)
+    println(b == c)
+    println(Seq(b, c).distinct)
+    println(Set(b, c))
     println(a.lengthSquared)
     println(a.distanceTo(b))
     println(b.distanceTo(a))
@@ -69,8 +73,20 @@ object DeterminantTest {
       println(values2(Seq(1,0,0,0)))
 
       println(values2(Seq(1,0,0,2)))
+      println(ManifoldUtils.quadMatrix(Seq(
+              Seq(0,2,3,4),
+              Seq(5,5,7,8),
+              Seq(9,10, 10, 12)
+            )))
+      println(ManifoldUtils.normalVectors(Seq(
+                    Seq(0,2,3,4),
+                    Seq(5,5,7,8),
+                    Seq(9,10, 10, 12)
+                  )))
+
   }
 }
+
 
 object SimplexTest {
   def main(args : Array[String]) : Unit = {
@@ -107,6 +123,14 @@ object SimplexTest {
     println(tt1.getPosition(p1))
     println(tt1.getPosition_(InfiniteVector(3)))
     println(tt1.getPosition(InfiniteVector(3)))
+    val test2 = Seq(
+      Vector3d(14.19, 55.191, -20.796),
+      Vector3d(15.021, 57.151, -21.508),
+      Vector3d(21.075, 55.107, -25.112),
+      Vector3d(15.291, 56.877, -18.205) )
+    val tt2 = new Simplex(test2)
+    println(Set(tt1, tt2))
+
   }
 }
 
@@ -431,10 +455,81 @@ object ValidationTest {
     validate_data(points, res.simplices.toSeq)
   }
   def test2() = {
+    println("testing positioning")
+    val simplex = new Simplex(Seq(
+      Vector3d(0, 0, 4),
+      Vector3d(3, 0, 0),
+      Vector3d(0, 3, 0),
+      Vector3d(-3, 0, 0)
+    ))
+    val point = Vector3d(0, 0, -4)
+    val point2 = Vector3d(0, 0, -0.5)
+    simplex.lowerPoint = Vector3d(0, 0, 0)
+    println(point.isAbove(simplex))
+    println(simplex.getPosition(point)) // LaysOutside
+    println(simplex.getPosition_(point)) // < 0
+    println(" second point - inside tetrahedra")
+    println(point2.isAbove(simplex))
+    println(simplex.getPosition(point2))
+    println(simplex.getPosition_(point2))
+  }
+  def test3() = {
+    println("test3")
+    val simplex = new Simplex(Seq(
+      Vector3d(0, 0, 4),
+      Vector3d(3, 0, 0),
+      Vector3d(0, 3, 0),
+      Vector3d(-3, 0, 0)
+    ))
+    val point = Vector3d(0, 0, -4)
+    val point2 = Vector3d(0, 0, -0.5)
+    println(simplex)
+    println("point: " + point)
+    println((new DelaunayTesselation3()).makeCone(Seq(simplex), point))
+    println("point2: " + point2)
+    println((new DelaunayTesselation3()).makeCone(Seq(simplex), point2))
 
+    val point3 = Vector3d(3, 3, 0)
+    println("point3: " + point3)
+    println((new DelaunayTesselation3()).makeCone(Seq(simplex), point3))
+  }
+  def test2d() = {
+    println("test2d")
+    val points = Seq(
+      Vector2d(0, 0),
+      Vector2d(2, 4),
+      Vector2d(4, 2),
+      Vector2d(4, 4),
+      Vector2d(7, 3),
+      Vector2d(6, 0),
+      Vector2d(7, 6),
+      Vector2d(10, 3)
+    ).take(6)
+    val tess = new DelaunayTesselation3()
+    tess.makeTesselation(points)
+    tess.simplices.foreach(println)
+    validate_data(points, tess.simplices.toSeq)
+  }
+  def test2d_positioning() = {
+    val simplex = new Simplex(Seq(
+      Vector2d(2, 4),
+      Vector2d(7, 3),
+      Vector2d(4, 4)
+    ))
+    val p1 = Vector2d(5, 3)
+    val p2 = Vector2d(0, 0)
+    println(simplex.lowerPoint)
+    println(simplex.dimensions)
+    println(simplex.getPosition(p1))
+    println(simplex.getPosition_(p1))
+    println(simplex.getPosition(p2))
+    println(simplex.getPosition_(p2))
   }
   def main(args : Array[String]) : Unit = {
-    test1()
-    test2()
+    //test1()
+    //test2()
+    //test3()
+    test2d()
+    //test2d_positioning()
   }
 }

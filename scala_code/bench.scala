@@ -39,7 +39,7 @@ def init() : (Seq[GeometryVector], Seq[GeometryVector]) = {
       case xx:PDBAtomInfo if xx.chainID == 'L' => Vector3d(xx.x, xx.y, xx.z)
     }
     ).toList
-  println(v1)
+  //println(v1)
   val v2 = structure.parse_array.collect({
     case xx:PDBAtomInfo if xx.chainID == 'H' => Vector3d(xx.x, xx.y, xx.z)
     }).toList
@@ -60,15 +60,20 @@ def compare_timing_1(points : Seq[GeometryVector]) = {
 
 def validate_data(points : Seq[GeometryVector], tetrahedras : Seq[Simplex]) : Boolean = {
   println("input parameters: " + points.size + " " + tetrahedras.size)
-  val res = points.foldLeft((0, 1)){
+  
+  val res = points.foldLeft((0, 1)) {
     case (delaunay_false, point) =>
     {
-      val isVertex = tetrahedras.count(t => t.hasVertex(point) )
-      if (isVertex == 0) {
+      //FIX: check condition
+      val isVertex = tetrahedras.count(t => t.getPosition(point) == PointPosition.LaysOnNSphere && t.hasVertex(point))
+      if (isVertex > 0) {
         println("at " + delaunay_false._2 + " got orphan point " + isVertex + " "+ point)
-        if (tetrahedras.count(t=> t.getPosition(point) == PointPosition.LaysOnNSphere) > 0 )
+        if (tetrahedras.count(t=> (t.getPosition(point) == PointPosition.LaysOnNSphere && !t.hasVertex(point))) > 0 )
         {
           println("point lays on n-dimensional sphere for some tetrahedras")
+          //println(tetrahedras.count(t=> t.getPosition(point)==PointPosition.LaysOnNSphere))
+          //println(point)
+          //println(tetrahedras.filterNot(_.hasVertex(point)))
         }
         (delaunay_false._1 + 1, delaunay_false._2 + 1)
       } else{
@@ -81,22 +86,35 @@ def validate_data(points : Seq[GeometryVector], tetrahedras : Seq[Simplex]) : Bo
     case (delaunay_false, point) =>
     {
       val bordered_set = tetrahedras.filter(t => t.getPosition(point) != PointPosition.LaysOutside)
-      val points_set_size = bordered_set.filter(t => t.hasVertex(point) || t.getPosition(point) == PointPosition.LaysOnNSphere).size
+      val points_set_size = bordered_set.filter(t=>t.getPosition(point) == PointPosition.LaysOnNSphere).size
       println("validation step: " + bordered_set.size + " " + points_set_size + " " + point)
 
       if (bordered_set.size > points_set_size) {
         println("error! achtung! "+point.toString)
-        bordered_set.filter(t => t.getPosition_(point) < -0.001).foreach(
+        val pp = bordered_set.filter(t => t.getPosition(point) != PointPosition.LaysOnNSphere)
+        if (pp.size>0) {
+          pp.foreach(
           t => {
-            println(t.toString + " :  " + t.getPosition(point) + " " + point + " dist: " + t.getPosition_(point));
+            println(t.toString + " :  " + t.getPosition(point) + " " + point + " dist: " + t.getPosition_(point) + " , " + t.getDistance(point));
             })
-       //return false
+            //return false
+            delaunay_false + 1
+            }
+       else {
+         delaunay_false
+       }
       }
-      delaunay_false + 1 //(bordered_set.size - points_set_size)
+      else {
+        delaunay_false
+      }
     }
   }
   println(validation_result)
+
   validation_result == 0
+
+  //println(tetrahedras.head.innerPoint)
+  //true
 }
 
 def compare_timing_2(points : Seq[GeometryVector], points2 : Seq[GeometryVector]) = {
@@ -117,7 +135,7 @@ def call_all(n : Int, logger_file_name : String = "triangulation_n_.txt") = {
   val simplices1 = time(compare_timing_1(pointsL.take(n)), writer, "delaunay triangulation")
   writer.write("amount : " + simplices1.size + "\n")
   //simplices1.foreach(x=>writer.write(x.toString+"\n"))
-  println("valid: " + validate_data(pointsL.take(n), simplices1.toSeq))
+  println("valid: " + validate_data(pointsL.take(n), simplices1.toSeq.distinct))
   writer.close()
 }
 
