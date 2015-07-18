@@ -5,6 +5,7 @@ import ru.biocad.ig.common.structures.geometry.{
   GeometryVector,
   InfiniteVector, PointPosition
 }
+import scala.math.sqrt
 
 object ManifoldUtils {
 
@@ -31,16 +32,73 @@ object ManifoldUtils {
               )
             )
             val multipliers = innerFunction(determinant.tail, multiplier * sign)
-            (determinant.head, multipliers).zipped.map( _ * _ ).foldLeft(0.0) ( _ + _ )
+            (determinant.head, multipliers).zipped.map( _ * _ ).reduceLeft( _ + _ )
           }
         })
       }
     }
     val cofactors = innerFunction(matrix, 1)
-    (cofactors, _ : Seq[Double]).zipped.map(_ * _ ).foldLeft(0.0) ( _ + _ )
+    (cofactors, _ : Seq[Double]).zipped.map(_ * _ ).reduceLeft( _ + _ )
   }
 
+  def getDeterminant(matrix: Seq[Seq[Double]]): Double = getCofactors(matrix.tail)(matrix.head)
 
+  /**returns result of multiplication between martix and matrix^{T}
+  */
+  def quadMatrix(matrix : Seq[Seq[Double]]) : Seq[Seq[Double]] = {
+    matrix.map({case line: Seq[Double] =>
+    {
+      matrix.map({case line2: Seq[Double]=>{
+        (line, line2).zipped.map(_ * _).reduceLeft(_ + _)
+      }})
+    }})
+  }
+
+  def normalVectors(points: Seq[Seq[Double]]) : Seq[Seq[Seq[Double]]] = {
+    0 to points.head.size-1 map { i => {
+      points.map{
+        line : Seq[Double] => {
+          line.zipWithIndex.map({case (a,index) =>{
+            if (index == i){ 1 }else {a}
+          }})
+      }}
+    }}
+  }
+  def normalize(point:Seq[Double]) : Double = {
+    sqrt((point, point).zipped.map(_ * _).reduceLeft(_ + _))
+  }
+
+  def getNormals(points : Seq[Seq[Double]]) : Seq[Double] = {
+    normalVectors(points).map({case normalMatrix =>  getDeterminant(normalMatrix) })
+  }
+
+  def getSimplexNormalEquation(points:Seq[Seq[Double]]) : Seq[Double] => Double = {
+    /**
+    println("in getSimplexNormalEquation")
+    points.foreach(println)
+    println("normals: ")
+    */
+    val n = getNormals(points)
+    //n.foreach(println)
+    val nLength = normalize(n)
+    //println(nLength)
+    //println("getting Det")
+    val d = getDeterminant(points)
+    (v : Seq[Double]) => ((n, v).zipped.map(_ * _ ).reduceLeft( _ + _ ) - d) / nLength
+  }
+  def getSimplexNormalEquationParameters(points: Seq[Seq[Double]]) : (Seq[Double], Double, Seq[Double] => Double) = {
+    val n = getNormals(points)
+    val nLength = normalize(n)
+    if (nLength.abs < 0.001)
+    {
+      val d = getDeterminant(points)
+      return (n, d, (v:Seq[Double]) => ((n, v).zipped.map(_*_).reduceLeft(_+_)-d))
+    }
+
+    val nNormalized = n.map(_/nLength)//todo: add zero check
+    val d = getDeterminant(points)/nLength
+    (nNormalized, d, (v:Seq[Double]) => ((nNormalized, v).zipped.map(_*_).reduceLeft(_+_)-d))
+  }
   def updateSimplices(s : Simplex, v : GeometryVector) : Seq[Simplex] = {
     if (s.isFlat) {
       println("in updateSimplices with flat simplex")

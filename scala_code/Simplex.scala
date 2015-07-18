@@ -36,16 +36,27 @@ class GeometryVectorIterator(input_sequence : Seq[GeometryVector]) extends Itera
 
 class Simplex(val vertices : Seq[GeometryVector]) {
   val dimensions : Int = vertices.head.dimensions
-  var lowerPoint : GeometryVector = InfiniteVector(dimensions)
+  var innerPoint : GeometryVector = vertices.reduceLeft(_ + _) /vertices.size
+  var lowerPoint : GeometryVector = vertices.reduceLeft(_ + _) /vertices.size
+
+  val (normals: Seq[Double], dNorm : Double, distFunc) = ManifoldUtils.getSimplexNormalEquationParameters(vertices.map(_.lifted))
 
   private lazy val testFunc : Seq[Double] => Double = ManifoldUtils.getCofactors(vertices.map(_.toSeq))
+  //private lazy val distFunc : Seq[Double] => Double =
 
+  def isInLowerConvHull() : Boolean = {
+    println("in lower conv hull check, got " + normals.last +" and "+ math.signum(distFunc(innerPoint.lifted)) )
+    vertices.foreach(println)
+    println(normals)
+    println(innerPoint)
+    normals.last*math.signum(distFunc(innerPoint.lifted)) > 0.001
+  }
   //FIX: change naming of this later and also return distance instead
   def getPosition_(v : GeometryVector) : Double = {
-    testFunc(v.toSeq) * math.signum(testFunc(lowerPoint.toSeq))
+    testFunc(v.toSeq) * math.signum(testFunc(InfiniteVector(dimensions).toSeq))
   }
   def getPosition(v : GeometryVector) : PointPosition = {
-    val result : Double = testFunc(v.toSeq) * math.signum(testFunc(InfiniteVector(dimensions).toSeq))
+    val result : Double = getPosition_(v)//testFunc(v.toSeq) * flag//math.signum(testFunc(lowerPoint.toSeq))//InfiniteVector(dimensions).toSeq))
     //println("result in getPosition: " + result)
     if ((result).abs <= 0.001) //FIX: there should be comparision with near-zero value
     LaysOnNSphere
@@ -53,6 +64,9 @@ class Simplex(val vertices : Seq[GeometryVector]) {
       if (result > 0.001) LaysOutside
       else LaysInside
     }
+  }
+  def getDistance(point : GeometryVector) : Double = {
+    distFunc(point.lifted) * math.signum(distFunc(innerPoint.lifted))
   }
 
   def isFlat : Boolean = testFunc(InfiniteVector(vertices.head.dimensions).toSeq).abs < 0.001
@@ -91,12 +105,14 @@ class Simplex(val vertices : Seq[GeometryVector]) {
     })
 
   override def equals(other : Any) : Boolean = other match {
-    case v : Simplex => {
-      v.vertices.diff(vertices).isEmpty
-    }
+    case v : Simplex => v.vertices.diff(vertices).isEmpty
     case _ => false
   }
-override def toString = vertices.mkString("\n[ \n  ", ", \n  ", " ],")
+  override def hashCode: Int = {
+    vertices.sortWith(_.hashCode < _.hashCode).map(_.hashCode).reduceLeft(_ + _ * 100)
+  }
+
+  override def toString = vertices.mkString("\n[ \n  ", ", \n  ", " ],")
 //  override def toString = vertices.mkString("\nSimplex[ \n  ", ", \n  ", " ]")
 }
 //todo: check if it useful to use getPosition for checking point position relative to different primitives
