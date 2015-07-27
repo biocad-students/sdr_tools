@@ -35,21 +35,33 @@ class GeometryVectorIterator(input_sequence : Seq[GeometryVector]) extends Itera
 }
 
 class Simplex(val vertices : Seq[GeometryVector]) {
+  val EPSILON = 0.001
   val dimensions : Int = vertices.head.dimensions
   var innerPoint : GeometryVector = vertices.reduceLeft(_ + _) /vertices.size
   var lowerPoint : GeometryVector = vertices.reduceLeft(_ + _) /vertices.size
 
-  val (normals: Seq[Double], dNorm : Double, distFunc) = ManifoldUtils.getSimplexNormalEquationParameters(vertices.map(_.lifted))
+  val (normals: Seq[Double], dNorm : Double, distFunc) = ManifoldUtils.getSimplexNormalEquationParameters(vertices)
 
   private lazy val testFunc : Seq[Double] => Double = ManifoldUtils.getCofactors(vertices.map(_.toSeq))
   //private lazy val distFunc : Seq[Double] => Double =
-
+  def reorient() : Simplex = {
+    //return this
+    if (testFunc(InfiniteVector(dimensions).toSeq) > EPSILON && vertices.size >= 2) {
+      val s = new Simplex(Seq(vertices.tail.head, vertices.head) ++ vertices.tail.tail)
+      s.innerPoint = innerPoint
+      s.lowerPoint = lowerPoint
+      s
+    }
+    else{
+    this
+    }
+  }
   def isInLowerConvHull() : Boolean = {
     println("in lower conv hull check, got " + normals.last +" and "+ math.signum(distFunc(innerPoint.lifted)) )
     vertices.foreach(println)
     println(normals)
     println(innerPoint)
-    normals.last*math.signum(distFunc(innerPoint.lifted)) > 0.001
+    normals.last*math.signum(distFunc(innerPoint)) > EPSILON
   }
   //FIX: change naming of this later and also return distance instead
   def getPosition_(v : GeometryVector) : Double = {
@@ -58,7 +70,7 @@ class Simplex(val vertices : Seq[GeometryVector]) {
   def getPosition(v : GeometryVector) : PointPosition = {
     val result : Double = getPosition_(v)//testFunc(v.toSeq) * flag//math.signum(testFunc(lowerPoint.toSeq))//InfiniteVector(dimensions).toSeq))
     //println("result in getPosition: " + result)
-    if ((result).abs <= 0.001) //FIX: there should be comparision with near-zero value
+    if ((result).abs <= EPSILON) //FIX: there should be comparision with near-zero value
     LaysOnNSphere
     else {
       if (result > 0.001) LaysOutside
@@ -66,10 +78,10 @@ class Simplex(val vertices : Seq[GeometryVector]) {
     }
   }
   def getDistance(point : GeometryVector) : Double = {
-    distFunc(point.lifted) * math.signum(distFunc(innerPoint.lifted))
+    distFunc(point) * math.signum(distFunc(innerPoint))
   }
 
-  def isFlat : Boolean = testFunc(InfiniteVector(vertices.head.dimensions).toSeq).abs < 0.001
+  def isFlat : Boolean = testFunc(InfiniteVector(vertices.head.dimensions).toSeq).abs < EPSILON
 
   def hasVertex(point : GeometryVector) : Boolean = vertices.filter(_.equals(point)) != Seq()
 

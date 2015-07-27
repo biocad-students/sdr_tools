@@ -409,6 +409,61 @@ object ValidationTest {
 
   def validate_data(points : Seq[GeometryVector], tetrahedras : Seq[Simplex]) : Boolean = {
     println("input parameters: " + points.size + " " + tetrahedras.size)
+
+    val res = points.foldLeft((0, 1)) {
+      case (delaunay_false, point) =>
+      {
+        //FIX: check condition
+        val isVertex = tetrahedras.count(t => t.hasVertex(point))
+        if (isVertex == 0) {
+          println("at " + delaunay_false._2 + " got orphan point " + isVertex + " "+ point)
+          if (tetrahedras.count(t=> (t.getPosition(point) == PointPosition.LaysOnNSphere && !t.hasVertex(point))) > 0 )
+          {
+            println("point lays on n-dimensional sphere for some tetrahedras")
+            //println(tetrahedras.count(t=> t.getPosition(point)==PointPosition.LaysOnNSphere))
+            //println(point)
+            //println(tetrahedras.filterNot(_.hasVertex(point)))
+          }
+          (delaunay_false._1 + 1, delaunay_false._2 + 1)
+        } else{
+        (delaunay_false._1, delaunay_false._2 + 1)
+        }
+      }
+    }
+
+    val validation_result = points.foldLeft(0){
+      case (delaunay_false, point) =>
+      {
+        val bordered_set = tetrahedras.filter(t => t.getPosition(point) != PointPosition.LaysOutside)
+        val points_set_size = bordered_set.filter(t=>t.getPosition(point) == PointPosition.LaysOnNSphere).size
+        println("validation step: " + bordered_set.size + " " + points_set_size + " " + point)
+
+        if (bordered_set.size > points_set_size) {
+          println("error! achtung! "+point.toString)
+          val pp = bordered_set.filter(t => t.getPosition(point) != PointPosition.LaysOnNSphere)
+          if (pp.size>0) {
+            pp.foreach(
+            t => {
+              println(t.toString + " :  " + t.getPosition(point) + " " + point + " dist: " + t.getPosition_(point) + " , " + t.getDistance(point));
+              })
+              //return false
+              delaunay_false + 1
+              }
+         else {
+           delaunay_false
+         }
+        }
+        else {
+          delaunay_false
+        }
+      }
+    }
+    println(validation_result)
+
+    validation_result == 0
+
+    /*
+    println("input parameters: " + points.size + " " + tetrahedras.size)
     val validation_result = points.foldLeft(0){
       case (delaunay_false, point) =>
       {
@@ -429,7 +484,7 @@ object ValidationTest {
 
     }
     println(validation_result)
-    validation_result == 0
+    validation_result == 0*/
   }
 
   def init_data() : Seq[GeometryVector]= {
@@ -503,8 +558,11 @@ object ValidationTest {
       Vector2d(7, 3),
       Vector2d(6, 0),
       Vector2d(7, 6),
-      Vector2d(10, 3)
-    ).take(6)
+      Vector2d(10, 3),
+      Vector2d(2, 0),
+      Vector2d(0, 2),
+      Vector2d(-2, 3)
+    )//.take(7)
     val tess = new DelaunayTesselation3()
     tess.makeTesselation(points)
     tess.simplices.foreach(println)

@@ -72,33 +72,35 @@ object ManifoldUtils {
     normalVectors(points).map({case normalMatrix =>  getDeterminant(normalMatrix) })
   }
 
-  def getSimplexNormalEquation(points:Seq[Seq[Double]]) : Seq[Double] => Double = {
+  def getSimplexNormalEquation(points : Seq[GeometryVector]) : Seq[Double] => Double = {
     /**
     println("in getSimplexNormalEquation")
     points.foreach(println)
     println("normals: ")
     */
-    val n = getNormals(points)
+    val n = getNormals(points.map(_.lifted.coordinates))
     //n.foreach(println)
     val nLength = normalize(n)
     //println(nLength)
     //println("getting Det")
-    val d = getDeterminant(points)
+    val d = getDeterminant(points.map(_.lifted.coordinates))
     (v : Seq[Double]) => ((n, v).zipped.map(_ * _ ).reduceLeft( _ + _ ) - d) / nLength
   }
-  def getSimplexNormalEquationParameters(points: Seq[Seq[Double]]) : (Seq[Double], Double, Seq[Double] => Double) = {
-    val n = getNormals(points)
+
+  def getSimplexNormalEquationParameters(points : Seq[GeometryVector]) : (Seq[Double], Double, GeometryVector => Double) = {
+    val n = getNormals(points.map(_.lifted.coordinates))
     val nLength = normalize(n)
     if (nLength.abs < 0.001)
     {
-      val d = getDeterminant(points)
-      return (n, d, (v:Seq[Double]) => ((n, v).zipped.map(_*_).reduceLeft(_+_)-d))
+      val d = getDeterminant(points.map(_.lifted.coordinates))
+      return (n, d, (v : GeometryVector) => ((n, v.lifted.coordinates).zipped.map(_ * _).reduceLeft(_ + _) - d))
     }
 
-    val nNormalized = n.map(_/nLength)//todo: add zero check
-    val d = getDeterminant(points)/nLength
-    (nNormalized, d, (v:Seq[Double]) => ((nNormalized, v).zipped.map(_*_).reduceLeft(_+_)-d))
+    val nNormalized = n.map(_ / nLength)//todo: add zero check
+    val d = getDeterminant(points.map(_.lifted.coordinates)) / nLength
+    (nNormalized, d, (v : GeometryVector) => ((nNormalized, v.lifted.coordinates).zipped.map(_ * _).reduceLeft(_ + _) - d))
   }
+
   def updateSimplices(s : Simplex, v : GeometryVector) : Seq[Simplex] = {
     if (s.isFlat) {
       println("in updateSimplices with flat simplex")

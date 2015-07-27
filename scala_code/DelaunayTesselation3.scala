@@ -33,7 +33,7 @@ class DelaunayTesselation3 {
   }
   def getHypervolume(pp : Seq[GeometryVector]) : Double = {
     ManifoldUtils.getDeterminant(pp.tail.map({line => {
-      (pp.head.lifted, line.lifted).zipped.map({(p0, p1) => p1 - p0})
+      (pp.head.lifted.coordinates, line.lifted.coordinates).zipped.map({(p0, p1) => p1 - p0})
     }}))
   }
   //returns set of simplices in d+1, wich are ridges of simplex in d+2
@@ -54,7 +54,7 @@ class DelaunayTesselation3 {
     if (getHypervolume(pp) > EPSILON) {
       pp = (Seq(pp.tail.head, pp.head) ++ pp.tail.tail)
     }
-    val innerPoint = pp.reduceLeft(_ + _)/(pp.size)
+    val innerPoint = pp.map(_.lifted).reduceLeft(_ + _)/(pp.size)
     (new GeometryVectorIterator(pp)).map({
       case s : (GeometryVector, Seq[GeometryVector]) => {
         val simplex = new Simplex(s._2)
@@ -111,16 +111,19 @@ class DelaunayTesselation3 {
     //println(horizonRidges.toSeq)
     horizonRidges.toSeq
   }
+
   def getLowerConvexHull(simplices : collection.mutable.Set[Simplex]) : collection.mutable.Set[Simplex] = {
     simplices.filter({
       case s : Simplex => s.isInLowerConvHull()
     })
   }
+
   def getUpperConvexHull(simplices : collection.mutable.Set[Simplex]) : collection.mutable.Set[Simplex] = {
     simplices.filter({
       case s : Simplex => (new InfiniteVector(s.vertices.head.dimensions)).isAbove(s)
     })
   }
+
   def makeCone(horizonSimplices : Seq[Simplex], point : GeometryVector) : Seq[Simplex] = {
     var ridges = getBorderLine(horizonSimplices, point)
     //println("in makeCone: ")
@@ -131,14 +134,19 @@ class DelaunayTesselation3 {
       var simplex = new Simplex(ridge.toSeq :+ point)
       simplex.lowerPoint = simplex.vertices.reduceLeft(_ + _)/simplex.vertices.size
       simplex.innerPoint = horizonSimplices.head.innerPoint
-      addSimplex(simplex)
-      addNeighbours(simplex)
-      simplex
+      //addSimplex(simplex)
+      //addNeighbours(simplex)
+      //simplex
+      val reoriented = simplex.reorient()
+      addSimplex(reoriented)
+      addNeighbours(reoriented)
+      reoriented
     }})
     //println("tetrahedras: " + tetrahedras)
     tetrahedras
 //    newSimplices
   }
+  
   /**this implementation should be qhull-based*/
   def makeTesselation(points : Seq[GeometryVector]) : Unit = {
     val startSimplices = prepareStartSimplex(points.distinct)
@@ -218,6 +226,7 @@ class DelaunayTesselation3 {
         removeNeighbours(simplex)
       }
       for (newSimplex <- newSimplices) {
+        /**
         unprocessedPoints = unprocessedPoints.filter({
           p => {
             if (point.isAbove(newSimplex)) {
@@ -228,15 +237,15 @@ class DelaunayTesselation3 {
               true
             }
           }
-        })
-        /**
+        })*/
+
         for (point <- unprocessedPoints) {
           if (point.isAbove(newSimplex)) {
             outerSet(newSimplex) = outerSet.getOrElseUpdate(newSimplex, Seq[GeometryVector]()) :+ point
             unprocessedPoints -= point
           }
         }
-        */
+
         addSimplex(newSimplex)
         addNeighbours(newSimplex)
       }
