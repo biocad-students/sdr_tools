@@ -29,7 +29,8 @@ sealed trait GeometryVector {
   def distanceTo(v : GeometryVector) = (this - v).length
 
   def toSeq : Seq[Double]
-  def lifted : Seq[Double] = coordinates ++ Seq(lengthSquared)
+  def lifted : GeometryVector // = coordinates ++ Seq(lengthSquared)
+  def unlifted : GeometryVector
 
   /** the following method returns true if point is above hyperplane defined by given simplex
   (points below hyperplane are detected with given simplex's lowerPoint)
@@ -50,6 +51,9 @@ case class Vector(val coordinates : Seq[Double]) extends GeometryVector  {
   override lazy val length : Double = sqrt(lengthSquared)
 
   override def toSeq : Seq[Double] = Seq(1.0) ++ coordinates ++ Seq(lengthSquared)
+
+  override def lifted : GeometryVector = new Vector(coordinates ++ Seq(lengthSquared))
+  override def unlifted : GeometryVector = new Vector(coordinates.init) // TODO: add empty list check
 
   override def equals(other : Any) : Boolean = other match {
     case v : Vector => (
@@ -85,6 +89,10 @@ case class InfiniteVector(val dimensions : Int) extends GeometryVector {
   override def *(multiplier : Double) : GeometryVector = this
 
   override def toSeq : Seq[Double] = Seq(0.0) ++ coordinates ++ Seq(lengthSquared)
+
+  override def lifted : GeometryVector = new InfiniteVector(dimensions + 1)//TODO: check if this is correct definition
+  override def unlifted : GeometryVector = new InfiniteVector(dimensions - 1) // TODO: add empty list check
+
 }
 
 

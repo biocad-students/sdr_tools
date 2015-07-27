@@ -60,13 +60,13 @@ def compare_timing_1(points : Seq[GeometryVector]) = {
 
 def validate_data(points : Seq[GeometryVector], tetrahedras : Seq[Simplex]) : Boolean = {
   println("input parameters: " + points.size + " " + tetrahedras.size)
-  
+
   val res = points.foldLeft((0, 1)) {
     case (delaunay_false, point) =>
     {
       //FIX: check condition
-      val isVertex = tetrahedras.count(t => t.getPosition(point) == PointPosition.LaysOnNSphere && t.hasVertex(point))
-      if (isVertex > 0) {
+      val isVertex = tetrahedras.count(t => t.hasVertex(point))
+      if (isVertex == 0) {
         println("at " + delaunay_false._2 + " got orphan point " + isVertex + " "+ point)
         if (tetrahedras.count(t=> (t.getPosition(point) == PointPosition.LaysOnNSphere && !t.hasVertex(point))) > 0 )
         {
@@ -95,7 +95,8 @@ def validate_data(points : Seq[GeometryVector], tetrahedras : Seq[Simplex]) : Bo
         if (pp.size>0) {
           pp.foreach(
           t => {
-            println(t.toString + " :  " + t.getPosition(point) + " " + point + " dist: " + t.getPosition_(point) + " , " + t.getDistance(point));
+            println(t.toString + " :  " + t.getPosition(point) + " " + point +
+            " dist: " + t.getPosition_(point) + " , " + t.getDistance(point));
             })
             //return false
             delaunay_false + 1
