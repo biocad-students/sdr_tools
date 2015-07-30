@@ -15,4 +15,11 @@ class PDBStructure {
   }
 
   override def toString : String = parse_array.mkString(", ")
+  //TODO: should add method to add hydrogen atoms
+  //TODO: should add method to remove water
+}
+
+//TODO: should extend all logic of pdb file reading, the following class is temporary solution for collecting atoms to aminoacids
+class PDBAminoAcidCollection(val basic_structure : PDBStructure) {
+  val aminoacids = basic_structure.parse_array.groupBy(_.chainID).map(_._2.groupBy(_.resSeq))
 }
