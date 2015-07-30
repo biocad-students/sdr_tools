@@ -7,3 +7,10 @@ I'll put final code version after refactoring to zmactep/ig-toolkit, this repo w
 references (mc, additional):
 
 http://www.actabp.pl/pdf/2_2004/349s.pdf
+
+Robert L. Jernigan. Protein folds. Curr.Opinion in Struct.Biology, 1992, 2:248-256
+
+
+"In the final stage of the folding protocol, the entire full atom structures may be reconstructed"
+
+Skolnick, J., Kolinski, A., Brooks, C.L., 111, Godzik, A. A method for prediction of protein structure from sequence. Current Biol. 3:414-423, 1993. -
