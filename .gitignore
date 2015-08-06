@@ -3,3 +3,6 @@
 scala_code/ru/**
 scala_code/test/**
 scala_code/benchmarker/**
+**/*.pyc
+**/*.so
+python_code/**/*.c
