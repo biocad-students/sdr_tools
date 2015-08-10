@@ -14,3 +14,8 @@ Robert L. Jernigan. Protein folds. Curr.Opinion in Struct.Biology, 1992, 2:248-2
 "In the final stage of the folding protocol, the entire full atom structures may be reconstructed"
 
 Skolnick, J., Kolinski, A., Brooks, C.L., 111, Godzik, A. A method for prediction of protein structure from sequence. Current Biol. 3:414-423, 1993. -
+
+===details on full-atom model reconstruction
+
+Michael Feig, Piotr Rotkiewicz, Andrzej Kolinski, Jeffrey Skolnick and Charles L. Brooks III.
+Accurate Reconstruction of All-Atom Protein Representations From Side-Chain-Based Low-Resolution Models
