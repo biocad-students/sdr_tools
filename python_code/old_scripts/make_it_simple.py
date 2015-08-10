@@ -463,12 +463,12 @@ class DTGraph:
         #print(start_nodes)
         return self.nearest_triangles[triangle] in self.start_nodes
     # method adds all child nodes and returns current node (from queue)
-    def get_path_fragment(self, check_edge, distance_func):
+    def get_path_fragment(self, check_edge, distance_func, check_simplex):
         if len(self.queue) == 0:
             return []
         while True:
             start_node = self.queue.pop()
-            if not start_node in self.visited or self.is_ch_simplex(start_node):
+            if not start_node in self.visited: # or self.is_ch_simplex(start_node):
                 break
             if (len(self.queue)==0):
                 return []
@@ -477,19 +477,13 @@ class DTGraph:
             return []
         #result = set() #start_node
         nodes = set()
-        for next_node in self.nodes_map[start_node]:
-            #edge = self.nodes_map[start_node][next_node]
-            self.find_nearest_node(next_node, distance_func)
-            #check_edge(*edge) and
-            if not self.is_ch_simplex(next_node) and self.check_dist(next_node):
-                if not next_node in self.visited:
-                    #if not next_node in self.queue:
-                    nodes.add(next_node)
-        #for node in nodes:
-        #if not next_node in self.queue:
+        for next_node in self.simplices[1].neighbours[start_node]:
+            if next_node >= 0:
+                if check_simplex(start_node, next_node): #TODO: fix this
+                    if not next_node in self.visited:
+                        nodex.add(next_node)
         self.queue.update(nodes)
-        #result.add(start_node)
-        return start_node
+        return self.simplices[1].points[start_node]
     def get_neighbours(self, start_nodes):
         result = np.unique(np.asarray([k for x in start_nodes for pair in x.points[self.idx2_3] for k in self.ch_neighbours[tuple(set(pair))] if k != x and not k in start_nodes]))
         #print len(result)
@@ -509,6 +503,12 @@ class DTGraph:
     def find_pockets(self, triangles, check_edge, distance_func, check_simplex):
         self.ss = self.get_start_simplices(triangles, check_edge, distance_func, check_simplex)
         print self.ss
+        self.queue = set(self.ss)
+        data = set()
+        while (len(self.queue) > 0):
+            x = self.get_path_fragment(check_edge, distance_func, check_simplex)
+            data.add(x)
+        result = np.asarray([x.points for x in data])
         #self.start_nodes = {DTNode(triangle) for triangle in triangles}
         #self.neighbour_nodes = self.get_neighbours(self.start_nodes)
         #self.build_graph(check_edge, distance_func, check_simplex)
@@ -522,10 +522,10 @@ class DTGraph:
         #    x = self.get_path_fragment(check_edge, distance_func)
         #    data.add(x)
         #result = np.asarray([x.points for x in data])
-        #if(len(result) == 0):
-        #    return result
-        #return result
-        return []
+        if(len(result) == 0):
+            return result
+        return result
+        #return []
 
 class CHNode:
     def __init__(self, points):
