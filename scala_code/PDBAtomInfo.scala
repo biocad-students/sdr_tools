@@ -8,7 +8,7 @@ case class PDBAtomInfo(
     altLoc : Char,
     resName : String,
     chainID : Char,
-    resSeq : String,
+    resSeq : Int, //String,//FIX: there are cases when resSeq contains letter, i.e. '100B'
     iCode : Char,
     x : Double,
     y : Double,
@@ -27,7 +27,7 @@ object PDBAtomInfo {
     altLoc = line.charAt(16),
     resName = line.substring(17, 20),
     chainID = line.charAt(21),
-    resSeq = line.substring(22, 26),
+    resSeq = line.substring(22, 26).trim.toInt,
     iCode = line.charAt(26),
     x = line.substring(30, 38).toDouble,
     y = line.substring(38, 46).toDouble,
