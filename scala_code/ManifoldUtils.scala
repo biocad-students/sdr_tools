@@ -8,7 +8,27 @@ import ru.biocad.ig.common.structures.geometry.{
 import scala.math.sqrt
 
 object ManifoldUtils {
-
+  //
+  def getCofactorsVector(lines : Seq[Seq[Double]], multiplier : Double = 1) : Seq[Double] = lines match {
+    case Seq() => Seq(0)
+    case Seq(Seq(x, y)) => Seq(y * multiplier, - x * multiplier)
+    case _ => {
+      val indicesAndSignatures = lines.head.foldLeft((0, 1, Seq[(Int, Int)]())) {
+        case ((index, permutationSignature, indicesAndSignaturesSeq), _) => (index + 1, -permutationSignature, indicesAndSignaturesSeq ++ Seq((index, permutationSignature)))
+      }._3
+      indicesAndSignatures.map({
+        case (index, sign) => {
+          val determinant = lines.map(
+            _.zipWithIndex.collect(
+              {case (cell, cellColumnIndex) if cellColumnIndex != index => cell}
+            )
+          )
+          val multipliers = getCofactorsVector(determinant.tail, multiplier * sign)
+          (determinant.head, multipliers).zipped.map( _ * _ ).reduceLeft( _ + _ )
+        }
+      })
+    }
+  }
   // Input matrix describes first (n-1) lines of n*n matrix,
   // result is a sequence of cofactors for determinant of n*n matrix, computed along last (now unknown) row
   // so, to find n*n matrix determinant, simply call:
@@ -17,27 +37,7 @@ object ManifoldUtils {
   // - this gives a determinant value for matrix with last line described in lastLine sequence of values
   // P.S. - if someone could change this implementation to tail-recursion or trampoline call, i'm gonna buy him a beer or coffee (or icecream).
   def getCofactors(matrix : Seq[Seq[Double]]) : Seq[Double] => Double = {
-    def innerFunction(lines : Seq[Seq[Double]], multiplier : Double) : Seq[Double] = lines match {
-      case Seq() => Seq(0)
-      case Seq(Seq(x, y)) => Seq(y * multiplier, - x * multiplier)
-      case _ => {
-        val indicesAndSignatures = lines.head.foldLeft((0, 1, Seq[(Int, Int)]())) {
-          case ((index, permutationSignature, indicesAndSignaturesSeq), _) => (index + 1, -permutationSignature, indicesAndSignaturesSeq ++ Seq((index, permutationSignature)))
-        }._3
-        indicesAndSignatures.map({
-          case (index, sign) => {
-            val determinant = lines.map(
-              _.zipWithIndex.collect(
-                {case (cell, cellColumnIndex) if cellColumnIndex != index => cell}
-              )
-            )
-            val multipliers = innerFunction(determinant.tail, multiplier * sign)
-            (determinant.head, multipliers).zipped.map( _ * _ ).reduceLeft( _ + _ )
-          }
-        })
-      }
-    }
-    val cofactors = innerFunction(matrix, 1)
+    val cofactors = getCofactorsVector(matrix, 1)
     (cofactors, _ : Seq[Double]).zipped.map(_ * _ ).reduceLeft( _ + _ )
   }
 

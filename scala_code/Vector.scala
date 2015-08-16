@@ -1,8 +1,7 @@
 package ru.biocad.ig.common.structures.geometry
 
-
 import scala.math.sqrt
-
+import ru.biocad.ig.common.algorithms.geometry.ManifoldUtils
 
 sealed trait GeometryVector {
   val EPSILON = 0.001
@@ -22,6 +21,9 @@ sealed trait GeometryVector {
   }
 
   def *(v : GeometryVector) : Double = ((coordinates, v.coordinates).zipped map ( _ * _ )).foldLeft(0.0) ( _ + _ )
+
+  //tries to compute vector product for given pair of vectors, based on 1st 3 coordinates
+  def ** (v : GeometryVector) : GeometryVector = new Vector(ManifoldUtils.getCofactorsVector(Seq(coordinates, v.coordinates)))
 
   def *(multiplier : Double) : GeometryVector = new Vector( coordinates.map( multiplier * _ ) )
   def /(divider : Double) : GeometryVector = new Vector( coordinates.map( _ / divider) )

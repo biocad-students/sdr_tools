@@ -14,13 +14,14 @@ import ru.biocad.ig.common.io.pdb.{PDBStructure, PDBAtomInfo, PDBAminoAcidCollec
 class Rotamer(val atoms : Seq[PDBAtomInfo], val ca : GeometryVector) {
   val sidechainRelativeVectors = atoms.map({atom=> Vector3d(atom.x, atom.y, atom.z) - ca})
   val center : GeometryVector = if (sidechainRelativeVectors.size > 0)
-      sidechainRelativeVectors.reduceLeft (_ + _) / sidechainRelativeVectors.size 
+      sidechainRelativeVectors.reduceLeft (_ + _) / sidechainRelativeVectors.size
     else Vector3d(0,0,0)
 
   override def toString = sidechainRelativeVectors.mkString("[[", ",\n", "]]") + "\n, center = " + center.toString
 }
 
 class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
+  val name = atoms.head.resName
   val ca : GeometryVector = atoms.find{_.atom.trim == "CA"} match{
     case Some(value) => Vector3d(value.x, value.y, value.z)
     case None => Vector3d(0.0, 0.0, 0.0)
@@ -42,7 +43,8 @@ class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
     //TODO: should implement
   }
 
-  override def toString = Seq(
+  override def toString = Seq(name,
+    ",",
     "original atoms: ",
     atoms.mkString("\n[ \n  ", ", \n  ", " ],"),
     "\nca: ",

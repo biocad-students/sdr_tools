@@ -26,6 +26,6 @@ object SimplifiedAATest{
       new SimplifiedAminoAcid(a._2)
     })
     println(filtered_map.head.toString)
-
+    println(Vector3d(1,0,0)**Vector3d(0,1,0))
   }
 }
