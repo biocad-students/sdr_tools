@@ -116,35 +116,107 @@ len(a :: GeometryVector) = sqrt(a*a)
 #println(len(GeometryVector([1,2,3])))
 
 normalize(a :: GeometryVector) = a/len(a)
+
+function projection(projected :: GeometryVector, whereToProject :: GeometryVector)
+  whereToProject*(projected*whereToProject)
+end
+
+function projectToAxes(v :: GeometryVector, x :: GeometryVector, y :: GeometryVector, z :: GeometryVector)
+  v_x = v*x
+  v_y = (v - x*v_x)*y
+  v_z = (v - x*v_x - y*v_y)*z
+  (v_x, v_y, v_z)
+end
+
+function cross3d(a :: GeometryVector, b :: GeometryVector)
+  GeometryVector([
+    a.coordinates[2]*b.coordinates[3] - a.coordinates[3]*b.coordinates[2],
+    -(a.coordinates[1]*b.coordinates[3] - a.coordinates[3]*b.coordinates[1]),
+    a.coordinates[1]*b.coordinates[2] - a.coordinates[2]*b.coordinates[1]
+    ])
+end
 #println(normalize(GeometryVector([1,2,3])))
 
 function readPDB(input_file_name :: String)
-  records = Dict{Char, Dict{Int, Array{PDBAtomInfo, 1}}}()
+  records = Dict{Char, Dict{Int, Dict{String, PDBAtomInfo}}}()
   input_file = open(input_file_name, "r")
   while !eof(input_file)
     s = rstrip(readline(input_file), ['\r','\n'])
     if s[1:4] == "ATOM"
       atom = parseAtomInfoFromString(s)
       if !(atom.chainID in keys(records))
-        records[atom.chainID] = Dict{Int, Array{PDBAtomInfo, 1}}()
+        records[atom.chainID] = Dict{Int, Dict{String, PDBAtomInfo}}()
       end
       if !(atom.resSeq in keys(records[atom.chainID]))
-        records[atom.chainID][atom.resSeq] = PDBAtomInfo[]
+        records[atom.chainID][atom.resSeq] = Dict{String, PDBAtomInfo}()
       end
-      push!(records[atom.chainID][atom.resSeq], atom)
+      records[atom.chainID][atom.resSeq][atom.atom] = atom
       #push!(records, parseAtomInfoFromString(s))
     end
   end
   records
 end
 
+getVector = a :: PDBAtomInfo -> GeometryVector([a.x, a.y, a.z])
+
+#this function returns d_{i-1, i+1}, d_{i, i+2}, d_{i-1, i+2}
+function calculateDistances(aminoacids)
+  d1 = len(getVector(aminoacids[3]["CA"]) - getVector(aminoacids[1]["CA"]))
+  d2 = len(getVector(aminoacids[4]["CA"]) - getVector(aminoacids[2]["CA"]))
+  v1 = getVector(aminoacids[2]["CA"]) - getVector(aminoacids[1]["CA"])
+  v2 = getVector(aminoacids[3]["CA"]) - getVector(aminoacids[2]["CA"])
+  v3 = getVector(aminoacids[4]["CA"]) - getVector(aminoacids[3]["CA"])
+  d3 = sign(cross3d(v1, v2)*v3) * len(v1 + v2 + v3)
+  (d1, d2, d3)
+end
+
+function getLocalVectors(aminoacids)
+  #get local coordinate system
+  #i=2
+  v1 = getVector(aminoacids[3]["CA"]) - getVector(aminoacids[2]["CA"])
+  vp = getVector(aminoacids[4]["CA"]) - getVector(aminoacids[2]["CA"])
+  x = normalize(cross3d(v1, vp))
+  y = normalize(cross3d(vp, x))
+  z = normalize(cross3d(x, y))
+  (x, y, z)
+  vectors = Dict{ASCIIString, (Number, Number, Number) }()
+  for (s, e) in [("CA", "C"), ("CA", "N"), ("C", "O")]
+    if haskey(aminoacids[2], e)
+      vectors[string(s, "_", e)] = projectToAxes(
+        getVector(aminoacids[2][e]) - getVector(aminoacids[2][s]),
+        x, y, z)
+    else
+      vectors[string(s, "_", e)] = (0, 0, 0)
+    end
+  end
+  sidechains = Dict{ASCIIString, (Number, Number, Number)}()
+  for e in keys(aminoacids[2])
+    if !(e in ["CA", "C", "N", "O"])
+      sidechains[e] = projectToAxes(
+        getVector(aminoacids[2][e]) - getVector(aminoacids[2]["CA"]),
+        x, y, z)
+    end
+  end
+  (x, y, z, aminoacids[2]["CA"].resName, vectors, sidechains)
+end
+
+function processChainPortion(aminoacids)
+  (d1, d2, d3) = calculateDistances(aminoacids)
+  (x, y, z, aa_name, vectors, sidechains) = getLocalVectors(aminoacids)
+#  println(aa_name)
+#  println(vectors)
+#  println(sidechains)
+end
+
 function load_atom_info(pdb_file_name)
   atom_infos = readPDB(pdb_file_name)
   for chain in keys(atom_infos)
     width = 4
-    ks = [k for k in keys(atom_infos[chain])]
-    for k in width : length(keys(atom_infos[chain]))
-      println(ks[k-width+1: k])
+    ks = sort([k for k in keys(atom_infos[chain])])
+    for k in width : length(ks)
+      # ks[k-width+1: k]
+      processChainPortion([atom_infos[chain][i] for i in ks[k - width + 1 : k]])
+      #return
     end
   end
   #println(atom_infos)
