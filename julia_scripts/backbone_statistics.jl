@@ -1,6 +1,7 @@
 require("ArgParse")
 
 using ArgParse
+import JSON
 
 push!(LOAD_PATH, dirname(@__FILE__()))
 
@@ -202,8 +203,27 @@ function getLocalVectors(aminoacids)
   (x, y, z, aminoacids[2]["CA"].resName, vectors, sidechains)
 end
 
-function makeAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}})
-  
+function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}})
+    result = Dict{String, Dict{(Int, Int, Int), Dict{String, GeometryVector}}}()
+    for (aa, aaInfo) in chainInfo
+        result[aa] = Dict{(Int, Int, Int), Dict{String, GeometryVector}}()
+        for (distances, positions) in aaInfo
+            size = length(positions)
+            result[aa][distances] = Dict{String, GeometryVector}()
+            for x in positions
+                for (k, v) in x
+                    if !haskey(result[aa][distances], k)
+                        result[aa][distances][k] = GeometryVector([0, 0, 0])
+                    end
+                    result[aa][distances][k] += GeometryVector([v[1], v[2], v[3]])
+                end
+            end
+            for k in keys(result[aa][distances])
+                result[aa][distances][k] = result[aa][distances][k] / size
+            end
+        end
+    end
+    result
 end
 
 function processChainPortion(aminoacids, meshSize = 0.3)
@@ -235,12 +255,15 @@ function load_atom_info(pdb_file_name)
       #return
     end
   end
-  println(makeAverage(basechainInfo))
+  r1 = getAverage(basechainInfo)
+  r2 = getAverage(sidechainInfo)
+  (r1, r2)
   #println(makeAverage(sidechainInfo))
 end
 
 function main()
-  load_atom_info("2OSL.pdb")
+    (r1, r2) = load_atom_info("2OSL.pdb")
+    println(JSON.json(r1))
     #parsed_args = parse_commandline()
 
     #input_file = parsed_args["fasta-file"]
