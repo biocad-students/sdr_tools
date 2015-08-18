@@ -91,7 +91,32 @@ end
 #Base.next(S::SlidingWindow, state) = (take(S.iter, S.width), next(S.iter))
 #Base.done(S::SlidingWindow, s) = length(s) >= S.width;
 
+immutable GeometryVector
+  coordinates :: Array{Number, 1}
+end
 
+function GeometryVectorOp2(a :: GeometryVector, b :: GeometryVector, op)
+  GeometryVector(map(op, zip(a.coordinates, b.coordinates)))
+end
+
++(a :: GeometryVector, b :: GeometryVector) = GeometryVectorOp2(a, b, x-> x[1] + x[2])
+-(a :: GeometryVector, b :: GeometryVector) = GeometryVectorOp2(a, b, x-> x[1] - x[2])
+function /(a :: GeometryVector, b :: Number)
+  GeometryVector(map(x -> x/b, a.coordinates))
+end
+function *(a :: GeometryVector, b :: Number)
+  GeometryVector(map(x -> x*b, a.coordinates))
+end
+
+function *(a :: GeometryVector, b :: GeometryVector)
+  sum(map(x -> x[1] * x[2], zip(a.coordinates, b.coordinates)))
+end
+
+len(a :: GeometryVector) = sqrt(a*a)
+#println(len(GeometryVector([1,2,3])))
+
+normalize(a :: GeometryVector) = a/len(a)
+#println(normalize(GeometryVector([1,2,3])))
 
 function readPDB(input_file_name :: String)
   records = Dict{Char, Dict{Int, Array{PDBAtomInfo, 1}}}()
