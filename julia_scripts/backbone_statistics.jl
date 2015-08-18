@@ -170,6 +170,9 @@ function calculateDistances(aminoacids)
   (d1, d2, d3)
 end
 
+AtomPosition = (Number, Number, Number)
+AminoacidInfo = Dict{String, AtomPosition}
+
 function getLocalVectors(aminoacids)
   #get local coordinate system
   #i=2
@@ -178,8 +181,7 @@ function getLocalVectors(aminoacids)
   x = normalize(cross3d(v1, vp))
   y = normalize(cross3d(vp, x))
   z = normalize(cross3d(x, y))
-  (x, y, z)
-  vectors = Dict{ASCIIString, (Number, Number, Number) }()
+  vectors = AminoacidInfo()
   for (s, e) in [("CA", "C"), ("CA", "N"), ("C", "O")]
     if haskey(aminoacids[2], e)
       vectors[string(s, "_", e)] = projectToAxes(
@@ -189,7 +191,7 @@ function getLocalVectors(aminoacids)
       vectors[string(s, "_", e)] = (0, 0, 0)
     end
   end
-  sidechains = Dict{ASCIIString, (Number, Number, Number)}()
+  sidechains = AminoacidInfo()
   for e in keys(aminoacids[2])
     if !(e in ["CA", "C", "N", "O"])
       sidechains[e] = projectToAxes(
@@ -200,26 +202,41 @@ function getLocalVectors(aminoacids)
   (x, y, z, aminoacids[2]["CA"].resName, vectors, sidechains)
 end
 
-function processChainPortion(aminoacids)
-  (d1, d2, d3) = calculateDistances(aminoacids)
+function makeAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}})
+  
+end
+
+function processChainPortion(aminoacids, meshSize = 0.3)
+  distances =  map(x -> convert(Int, round(x / meshSize)), calculateDistances(aminoacids))
   (x, y, z, aa_name, vectors, sidechains) = getLocalVectors(aminoacids)
-#  println(aa_name)
-#  println(vectors)
-#  println(sidechains)
+  (distances, aa_name, vectors, sidechains)
 end
 
 function load_atom_info(pdb_file_name)
   atom_infos = readPDB(pdb_file_name)
+  basechainInfo = Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}}()
+  sidechainInfo = Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}}()
   for chain in keys(atom_infos)
     width = 4
     ks = sort([k for k in keys(atom_infos[chain])])
     for k in width : length(ks)
       # ks[k-width+1: k]
-      processChainPortion([atom_infos[chain][i] for i in ks[k - width + 1 : k]])
+      (d, aa, b, s) = processChainPortion([atom_infos[chain][i] for i in ks[k - width + 1 : k]])
+      if !haskey(basechainInfo, aa)
+        basechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
+        sidechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
+      end
+      if !haskey(basechainInfo[aa], d)
+        basechainInfo[aa][d] = AminoacidInfo[]
+        sidechainInfo[aa][d] = AminoacidInfo[]
+      end
+      push!(basechainInfo[aa][d], b)
+      push!(sidechainInfo[aa][d], s)
       #return
     end
   end
-  #println(atom_infos)
+  println(makeAverage(basechainInfo))
+  #println(makeAverage(sidechainInfo))
 end
 
 function main()
