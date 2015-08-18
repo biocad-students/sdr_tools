@@ -138,6 +138,16 @@ function cross3d(a :: GeometryVector, b :: GeometryVector)
 end
 #println(normalize(GeometryVector([1,2,3])))
 
+function getPDBFileNames(input_file_name :: String)
+  input_file = open(input_file_name, "r")
+  result = String[]
+  while !eof(input_file)
+    push!(result, string(rstrip(readline(input_file)), ".pdb"))
+  end
+  close(input_file)
+  result
+end
+
 function readPDB(input_file_name :: String)
   records = Dict{Char, Dict{Int, Dict{String, PDBAtomInfo}}}()
   input_file = open(input_file_name, "r")
@@ -155,6 +165,7 @@ function readPDB(input_file_name :: String)
       #push!(records, parseAtomInfoFromString(s))
     end
   end
+  close(input_file)
   records
 end
 
@@ -223,7 +234,17 @@ function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{Aminoa
             end
         end
     end
-    result
+    result2 = Dict{String, Dict{(Int, Int, Int), Dict{String, Array{Number, 1}}}}()
+    for (aa, aaInfo) in result
+        result2[aa] = Dict{(Int, Int, Int), Dict{String, Array{Number, 1}}}()
+        for (distances, positions) in aaInfo
+            result2[aa][distances] = Dict{String, Array{Number, 1}}()
+            for (k, v) in positions
+                result2[aa][distances][k] = v.coordinates
+            end
+        end
+    end
+    result2
 end
 
 function processChainPortion(aminoacids, meshSize = 0.3)
@@ -232,40 +253,46 @@ function processChainPortion(aminoacids, meshSize = 0.3)
   (distances, aa_name, vectors, sidechains)
 end
 
-function load_atom_info(pdb_file_name)
-  atom_infos = readPDB(pdb_file_name)
+function load_atom_info(text_file_name)
   basechainInfo = Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}}()
   sidechainInfo = Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}}()
-  for chain in keys(atom_infos)
-    width = 4
-    ks = sort([k for k in keys(atom_infos[chain])])
-    for k in width : length(ks)
-      # ks[k-width+1: k]
-      (d, aa, b, s) = processChainPortion([atom_infos[chain][i] for i in ks[k - width + 1 : k]])
-      if !haskey(basechainInfo, aa)
-        basechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
-        sidechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
+  pdb_file_names = getPDBFileNames(text_file_name)
+  for pdb_file_name in pdb_file_names
+    atom_infos = readPDB(pdb_file_name)
+    for chain in keys(atom_infos)
+      width = 4
+      ks = sort([k for k in keys(atom_infos[chain])])
+      for k in width : length(ks)
+        # ks[k-width+1: k]
+        (d, aa, b, s) = processChainPortion([atom_infos[chain][i] for i in ks[k - width + 1 : k]])
+        if !haskey(basechainInfo, aa)
+          basechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
+          sidechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
+        end
+        if !haskey(basechainInfo[aa], d)
+          basechainInfo[aa][d] = AminoacidInfo[]
+          sidechainInfo[aa][d] = AminoacidInfo[]
+        end
+        push!(basechainInfo[aa][d], b)
+        push!(sidechainInfo[aa][d], s)
       end
-      if !haskey(basechainInfo[aa], d)
-        basechainInfo[aa][d] = AminoacidInfo[]
-        sidechainInfo[aa][d] = AminoacidInfo[]
-      end
-      push!(basechainInfo[aa][d], b)
-      push!(sidechainInfo[aa][d], s)
-      #return
     end
   end
   r1 = getAverage(basechainInfo)
   r2 = getAverage(sidechainInfo)
   (r1, r2)
-  #println(makeAverage(sidechainInfo))
 end
 
-function main()
-    (r1, r2) = load_atom_info("2OSL.pdb")
-    println(JSON.json(r1))
-    #parsed_args = parse_commandline()
 
+function main()
+    (r1, r2) = load_atom_info("list.txt")
+    #parsed_args = parse_commandline()
+    output_file = open("backbone.json", "w")
+    println(output_file, JSON.json(r1))
+    close(output_file)
+    output_file = open("sidechains.json", "w")
+    println(output_file, JSON.json(r2))
+    close(output_file)
     #input_file = parsed_args["fasta-file"]
     #output_file = parsed_args["output-file"]
     #clustering = parsed_args["clustering"]
