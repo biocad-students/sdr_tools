@@ -8,6 +8,10 @@ import ru.biocad.ig.common.structures.geometry.{
 import scala.math.sqrt
 
 object ManifoldUtils {
+
+  def getRMSD(a : Seq[GeometryVector], b : Seq[GeometryVector]) : Double = {
+    sqrt((a, b).zipped.map(_ - _).map(_.lengthSquared).reduceLeft(_ + _)/a.length)
+  }
   //
   def getCofactorsVector(lines : Seq[Seq[Double]], multiplier : Double = 1) : Seq[Double] = lines match {
     case Seq() => Seq(0)
