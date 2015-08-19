@@ -6,7 +6,11 @@ import ru.biocad.ig.common.structures.geometry.{
     Vector, Vector2d, Vector3d,InfiniteVector,
     SimplifiedAminoAcid
   }
-
+import spray.json._
+import scala.io.Source
+//import ru.biocad.ig.alascan.constants.json.AlascanConstantsJsonProtocol
+//import ru.biocad.ig.alascan.constants.json.AlascanConstantsJsonProtocol._
+import ru.biocad.ig.alascan.constants.BackboneInfo
 //TODO: update scala, find out wtf wrong with alphabet's calling
 
 
@@ -26,6 +30,15 @@ object SimplifiedAATest{
       new SimplifiedAminoAcid(a._2)
     })
     println(filtered_map.head.toString)
-    println(Vector3d(1,0,0)**Vector3d(0,1,0))
+    println(Vector3d(1, 0, 0)**Vector3d(0,1,0))
+  }
+}
+
+object JSONTest{
+
+  def main(args : Array[String]) = {
+    println("testing JSON")
+    val bi = JsonParser(Source.fromFile("backbone.json").getLines().mkString("")).convertTo[BackboneInfo]
+
   }
 }
