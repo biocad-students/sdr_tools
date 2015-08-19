@@ -7,6 +7,7 @@ import ru.biocad.ig.common.structures.geometry.{
     SimplifiedAminoAcid
   }
 import spray.json._
+import DefaultJsonProtocol._
 import scala.io.Source
 //import ru.biocad.ig.alascan.constants.json.AlascanConstantsJsonProtocol
 //import ru.biocad.ig.alascan.constants.json.AlascanConstantsJsonProtocol._
@@ -38,7 +39,7 @@ object JSONTest{
 
   def main(args : Array[String]) = {
     println("testing JSON")
-    val bi = JsonParser(Source.fromFile("backbone.json").getLines().mkString("")).convertTo[BackboneInfo]
-
+    val bi = JsonParser(Source.fromFile("backbone.json").getLines().mkString("")).convertTo[Map[String, Map[String, Map[String, Seq[Double]]]]]
+    println(bi("LEU")("(20,22,-32)"))
   }
 }
