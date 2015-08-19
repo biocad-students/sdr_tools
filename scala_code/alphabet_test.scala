@@ -15,31 +15,39 @@ import ru.biocad.ig.alascan.constants.BackboneInfo
 //TODO: update scala, find out wtf wrong with alphabet's calling
 
 
-object SimplifiedAATest{
-
+object SimplifiedAACreationTest{
   def main(args : Array[String]) = {
     println("testing")
     val structure : PDBStructure = new PDBStructure()
     structure.readFile("2OSL.pdb")
-    val aa_by_chain = new PDBAminoAcidCollection(structure)
     //println(typename(aa_by_chain.aminoacids) )
-    println(aa_by_chain.chains)
-    val aas = aa_by_chain.aminoacids('L').keys.take(5).toSeq
+    val aa_by_chain = new PDBAminoAcidCollection(structure)
+    val aas = aa_by_chain.aminoacids('L').keys.toSeq.sorted.take(5)
     println(aas)
-    val filtered_map = aa_by_chain.aminoacids('L').filter(k=>aas.contains(k._1)).map( a =>
-    {
-      new SimplifiedAminoAcid(a._2)
-    })
+    val filtered_map = aas.map(aa => new SimplifiedAminoAcid(aa_by_chain.aminoacids('L')(aa)))
     println(filtered_map.head.toString)
     println(Vector3d(1, 0, 0)**Vector3d(0,1,0))
   }
 }
 
-object JSONTest{
-
+object JSONLoadingTest{
   def main(args : Array[String]) = {
     println("testing JSON")
     val bi = JsonParser(Source.fromFile("backbone.json").getLines().mkString("")).convertTo[Map[String, Map[String, Map[String, Seq[Double]]]]]
     println(bi("LEU")("(20,22,-32)"))
+  }
+}
+
+object SubchainBackboneReconstructionTest{
+  def main(args : Array[String]) = {
+    println("testing backbone reconstruction...")
+    val structure : PDBStructure = new PDBStructure()
+    structure.readFile("2OSL.pdb")
+    println("local file read - ok")
+    val aa_by_chain = new PDBAminoAcidCollection(structure)
+    val aas = aa_by_chain.aminoacids('L').keys.toSeq.sorted.take(5)
+    println(aas)
+    val filtered_map = aas.map(aa => new SimplifiedAminoAcid(aa_by_chain.aminoacids('L')(aa)))
+    println(filtered_map.head.atomsMap.toString)
   }
 }

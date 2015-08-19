@@ -22,10 +22,8 @@ class Rotamer(val atoms : Seq[PDBAtomInfo], val ca : GeometryVector) {
 
 class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
   val name = atoms.head.resName
-  val ca : GeometryVector = atoms.find{_.atom.trim == "CA"} match{
-    case Some(value) => Vector3d(value.x, value.y, value.z)
-    case None => Vector3d(0.0, 0.0, 0.0)
-    }
+  val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
+  val ca : GeometryVector = Vector3d(atomsMap("CA").x, atomsMap("CA").y, atomsMap("CA").z)
   //FIX: ..
   /** there should be rotamer center+radius.
   If rotamer center is changed and ca moved,  we should recompute all atoms when moving back to full-atom model.

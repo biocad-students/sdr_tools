@@ -23,7 +23,7 @@ case class PDBAtomInfo(
 object PDBAtomInfo {
   def apply(line: String) : PDBAtomInfo = PDBAtomInfo(
     serial = line.substring(6, 11).trim.toInt,
-    atom = line.substring(12, 16),
+    atom = line.substring(12, 16).trim,
     altLoc = line.charAt(16),
     resName = line.substring(17, 20),
     chainID = line.charAt(21),
