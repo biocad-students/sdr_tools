@@ -1,4 +1,4 @@
-name := "hello"
+name := "sdr_tools"
 
 version := "1.0"
 
