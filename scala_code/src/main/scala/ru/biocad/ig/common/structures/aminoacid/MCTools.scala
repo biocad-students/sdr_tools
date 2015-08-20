@@ -1,7 +1,8 @@
-package ru.biocad.ig.common.structures.geometry
+package ru.biocad.ig.common.structures.aminoacid
 
 import ru.biocad.ig.common.io.pdb.{PDBStructure, PDBAtomInfo, PDBAminoAcidCollection}
 
+import ru.biocad.ig.common.structures.geometry._
 //class LatticeVector = Seq[Int]
 /** should represent basic general lattice with given meshSize and set of basic vectors.
   * should convert real pdb coordinates to lattice coordinates and vice versa,
