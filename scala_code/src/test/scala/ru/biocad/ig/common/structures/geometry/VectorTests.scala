@@ -18,6 +18,11 @@ class VectorTests extends FlatSpec with Matchers {
     (Vector3d(0, 1, 2)) should equal (new Vector(Seq(0, 1, 2)))
     (Vector2d(0, 1)) should not equal(Vector3d(0, 1, 2))
   }
+  
+  it should "compute unit vector correctly" in {
+    val a : Vector = new Vector(Seq(3, 4, 5))
+    (math.abs(a.normalize.length - 1.0)) should be < 0.001
+  }
 
   "InfiniteVector" should "be special case" in {
     val InfiniteVector3d = new InfiniteVector(3)
