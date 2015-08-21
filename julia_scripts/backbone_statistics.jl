@@ -234,17 +234,29 @@ function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{Aminoa
             end
         end
     end
-    result2 = Dict{String, Dict{(Int, Int, Int), Dict{String, Array{Number, 1}}}}()
+    #result2 = Dict{String, Dict{(Int, Int, Int), Dict{String, Array{Number, 1}}}}()
+    result2 = Dict{String, Dict{Int, Dict{Int, Dict{Int, Dict{String, Array{Number, 1}}}}}}()
     for (aa, aaInfo) in result
-        result2[aa] = Dict{(Int, Int, Int), Dict{String, Array{Number, 1}}}()
-        for (distances, positions) in aaInfo
-            result2[aa][distances] = Dict{String, Array{Number, 1}}()
+        result2[aa] = Dict{Int, Dict{Int, Dict{Int, Dict{String, Array{Number, 1}}}}}()
+        for ((d1, d2, d3), positions) in aaInfo
+            if !haskey(result2[aa], d1)
+              result2[aa][d1] = Dict{Int, Dict{Int, Dict{String, Array{Number, 1}}}}()
+            end
+            if !haskey(result2[aa][d1], d2)
+              result2[aa][d1][d2] = Dict{Int, Dict{String, Array{Number, 1}}}()
+            end
+            if !haskey(result2[aa][d1][d2], d3)
+              result2[aa][d1][d2][d3] = Dict{String, Array{Number, 1}}()
+            end
             for (k, v) in positions
-                result2[aa][distances][k] = v.coordinates
+                result2[aa][d1][d2][d3][k] = v.coordinates
             end
         end
     end
     result2
+    #result2 = Dict{String, Dict{(Int, Int, Int), Dict{String, Array{Number, 1}}}}()
+    result2
+
 end
 
 function processChainPortion(aminoacids, meshSize = 0.3)
