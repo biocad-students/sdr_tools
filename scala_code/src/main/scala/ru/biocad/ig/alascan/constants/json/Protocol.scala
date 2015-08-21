@@ -22,6 +22,6 @@ object AlascanConstantsJsonProtocol extends DefaultJsonProtocol {
       }
     }
   }
-
 }
+
 import AlascanConstantsJsonProtocol._

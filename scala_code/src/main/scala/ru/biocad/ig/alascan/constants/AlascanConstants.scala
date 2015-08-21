@@ -6,7 +6,7 @@ case class BackboneInfo(
     def restoreCoordinates(aminoacid : String,
       d1 : Double,
       d2 : Double,
-      d3 : Double) = {
+      d3 : Double) : Map[String, Seq[Double]] = {
       val i1 = math.round(d1 / meshSize).toInt
       val i2 = math.round(d2 / meshSize).toInt
       val i3 = math.round(d3 / meshSize).toInt

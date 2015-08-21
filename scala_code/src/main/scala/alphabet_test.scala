@@ -15,8 +15,10 @@ import ru.biocad.ig.alascan.constants.json.AlascanConstantsJsonProtocol._
 import ru.biocad.ig.alascan.constants.BackboneInfo
 //TODO: update scala, find out wtf wrong with alphabet's calling
 
+import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
 
-object SimplifiedAACreationTest{
+
+object SimplifiedAACreationTest {
   def main(args : Array[String]) = {
     println("testing")
     val structure : PDBStructure = new PDBStructure()
@@ -39,12 +41,15 @@ object JSONLoadingTest{
     val bi2 = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[BackboneInfo]
     println(bi2.data("LEU")(20)(22)(-32))
     println(bi2.meshSize)
-    println(bi2.restoreCoordinates("LEU", 20, 22, -33))
+    println(bi2.restoreCoordinates("LEU", 20*0.3, 22*0.3, -32*0.3))
+
   }
 }
 
+
+
 object SubchainBackboneReconstructionTest{
-  def main(args : Array[String]) = {
+  def main(args : Array[String]) : Unit = {
     println("testing backbone reconstruction...")
     val structure : PDBStructure = new PDBStructure()
     structure.readFile(getClass.getResource("/2OSL.pdb").getFile())
@@ -54,5 +59,15 @@ object SubchainBackboneReconstructionTest{
     println(aas)
     val filtered_map = aas.map(aa => new SimplifiedAminoAcid(aa_by_chain.aminoacids('L')(aa)))
     println(filtered_map.head.atomsMap.toString)
+    val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[BackboneInfo]
+    val result = filtered_map.sliding(4, 1).map({case Seq(a1, a2, a3, a4) => {
+      val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
+      val coordinatesMap = backboneInfo.restoreCoordinates(a2.name, d1, d2, d3)
+      val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
+      coordinatesMap.map({
+        case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.toSeq))
+      })
+    }}).toList
+    println(result)
   }
 }
