@@ -25,6 +25,8 @@ sealed trait GeometryVector {
   //tries to compute vector product for given pair of vectors, based on 1st 3 coordinates
   def ** (v : GeometryVector) : GeometryVector = new Vector(ManifoldUtils.getCofactorsVector(Seq(coordinates, v.coordinates)))
 
+  def normalize() : GeometryVector = this/this.length
+
   def *(multiplier : Double) : GeometryVector = new Vector( coordinates.map( multiplier * _ ) )
   def /(divider : Double) : GeometryVector = new Vector( coordinates.map( _ / divider) )
 
