@@ -23,11 +23,18 @@ object AminoacidUtils{
   ) : (GeometryVector, GeometryVector, GeometryVector) = {
 
     val v1 = p3 - p2
-    val vp = p4-p2
+    val vp = p4 - p2
     val x = (v1 ** vp).normalize
     val y = (vp ** x).normalize
     val z = (x ** y).normalize
     (x, y, z)
+  }
+
+  /**
+  returns global coordinates for given axes and atom's local coordinates
+  */
+  def getGlobalCoordinates(localAxes : Seq[GeometryVector], localCoordinates : Seq[Double]) : GeometryVector = {
+    (localAxes, localCoordinates).zipped.map(_ * _).reduceLeft(_ + _)
   }
 
   /**

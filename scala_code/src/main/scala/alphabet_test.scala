@@ -7,10 +7,11 @@ import ru.biocad.ig.common.structures.geometry.{
 
 import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoAcid}
 import spray.json._
-import DefaultJsonProtocol._
+//import DefaultJsonProtocol._
 import scala.io.Source
-//import ru.biocad.ig.alascan.constants.json.AlascanConstantsJsonProtocol
-//import ru.biocad.ig.alascan.constants.json.AlascanConstantsJsonProtocol._
+
+import ru.biocad.ig.alascan.constants.json.AlascanConstantsJsonProtocol
+import ru.biocad.ig.alascan.constants.json.AlascanConstantsJsonProtocol._
 import ru.biocad.ig.alascan.constants.BackboneInfo
 //TODO: update scala, find out wtf wrong with alphabet's calling
 
@@ -33,8 +34,10 @@ object JSONLoadingTest{
   def main(args : Array[String]) = {
     println("testing JSON")
 
-    val bi = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[Map[String, Map[String, Map[String, Seq[Double]]]]]
-    println(bi("LEU")("(20,22,-32)"))
+    //val bi = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[Map[String, Map[String, Map[String, Seq[Double]]]]]
+    //println(bi("LEU")("(20,22,-32)"))
+    val bi2 = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[BackboneInfo]
+    println(bi2)
   }
 }
 
