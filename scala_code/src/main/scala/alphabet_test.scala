@@ -26,7 +26,6 @@ object SimplifiedAACreationTest{
     println(aas)
     val filtered_map = aas.map(aa => new SimplifiedAminoAcid(aa_by_chain.aminoacids('L')(aa)))
     println(filtered_map.head.toString)
-    println(Vector3d(1, 0, 0)**Vector3d(0,1,0))
   }
 }
 
