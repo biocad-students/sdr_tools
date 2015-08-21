@@ -37,7 +37,8 @@ object JSONLoadingTest{
     //val bi = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[Map[String, Map[String, Map[String, Seq[Double]]]]]
     //println(bi("LEU")("(20,22,-32)"))
     val bi2 = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[BackboneInfo]
-    println(bi2)
+    println(bi2.data("LEU")(20)(22)(-32))
+    println(bi2.meshSize)
   }
 }
 
