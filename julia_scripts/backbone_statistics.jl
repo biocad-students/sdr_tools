@@ -280,7 +280,7 @@ function load_atom_info(text_file_name)
   end
   r1 = getAverage(basechainInfo)
   r2 = getAverage(sidechainInfo)
-  (r1, r2)
+  ({"data" => r1, "meshSize" => 0.3}, r2)
 end
 
 
@@ -288,7 +288,7 @@ function main()
     (r1, r2) = load_atom_info("list.txt")
     #parsed_args = parse_commandline()
     output_file = open("backbone.json", "w")
-    println(output_file, JSON.json(r1))
+    println(output_file, JSON.json(r1, 1))
     close(output_file)
     output_file = open("sidechains.json", "w")
     println(output_file, JSON.json(r2))

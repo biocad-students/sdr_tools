@@ -18,7 +18,7 @@ class VectorTests extends FlatSpec with Matchers {
     (Vector3d(0, 1, 2)) should equal (new Vector(Seq(0, 1, 2)))
     (Vector2d(0, 1)) should not equal(Vector3d(0, 1, 2))
   }
-  
+
   it should "compute unit vector correctly" in {
     val a : Vector = new Vector(Seq(3, 4, 5))
     (math.abs(a.normalize.length - 1.0)) should be < 0.001
@@ -39,5 +39,8 @@ class VectorTests extends FlatSpec with Matchers {
     (b + InfiniteVector3d) should equal(InfiniteVector3d)
   }
 
-  it should "support lifting correctly"
+  it should "support lifting/unlifting correctly" in {
+    val v = Vector3d(3, 4, 5)
+    (v.lifted.unlifted) should equal (v)
+  }
 }
