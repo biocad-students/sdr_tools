@@ -22,33 +22,6 @@ object StructureTest {
   }
 }
 
-object VectorTest {
-  def main(args : Array[String]) = {
-    println("testing")
-    val a : Vector = new Vector(Seq(-3, 4))
-    val b : GeometryVector = new Vector(Seq(1, 0, 1.0))
-    val c : GeometryVector = new Vector(Seq(1, 0, 1.0))
-    println(a)
-    println(b)
-    println(a - b)
-    println(a + b)
-    println(a == b)
-    println(a * b)
-    println(a.length)
-    println(b == c)
-    println(Seq(b, c).distinct)
-    println(Set(b, c))
-    println(a.lengthSquared)
-    println(a.distanceTo(b))
-    println(b.distanceTo(a))
-    println((a*2).lengthSquared)
-    println(a, a*2)
-    println(Vector2d(0, 3))
-    println(Vector3d(0, 3, 4))
-
-    //println(2*a) -- this doesn't work now
-  }
-}
 
 object DeterminantTest {
   def main(args : Array[String]) : Unit = {
@@ -337,24 +310,6 @@ object UpdateSimplicesTest2{
     val t2 =ManifoldUtils.updateSimplices(tetrahedras, f)
     println(t2)
     println(ManifoldUtils.updateSimplices(t2, x))
-  }
-}
-
-object EqualityTest{
-  def main(args:Array[String]) = {
-    println("testing equality")
-    val a = Vector3d(0, 0, 0)
-    val b = Vector3d(0, 0, 100)
-    val c = Vector3d(100, 0, 0)
-    val d = Vector3d(0, 100, 0)
-    val t1 = new Tetrahedra(a, b, c, d)
-    val t2 = new Tetrahedra(a, c, b, d)
-    println(t1.equals(t2))
-    println(t2.equals(t1))
-    println("finding distinct tetrahedras")
-    println(Set(t1, t2))
-    println("finding distinct tetrahedras 2")
-    println(Seq(t1, t2).toSet.toSeq)
   }
 }
 
