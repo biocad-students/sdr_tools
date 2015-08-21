@@ -254,9 +254,6 @@ function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{Aminoa
         end
     end
     result2
-    #result2 = Dict{String, Dict{(Int, Int, Int), Dict{String, Array{Number, 1}}}}()
-    result2
-
 end
 
 function processChainPortion(aminoacids, meshSize = 0.3)
@@ -305,23 +302,6 @@ function main()
     output_file = open("sidechains.json", "w")
     println(output_file, JSON.json(r2))
     close(output_file)
-    #input_file = parsed_args["fasta-file"]
-    #output_file = parsed_args["output-file"]
-    #clustering = parsed_args["clustering"]
-    #score_matrix_file = parsed_args["score-matrix"]
-    #score_matrix = readMatrix(score_matrix_file)
-    #println("Score matrix loaded...")
-
-    #ProfileAligner.setScoringMatrix(score_matrix)
-    #fasta_sequences = readSequences(input_file)
-    #println("FASTA sequences loaded...")
-    #seq = strToProfiles( fasta_sequences)
-    #println("Sequences converted to profiles successfully, starting tree construction...")
-    #result = (clustering == "N" ? NeighbourJoining(seq, scoreFunc, mergeFunc) :
-    #  clustering == "W" ? WPGMA(seq, scoreFunc, mergeFunc) : UPGMA(seq, scoreFunc, mergeFunc) )
-    #println("Tree constructed, writing to output_file...")
-    #writeSequences(output_file, getstrings(result))
-    #println("All done, go and do smthng else")
 end
 
 main()
