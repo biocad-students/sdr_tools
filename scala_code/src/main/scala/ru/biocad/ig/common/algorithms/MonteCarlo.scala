@@ -1,9 +1,10 @@
 package ru.biocad.ig.common.algorithms
 
+import ru.biocad.ig.common.structures.geometry.LatticeBasicMove
 import scala.util.Random
 /**
 object MonteCarloRunner{
-  def run(structure, moves, getEnergy, ck_rule, numberOfMoves = 1000) {
+  def run(structure, moves :: Seq[LatticeBasicMove], getEnergy, ck_rule, numberOfMoves = 1000) {
     Stream.continually(
       (
         Random.nextInt(structure.length),
@@ -24,5 +25,4 @@ object MonteCarloRunner{
 
     }
   }
-}
-*/
+}*/
