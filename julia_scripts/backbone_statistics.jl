@@ -149,7 +149,7 @@ function getPDBFileNames(input_file_name :: String)
   result
 end
 
-function readPDB(input_file_name :: String)
+function readPDB_old(input_file_name :: String)
   records = Dict{Char, Dict{Int, Dict{String, PDBAtomInfo}}}()
   input_file = open(input_file_name, "r")
   while !eof(input_file)
@@ -168,6 +168,21 @@ function readPDB(input_file_name :: String)
   end
   close(input_file)
   records
+end
+
+function readPDB(input_file_name :: String)
+  records = Dict{Char, Dict{Int, Dict{String, PDBAtomInfo}}}()
+  input_file = open(input_file_name, "r")
+  result = Array{PDBAtomInfo, 1}()
+  for str in readline(input_file)
+    atom = rstrip(str, ['\r', '\n'])
+    if s[1:4] == "ATOM"
+      push!(result, parseAtomInfoFromString(s))
+    end
+  end
+  close(input_file)
+  rr = [ [y for y in groupby(a->a.resName, xs)] for xs in groupby(a -> a.chainID, result)]
+println(rr)
 end
 
 getVector = a :: PDBAtomInfo -> GeometryVector([a.x, a.y, a.z])
@@ -263,7 +278,7 @@ function processChainPortion(aminoacids, meshSize = 0.3)
   (distances, aa_name, vectors, sidechains)
 end
 
-function load_atom_info(text_file_name)
+function load_atom_info_old(text_file_name)
   basechainInfo = Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}}()
   sidechainInfo = Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}}()
   pdb_file_names = getPDBFileNames(text_file_name)
@@ -291,6 +306,38 @@ function load_atom_info(text_file_name)
   r1 = getAverage(basechainInfo)
   r2 = getAverage(sidechainInfo)
   ({"data" => r1, "meshSize" => 0.3}, r2)
+end
+
+
+function load_atom_info(text_file_name)
+  basechainInfo = Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}}()
+  sidechainInfo = Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}}()
+  pdb_file_names = getPDBFileNames(text_file_name)
+  for pdb_file_name in pdb_file_names
+    atom_infos = readPDB(pdb_file_name)
+    for chain in keys(atom_infos)
+      #width = 4
+      #ks = sort([k for k in keys(atom_infos[chain])])
+      for aminoacids in partition(atom_infos[chain], 4, 1)
+        # ks[k-width+1: k]
+        (d, aa, b, s) = processChainPortion(aminoacids)
+        if !haskey(basechainInfo, aa)
+          basechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
+          sidechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
+        end
+        if !haskey(basechainInfo[aa], d)
+          basechainInfo[aa][d] = AminoacidInfo[]
+          sidechainInfo[aa][d] = AminoacidInfo[]
+        end
+        push!(basechainInfo[aa][d], b)
+        push!(sidechainInfo[aa][d], s)
+      end
+    end
+  end
+  r1 = getAverage(basechainInfo)
+  r2 = getAverage(sidechainInfo)
+  ( {"data" => r1, "meshSize" => 0.3},
+    {"data" => r2, "threshold" => 1.7, "meshSize": 0.3})
 end
 
 
