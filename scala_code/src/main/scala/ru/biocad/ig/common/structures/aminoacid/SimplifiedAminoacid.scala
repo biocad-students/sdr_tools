@@ -7,7 +7,7 @@ import ru.biocad.ig.common.structures.geometry._
 class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
   val name = atoms.head.resName
   val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
-  val ca : GeometryVector = Vector3d(atomsMap("CA").x, atomsMap("CA").y, atomsMap("CA").z)
+  var ca : GeometryVector = Vector3d(atomsMap("CA").x, atomsMap("CA").y, atomsMap("CA").z)
   //FIX: ..
   /** there should be rotamer center+radius.
   If rotamer center is changed and ca moved,  we should recompute all atoms when moving back to full-atom model.
@@ -34,4 +34,12 @@ class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
     "\nrotamer: ",
     rotamer.toString
   ).mkString("SimplifiedAminoacid{\n", "\n ", "\n}")
+
+  def move(shift : GeometryVector) : SimplifiedAminoAcid = {
+    val result = new SimplifiedAminoAcid(atoms)
+    result.ca = this.ca + shift
+    result
+  }
+
+  def moveRotamer(shift : GeometryVector) : SimplifiedAminoAcid = ???
 }
