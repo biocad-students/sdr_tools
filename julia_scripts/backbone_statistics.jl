@@ -182,8 +182,8 @@ function calculateDistances(aminoacids)
   (d1, d2, d3)
 end
 
-AtomPosition = (Number, Number, Number)
-AminoacidInfo = Dict{String, AtomPosition}
+typealias AtomPosition (Number, Number, Number)
+typealias AminoacidInfo Dict{String, AtomPosition}
 
 function getLocalVectors(aminoacids)
   #get local coordinate system
@@ -194,9 +194,9 @@ function getLocalVectors(aminoacids)
   y = normalize(cross3d(vp, x))
   z = normalize(cross3d(x, y))
   vectors = AminoacidInfo()
-  for (s, e) in [("CA", "C"), ("CA", "N"), ("C", "O")]
+  for (s, e) in [("CA", "C"), ("CA", "N"), ("CA", "O")]
     if haskey(aminoacids[2], e)
-      vectors[string(s, "_", e)] = projectToAxes(
+      vectors[e] = projectToAxes(
         getVector(aminoacids[2][e]) - getVector(aminoacids[2][s]),
         x, y, z)
     else
