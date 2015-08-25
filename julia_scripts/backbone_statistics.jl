@@ -1,6 +1,7 @@
 require("ArgParse")
+require("Iterators")
 
-using ArgParse
+using ArgParse, Iterators
 import JSON
 
 push!(LOAD_PATH, dirname(@__FILE__()))
