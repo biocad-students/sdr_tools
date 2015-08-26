@@ -273,6 +273,76 @@ function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{Aminoa
     result2
 end
 
+
+type RotamerInfo
+  representatives :: Array{Rotamer, 1}
+  total :: Int
+  amounts :: Array{Int, 1}
+end
+
+RotamerInfo() = RotamerInfo(Rotamer[], 0, Int[])
+
+#helper method.returns index of nearest rotamer group. or zero if no one is found
+function findRotamerGroup(representatives :: Array{Rotamer, 1}, rotamer :: Rotamer, threshold :: Number = 1.7)
+  for i in 1:length(representatives)
+    if (len(representatives[i].center - rotamer.center) < threshold)
+      return i
+    end
+  end
+  0
+end
+
+function buildLibraryFragment!(destination :: RotamerInfo, positions :: Array{Rotamer, 1})
+  #1. group by number of representatives
+  # todo: when select greatest. if 1, take unaffected
+  # at first - make it simple, but ugly
+  for rotamerGroup in sort(collect(groupby(r-> r.center, positions)), by=length, rev=true)
+    i = findRotamerGroup(destination.representatives, rotamerGroup[1])
+    if (i == 0)
+      # add new rotamer to library
+      push!(destination.representatives, rotamerGroup[1]) #add only 1 rotamer, they are the same
+      push!(destination.amounts, length(rotamerGroup))
+    else
+      #add rotamer to existing cluster i
+      destination.amounts[i] += length(rotamerGroup)
+    end
+    destination.total += length(rotamerGroup)
+  end
+end
+
+function getRotamerDb(rotamers :: Dict{String, Dict{(Int, Int, Int), Array{Rotamer, 1}}})
+    result = Dict{String, Dict{(Int, Int, Int), RotamerInfo}}()
+    for (aa, aaInfo) in rotamers
+        result[aa] = Dict{(Int, Int, Int), RotamerInfo}()
+        for (distances, positions) in aaInfo
+            size = length(positions)
+            result[aa][distances] = RotamerInfo()
+            buildLibraryFragment!(result[aa][distances], positions)
+        end
+    end
+    result
+    #result2 = Dict{String, Dict{(Int, Int, Int), Dict{String, Array{Number, 1}}}}()
+    #result2 = Dict{String, Dict{Int, Dict{Int, Dict{Int, RotamerInfo}}}}()
+    #for (aa, aaInfo) in result
+    #    result2[aa] = Dict{Int, Dict{Int, Dict{Int, Dict{String, Array{Number, 1}}}}}()
+    #    for ((d1, d2, d3), positions) in aaInfo
+    #        if !haskey(result2[aa], d1)
+    #          result2[aa][d1] = Dict{Int, Dict{Int, Dict{String, Array{Number, 1}}}}()
+    #        end
+    #        if !haskey(result2[aa][d1], d2)
+    #          result2[aa][d1][d2] = Dict{Int, Dict{String, Array{Number, 1}}}()
+    #        end
+    #        if !haskey(result2[aa][d1][d2], d3)
+    #          result2[aa][d1][d2][d3] = Dict{String, Array{Number, 1}}()
+    #        end
+    #        for (k, v) in positions
+    #            result2[aa][d1][d2][d3][k] = v.coordinates
+    #        end
+    #    end
+    #end
+    #result2
+end
+
 function processChainPortion(aminoacids, meshSize = 0.3)
   distances =  map(x -> convert(Int, round(x / meshSize)), calculateDistances(aminoacids))
   (x, y, z, aa_name, vectors, sidechains) = getLocalVectors(aminoacids)
@@ -318,7 +388,7 @@ function main()
     println(output_file, JSON.json(r1, 1))
     close(output_file)
     output_file = open("sidechains.json", "w")
-    println(output_file, JSON.json(r2))
+    println(output_file, JSON.json(r2, 1))
     close(output_file)
 end
 
