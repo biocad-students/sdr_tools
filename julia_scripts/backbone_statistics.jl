@@ -106,6 +106,7 @@ end
 function /(a :: GeometryVector, b :: Number)
   GeometryVector(map(x -> x/b, a.coordinates))
 end
+
 function *(a :: GeometryVector, b :: Number)
   GeometryVector(map(x -> x*b, a.coordinates))
 end
@@ -138,6 +139,13 @@ function cross3d(a :: GeometryVector, b :: GeometryVector)
     ])
 end
 #println(normalize(GeometryVector([1,2,3])))
+
+type Rotamer
+  atoms :: Dict{String, (Number, Number, Number)}
+  center :: GeometryVector
+end
+Rotamer() = Rotamer(Dict{String, (Number, Number, Number)}(), GeometryVector([0, 0, 0]))
+
 
 function getPDBFileNames(input_file_name :: String)
   input_file = open(input_file_name, "r")
@@ -205,15 +213,22 @@ function getLocalVectors(aminoacids)
       vectors[string(s, "_", e)] = (0, 0, 0)
     end
   end
-  sidechains = AminoacidInfo()
+  sidechain = Rotamer()
   for e in keys(aminoacids[2])
     if !(e in ["CA", "C", "N", "O"])
-      sidechains[e] = projectToAxes(
+      sidechain.atoms[e] = projectToAxes(
         getVector(aminoacids[2][e]) - getVector(aminoacids[2]["CA"]),
         x, y, z)
     end
   end
-  (x, y, z, aminoacids[2]["CA"].resName, vectors, sidechains)
+  #println(map(x->GeometryVector([x[1], x[2], x[3]]), values(sidechain.atoms)))
+  sidechainLength = length(values(sidechain.atoms))
+  if (sidechainLength > 0)
+    sidechain.center = sum(
+      map(x->GeometryVector([x[1], x[2], x[3]]),
+      values(sidechain.atoms)))/sidechainLength
+  end
+  (x, y, z, aminoacids[2]["CA"].resName, vectors, sidechain)
 end
 
 function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}})
@@ -266,7 +281,7 @@ end
 
 function load_atom_info(text_file_name)
   basechainInfo = Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}}()
-  sidechainInfo = Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}}()
+  sidechainInfo = Dict{String, Dict{(Int, Int, Int), Array{Rotamer, 1}}}()
   pdb_file_names = getPDBFileNames(text_file_name)
   for pdb_file_name in pdb_file_names
     atom_infos = readPDB(pdb_file_name)
@@ -278,11 +293,11 @@ function load_atom_info(text_file_name)
         (d, aa, b, s) = processChainPortion([atom_infos[chain][i] for i in ks[k - width + 1 : k]])
         if !haskey(basechainInfo, aa)
           basechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
-          sidechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
+          sidechainInfo[aa] = Dict{(Int, Int, Int), Array{Rotamer, 1}}()
         end
         if !haskey(basechainInfo[aa], d)
           basechainInfo[aa][d] = AminoacidInfo[]
-          sidechainInfo[aa][d] = AminoacidInfo[]
+          sidechainInfo[aa][d] = Rotamer[]
         end
         push!(basechainInfo[aa][d], b)
         push!(sidechainInfo[aa][d], s)
@@ -290,7 +305,7 @@ function load_atom_info(text_file_name)
     end
   end
   r1 = getAverage(basechainInfo)
-  r2 = getAverage(sidechainInfo)
+  r2 = getRotamerDb(sidechainInfo)
   ( {"data" => r1, "meshSize" => 0.3},
     {"data" => r2, "threshold" => 1.7, "meshSize"=> 0.3})
 end
