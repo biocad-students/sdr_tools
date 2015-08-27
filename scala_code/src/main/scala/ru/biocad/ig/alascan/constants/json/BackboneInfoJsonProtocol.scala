@@ -1,25 +1,20 @@
 package ru.biocad.ig.alascan.constants.json
 
 import spray.json._
-import ru.biocad.ig.alascan.constants.{BackboneInfo}
+import ru.biocad.ig.alascan.constants.BackboneInfo
+
+import ru.biocad.ig.common.structures.geometry.GeometryVector
+
+import GeometryVectorJsonProtocol._
 
 
 object BackboneInfoJsonProtocol extends DefaultJsonProtocol {
-
   implicit object BackboneInfoJsonFormat extends RootJsonFormat[BackboneInfo] {
     def write(info: BackboneInfo) = info.toJson
 
     def read(value: JsValue) = {
-      value.asJsObject.getFields("data", "meshSize") match {
-        case Seq(JsObject(data), JsNumber(meshSize)) => {
-          new BackboneInfo(data.mapValues(_.convertTo[Map[String, JsValue]].map({
-            case (k, v) => (k.toInt, v.convertTo[Map[String, JsValue]].map({
-              case (k, v) => (k.toInt, v.convertTo[Map[String, Map[String, Seq[Double]]]].map({
-            case (k,v) => (k.toInt, v)
-          }))}))})), meshSize.toDouble)
-          }
-        case _ => throw new DeserializationException("BackboneInfo expected")
-      }
+          new BackboneInfo(value.convertTo[Map[String, JsValue]].mapValues(_.convertTo[GeometryVector]))
+        //case _ => throw new DeserializationException("BackboneInfo expected")
     }
   }
 }

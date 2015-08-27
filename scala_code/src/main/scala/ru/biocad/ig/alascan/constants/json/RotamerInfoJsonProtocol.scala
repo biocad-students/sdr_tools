@@ -3,21 +3,22 @@ package ru.biocad.ig.alascan.constants.json
 import spray.json._
 import ru.biocad.ig.alascan.constants.RotamerInfo
 
-object RotamerLibraryJsonProtocol extends DefaultJsonProtocol {
-  implicit object RotamerLibraryJsonFormat extends RootJsonFormat[RotamerLibrary] {
-    def write(info: RotamerLibrary) = info.toJson
+import ru.biocad.ig.common.structures.aminoacid.Rotamer
+import RotamerJsonProtocol._
+
+object RotamerInfoJsonProtocol extends DefaultJsonProtocol {
+  implicit object RotamerInfoFormat extends RootJsonFormat[RotamerInfo] {
+    def write(info: RotamerInfo) = info.toJson
 
     def read(value: JsValue) = {
-      value.asJsObject.getFields("data", "meshSize") match {
-        case Seq(JsObject(data), JsNumber(meshSize)) => {
-          new RotamerLibrary(data.mapValues(_.convertTo[Map[String, JsValue]].map({
-            case (k, v) => (k.toInt, v.convertTo[Map[String, JsValue]].map({
-              case (k, v) => (k.toInt, v.convertTo[Map[String, Map[String, Seq[Double]]]].map({
-            case (k,v) => (k.toInt, v)
-          }))}))})), meshSize.toDouble)
+      println(value)
+      value.asJsObject.getFields("representatives", "amounts", "total") match {
+        case Seq(JsArray(representatives), JsArray(amounts), JsNumber(total)) => {
+          new RotamerInfo(representatives.map(_.convertTo[Rotamer]), amounts.map(_.convertTo[Int]), total.toInt)
           }
-        case _ => throw new DeserializationException("Rotamer expected")
+        case _ => throw new DeserializationException("RotamerInfo expected")
       }
     }
   }
 }
+import RotamerInfoJsonProtocol._
