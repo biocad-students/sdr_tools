@@ -96,6 +96,7 @@ end
 immutable GeometryVector
   coordinates :: Array{Number, 1}
 end
+GeometryVector() = GeometryVector([0, 0, 0]) #by default is 3-dimensional
 
 function GeometryVectorOp2(a :: GeometryVector, b :: GeometryVector, op)
   GeometryVector(map(op, zip(a.coordinates, b.coordinates)))
@@ -128,7 +129,7 @@ function projectToAxes(v :: GeometryVector, x :: GeometryVector, y :: GeometryVe
   v_x = v*x
   v_y = (v - x*v_x)*y
   v_z = (v - x*v_x - y*v_y)*z
-  (v_x, v_y, v_z)
+  GeometryVector([v_x, v_y, v_z])
 end
 
 function cross3d(a :: GeometryVector, b :: GeometryVector)
@@ -141,10 +142,10 @@ end
 #println(normalize(GeometryVector([1,2,3])))
 
 type Rotamer
-  atoms :: Dict{String, (Number, Number, Number)}
+  atoms :: Dict{String, GeometryVector}
   center :: GeometryVector
 end
-Rotamer() = Rotamer(Dict{String, (Number, Number, Number)}(), GeometryVector([0, 0, 0]))
+Rotamer() = Rotamer(Dict{String, GeometryVector}(), GeometryVector([0, 0, 0]))
 
 
 function getPDBFileNames(input_file_name :: String)
@@ -192,7 +193,7 @@ function calculateDistances(aminoacids)
   (d1, d2, d3)
 end
 
-typealias AtomPosition (Number, Number, Number)
+typealias AtomPosition GeometryVector
 typealias AminoacidInfo Dict{String, AtomPosition}
 
 function getLocalVectors(aminoacids)
@@ -224,9 +225,7 @@ function getLocalVectors(aminoacids)
   #println(map(x->GeometryVector([x[1], x[2], x[3]]), values(sidechain.atoms)))
   sidechainLength = length(values(sidechain.atoms))
   if (sidechainLength > 0)
-    sidechain.center = sum(
-      map(x->GeometryVector([x[1], x[2], x[3]]),
-      values(sidechain.atoms)))/sidechainLength
+    sidechain.center = sum(values(sidechain.atoms)) / sidechainLength
   end
   (x, y, z, aminoacids[2]["CA"].resName, vectors, sidechain)
 end
@@ -243,7 +242,7 @@ function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{Aminoa
                     if !haskey(result[aa][distances], k)
                         result[aa][distances][k] = GeometryVector([0, 0, 0])
                     end
-                    result[aa][distances][k] += GeometryVector([v[1], v[2], v[3]])
+                    result[aa][distances][k] += v
                 end
             end
             for k in keys(result[aa][distances])
@@ -252,21 +251,21 @@ function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{Aminoa
         end
     end
     #result2 = Dict{String, Dict{(Int, Int, Int), Dict{String, Array{Number, 1}}}}()
-    result2 = Dict{String, Dict{Int, Dict{Int, Dict{Int, Dict{String, Array{Number, 1}}}}}}()
+    result2 = Dict{String, Dict{Int, Dict{Int, Dict{Int, Dict{String, GeometryVector}}}}}()
     for (aa, aaInfo) in result
-        result2[aa] = Dict{Int, Dict{Int, Dict{Int, Dict{String, Array{Number, 1}}}}}()
+        result2[aa] = Dict{Int, Dict{Int, Dict{Int, Dict{String, GeometryVector}}}}()
         for ((d1, d2, d3), positions) in aaInfo
             if !haskey(result2[aa], d1)
-              result2[aa][d1] = Dict{Int, Dict{Int, Dict{String, Array{Number, 1}}}}()
+              result2[aa][d1] = Dict{Int, Dict{Int, Dict{String, GeometryVector}}}()
             end
             if !haskey(result2[aa][d1], d2)
-              result2[aa][d1][d2] = Dict{Int, Dict{String, Array{Number, 1}}}()
+              result2[aa][d1][d2] = Dict{Int, Dict{String, GeometryVector}}()
             end
             if !haskey(result2[aa][d1][d2], d3)
-              result2[aa][d1][d2][d3] = Dict{String, Array{Number, 1}}()
+              result2[aa][d1][d2][d3] = Dict{String, GeometryVector}()
             end
             for (k, v) in positions
-                result2[aa][d1][d2][d3][k] = v.coordinates
+                result2[aa][d1][d2][d3][k] = v
             end
         end
     end
@@ -320,27 +319,22 @@ function getRotamerDb(rotamers :: Dict{String, Dict{(Int, Int, Int), Array{Rotam
             buildLibraryFragment!(result[aa][distances], positions)
         end
     end
-    result
-    #result2 = Dict{String, Dict{(Int, Int, Int), Dict{String, Array{Number, 1}}}}()
-    #result2 = Dict{String, Dict{Int, Dict{Int, Dict{Int, RotamerInfo}}}}()
-    #for (aa, aaInfo) in result
-    #    result2[aa] = Dict{Int, Dict{Int, Dict{Int, Dict{String, Array{Number, 1}}}}}()
-    #    for ((d1, d2, d3), positions) in aaInfo
-    #        if !haskey(result2[aa], d1)
-    #          result2[aa][d1] = Dict{Int, Dict{Int, Dict{String, Array{Number, 1}}}}()
-    #        end
-    #        if !haskey(result2[aa][d1], d2)
-    #          result2[aa][d1][d2] = Dict{Int, Dict{String, Array{Number, 1}}}()
-    #        end
-    #        if !haskey(result2[aa][d1][d2], d3)
-    #          result2[aa][d1][d2][d3] = Dict{String, Array{Number, 1}}()
-    #        end
-    #        for (k, v) in positions
-    #            result2[aa][d1][d2][d3][k] = v.coordinates
-    #        end
-    #    end
-    #end
-    #result2
+    result2 = Dict{String, Dict{Int, Dict{Int, Dict{Int, RotamerInfo}}}}()
+    for (aa, aaInfo) in result
+      result2[aa] = Dict{Int, Dict{Int, Dict{Int, RotamerInfo}}}()
+      for (dist, r) in aaInfo
+        if !haskey(result2[aa], dist[1])
+          result2[aa][dist[1]] = Dict{Int, Dict{Int, RotamerInfo}}()
+        end
+        if !haskey(result2[aa][dist[1]], dist[2])
+          result2[aa][dist[1]][dist[2]] = Dict{Int, RotamerInfo}()
+        end
+        if !haskey(result2[aa][dist[1]][dist[2]], dist[3])
+          result2[aa][dist[1]][dist[2]][dist[3]] = r
+        end
+      end
+    end
+    result2
 end
 
 function processChainPortion(aminoacids, meshSize = 0.3)
