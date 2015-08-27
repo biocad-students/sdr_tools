@@ -10,8 +10,8 @@ import spray.json._
 //import DefaultJsonProtocol._
 import scala.io.Source
 
-import ru.biocad.ig.alascan.constants.json.AlascanConstantsJsonProtocol
-import ru.biocad.ig.alascan.constants.json.AlascanConstantsJsonProtocol._
+import ru.biocad.ig.alascan.constants.json.BackboneInfoJsonProtocol
+import ru.biocad.ig.alascan.constants.json.BackboneInfoJsonProtocol._
 import ru.biocad.ig.alascan.constants.BackboneInfo
 //TODO: update scala, find out wtf wrong with alphabet's calling
 

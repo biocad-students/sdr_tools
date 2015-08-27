@@ -4,9 +4,9 @@ import spray.json._
 import ru.biocad.ig.alascan.constants.{BackboneInfo}
 
 
-object AlascanConstantsJsonProtocol extends DefaultJsonProtocol {
+object BackboneInfoJsonProtocol extends DefaultJsonProtocol {
 
-  implicit object AlascanConstantsJsonFormat extends RootJsonFormat[BackboneInfo] {
+  implicit object BackboneInfoJsonFormat extends RootJsonFormat[BackboneInfo] {
     def write(info: BackboneInfo) = info.toJson
 
     def read(value: JsValue) = {
@@ -24,4 +24,4 @@ object AlascanConstantsJsonProtocol extends DefaultJsonProtocol {
   }
 }
 
-import AlascanConstantsJsonProtocol._
+import BackboneInfoJsonProtocol._
