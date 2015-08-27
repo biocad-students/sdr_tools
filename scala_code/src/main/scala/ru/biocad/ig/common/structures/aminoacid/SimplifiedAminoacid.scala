@@ -14,7 +14,7 @@ class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
   If there were no changes, we can probably use original coordinates of atoms.
   */
   //rotamer has off-lattice coordinates vs. Ca's are projected onto lattice
-  var rotamer : Rotamer = new Rotamer(atoms.filterNot{s=>Seq("N", "H", "CA", "C", "O").contains(s.atom.trim)}, ca)//todo: check this
+  //////var rotamer : Rotamer = new Rotamer() // atoms.filterNot{s=>Seq("N", "H", "CA", "C", "O").contains(s.atom.trim)}, ca)//todo: check this
   def isInContactWith(aa : SimplifiedAminoAcid, distance_cutoff : Double = 4.2) : Boolean = {
     atoms.forall({case atom => {
       val atom_vector = Vector3d(atom.x, atom.y, atom.z)
@@ -25,7 +25,7 @@ class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
     //TODO: should implement
   }
 
-  override def toString = Seq(name,
+  /*override def toString = Seq(name,
     ",",
     "original atoms: ",
     atoms.mkString("\n[ \n  ", ", \n  ", " ],"),
@@ -34,7 +34,7 @@ class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
     "\nrotamer: ",
     rotamer.toString
   ).mkString("SimplifiedAminoacid{\n", "\n ", "\n}")
-
+*/
   def move(shift : GeometryVector) : SimplifiedAminoAcid = {
     val result = new SimplifiedAminoAcid(atoms)
     result.ca = this.ca + shift

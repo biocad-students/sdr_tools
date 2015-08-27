@@ -10,9 +10,9 @@ import spray.json._
 //import DefaultJsonProtocol._
 import scala.io.Source
 
-import ru.biocad.ig.alascan.constants.json.BackboneInfoJsonProtocol
-import ru.biocad.ig.alascan.constants.json.BackboneInfoJsonProtocol._
-import ru.biocad.ig.alascan.constants.BackboneInfo
+import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol
+import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol._
+import ru.biocad.ig.alascan.constants.{AminoacidLibrary, BackboneInfo}
 //TODO: update scala, find out wtf wrong with alphabet's calling
 
 import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
@@ -38,10 +38,10 @@ object JSONLoadingTest{
 
     //val bi = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[Map[String, Map[String, Map[String, Seq[Double]]]]]
     //println(bi("LEU")("(20,22,-32)"))
-    val bi2 = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[BackboneInfo]
+    val bi2 = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
     println(bi2.data("LEU")(20)(22)(-32))
     println(bi2.meshSize)
-    println(bi2.restoreCoordinates("LEU", 20*0.3, 22*0.3, -32*0.3))
+    println(bi2.restoreInfo("LEU", 20*0.3, 22*0.3, -32*0.3))
 
   }
 }
@@ -59,12 +59,12 @@ object SubchainBackboneReconstructionTest{
     println(aas)
     val filtered_map = aas.map(aa => new SimplifiedAminoAcid(aa_by_chain.aminoacids('L')(aa)))
     println(filtered_map.head.atomsMap.toString)
-    val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[BackboneInfo]
+    val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
     val result = filtered_map.sliding(4, 1).map({case Seq(a1, a2, a3, a4) => {
       val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
-      val coordinatesMap = backboneInfo.restoreCoordinates(a2.name, d1, d2, d3)
+      val coordinatesMap = backboneInfo.restoreInfo(a2.name, d1, d2, d3)
       val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
-      coordinatesMap.map({
+      coordinatesMap.data.map({
         case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.toSeq))
       })
     }}).toList
