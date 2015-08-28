@@ -1,13 +1,12 @@
 import org.scalatest.{Matchers, FlatSpec}
 
-import ru.biocad.ig.alascan.constants.BackboneInfo
 import spray.json._
 import scala.io.Source
 
-import ru.biocad.ig.alascan.constants.json.BackboneInfoJsonProtocol
-import ru.biocad.ig.alascan.constants.json.BackboneInfoJsonProtocol._
+import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol
+import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol._
 
-import ru.biocad.ig.alascan.constants.AminoacidLibrary 
+import ru.biocad.ig.alascan.constants.{AminoacidLibrary, BackboneInfo}
 
 class BackboneTests extends FlatSpec with Matchers {
   it should "restore coordinates with given meshSize" in {
