@@ -32,19 +32,20 @@ object SimplifiedAACreationTest {
   }
 }
 
-object JSONLoadingTest{
+import ru.biocad.ig.alascan.constants.energy_terms._
+import EOneJsonProtocol._
+object energyTermsJSONLoadingTest{
   def main(args : Array[String]) = {
     println("testing JSON")
 
+
     //val bi = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[Map[String, Map[String, Map[String, Seq[Double]]]]]
     //println(bi("LEU")("(20,22,-32)"))
-    val bi2 = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
-    println(bi2.data("LEU")(20)(22)(-32))
-    println(bi2.meshSize)
-    println(bi2.restoreInfo("LEU", 20*0.3, 22*0.3, -32*0.3))
-
+    val eone : EOne = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/EONE.json")).getLines().mkString("")).convertTo[EOne]
+    println(eone.nkb(2))
   }
 }
+
 
 
 
