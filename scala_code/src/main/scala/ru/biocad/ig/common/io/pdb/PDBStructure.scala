@@ -22,5 +22,7 @@ class PDBStructure {
 //TODO: should extend all logic of pdb file reading, the following class is temporary solution for collecting atoms to aminoacids
 class PDBAminoAcidCollection(val basic_structure : PDBStructure) {
   val aminoacids = basic_structure.parse_array.groupBy(_.chainID).map(x=>(x._1, x._2.groupBy(_.resSeq))).toMap
+  val aminoacidIds = basic_structure.parse_array.groupBy(_.chainID).map(x=>(x._1, x._2.map(_.resSeq).distinct)).toMap
+
   val chains = aminoacids.keys
 }

@@ -34,15 +34,30 @@ object SimplifiedAACreationTest {
 
 import ru.biocad.ig.alascan.constants.energy_terms._
 import EOneJsonProtocol._
+
 object energyTermsJSONLoadingTest{
+  def loadStructure(filename : String) = {
+    println("loading structure from sample pdb...")
+    val structure : PDBStructure = new PDBStructure()
+    structure.readFile(getClass.getResource(filename).getFile())
+    println("local file read - done")
+    val aa_by_chain = new PDBAminoAcidCollection(structure)
+    val aas = aa_by_chain.aminoacidIds('L')
+    println(aas)
+    val filtered_map = aas.map(aa => new SimplifiedAminoAcid(aa_by_chain.aminoacids('L')(aa)))
+    println(filtered_map.head.toString)
+
+  }
   def main(args : Array[String]) = {
     println("testing JSON")
-
-
     //val bi = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[Map[String, Map[String, Map[String, Seq[Double]]]]]
     //println(bi("LEU")("(20,22,-32)"))
     val eone : EOne = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/EONE.json")).getLines().mkString("")).convertTo[EOne]
-    println(eone.nkb(2))
+    println("testing backbone reconstruction...")
+    loadStructure("/2OSL.pdb")
+
+
+
   }
 }
 
