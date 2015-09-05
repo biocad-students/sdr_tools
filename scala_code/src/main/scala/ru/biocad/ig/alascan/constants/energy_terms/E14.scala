@@ -16,9 +16,11 @@ case class E14(
       val startIndex : Int,
       val endIndex : Int,
       val binRightBorders : Seq[Int]) {
-  def getValidIndex(r14 : Double) : Int = {
-    math.round(r14) - startIndex
-    ???
+
+  def getValidIndex(r14 : Double) : Int = math.round(r14).toInt match {
+    case i if i < 0 => 0
+    case i if i <= endIndex => i - startIndex
+    case _ => endIndex - startIndex
   }
 
   def getBinNumber(r14 : Double) : Int = {
@@ -37,11 +39,7 @@ case class E14(
        return get(r14, aa2, aa1)
     }
 
-    val index = math.round(r14).toInt match {
-      case i if i < 0 => 0
-      case i if i <= endIndex => i - startIndex
-      case _ => endIndex - startIndex
-    }
+    val index = getValidIndex(r14)
     println(data(aa1)(aa2).e214(index))
       //println(getBinNumber(r14))
     ???
