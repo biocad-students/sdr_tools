@@ -47,9 +47,8 @@ object energyTermsJSONLoadingTest{
     val aa_by_chain = new PDBAminoAcidCollection(structure)
     val aas = aa_by_chain.aminoacidIds('L')
     println(aas)
-    val filtered_map = aas.map(aa => new SimplifiedAminoAcid(aa_by_chain.aminoacids('L')(aa)))
+    val filtered_map = aas.map(aa => new SimplifiedAminoAcid(aa_by_chain.aminoacids('L')(aa))).toArray
     println(filtered_map.head.toString)
-    filtered_map
     println(Lattice.getEnergy(filtered_map))
   }
 
