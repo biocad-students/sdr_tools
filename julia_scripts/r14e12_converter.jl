@@ -41,8 +41,9 @@ end
 function process_r14aa12(result :: Dict{String, Dict{String, E12Data}})
   {"data"=>
   [
+  aa1 =>
     [
-      result[aa1][aa2]
+      aa2 => result[aa1][aa2]
       for aa2 in intersect(aaNames, keys(result[aa1]))
     ]
     for aa1 in intersect(aaNames, keys(result))

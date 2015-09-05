@@ -57,14 +57,14 @@ object Lattice {
   }
 
   //TODO: we have pair of chains, that means we somehow should utilize that when we compute total energy
-  def get_E(aminoacids : Seq[SimplifiedAminoAcid]) : Double = {
-    get_E_CA_trace(aminoacids) +
+  def getEnergy(aminoacids : Seq[SimplifiedAminoAcid]) : Double = {
+    get_E_CA_trace(aminoacids) /*+
     get_E_H_bond(aminoacids) +
     get_E_rot(aminoacids) +
     get_E_SG_local(aminoacids) +
     get_E_one(aminoacids) +
     get_E_pair(aminoacids) +
-    get_E_tem(aminoacids)
+    get_E_tem(aminoacids)*/
   }
 
 }

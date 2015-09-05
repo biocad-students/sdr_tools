@@ -34,6 +34,8 @@ object SimplifiedAACreationTest {
 
 import ru.biocad.ig.alascan.constants.energy_terms._
 import EOneJsonProtocol._
+import ru.biocad.ig.common.structures.geometry.Lattice
+
 
 object energyTermsJSONLoadingTest{
   def loadStructure(filename : String) = {
@@ -46,7 +48,8 @@ object energyTermsJSONLoadingTest{
     println(aas)
     val filtered_map = aas.map(aa => new SimplifiedAminoAcid(aa_by_chain.aminoacids('L')(aa)))
     println(filtered_map.head.toString)
-
+    filtered_map
+    println(Lattice.getEnergy(filtered_map))
   }
   def main(args : Array[String]) = {
     println("testing JSON")
@@ -54,7 +57,7 @@ object energyTermsJSONLoadingTest{
     //println(bi("LEU")("(20,22,-32)"))
     val eone : EOne = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/EONE.json")).getLines().mkString("")).convertTo[EOne]
     println("testing backbone reconstruction...")
-    loadStructure("/2OSL.pdb")
+    val simplifiedChain = loadStructure("/2OSL.pdb")
 
 
 
