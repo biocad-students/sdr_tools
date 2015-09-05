@@ -48,7 +48,9 @@ function process_r14aa12(result :: Dict{String, Dict{String, E12Data}})
     ]
     for aa1 in intersect(aaNames, keys(result))
     ],
-    "startIndex" => -86
+    "startIndex" => -86,
+    "endIndex" => 91,
+    "binRightBorders" => [-79, -55, -35, -25, -12, 14, 26, 46, 65, 72, 81]
     }
 end
 

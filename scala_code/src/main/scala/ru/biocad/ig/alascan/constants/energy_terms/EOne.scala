@@ -6,7 +6,7 @@ case class EOne(val nkb : Array[Int], val eone: Array[Double]) {
 }
 import DefaultJsonProtocol._
 object EOneJsonProtocol extends DefaultJsonProtocol {
-  implicit val colorFormat = jsonFormat2(EOne)
+  implicit val EOneFormat = jsonFormat2(EOne)
 }
 
 import EOneJsonProtocol._
