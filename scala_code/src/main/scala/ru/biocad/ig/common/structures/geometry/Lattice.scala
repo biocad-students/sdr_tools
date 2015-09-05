@@ -32,21 +32,22 @@ object Lattice {
 
   /** energy methods*/
   def get_E_CA_trace(aminoacids : Array[SimplifiedAminoAcid]) : Double = {
-    (1 to aminoacids.size - 3).map( i =>
+    val r14Seq : Seq[Double] = (1 to aminoacids.size - 3).map({
+      case i : Int =>
       {
         val b = (Seq(i, i + 1, i + 2), Seq(i - 1, i, i + 1)).zipped.map({
           case (x : Int, y : Int) => {
             aminoacids(x).ca - aminoacids(y).ca
           }
         })
-        val r14 = math.round(b.reduceLeft(_ + _).lengthSquared*math.signum(ManifoldUtils.getDeterminant(b.map(_.coordinates))))
-        println(r14)
-        val v  = 3*e14.get(r14, aminoacids(i).name, aminoacids(i + 1).name) +
-          e14avg.get(r14, r14)
-        println(v)
-        v
+        b.reduceLeft(_ + _).lengthSquared * math.signum(ManifoldUtils.getDeterminant(b.map(_.coordinates)))
+      }})
+    (r14Seq, 0.0 +: r14Seq, (1 to aminoacids.size - 3)).zipped.map({
+      case (r14, r14_prev, i)  => {
+        3*e14.get(r14, aminoacids(i).name, aminoacids(i + 1).name) +
+          e14avg.get(r14, r14_prev)
       }
-    ).reduceLeft (_ + _)
+    }).reduceLeft(_ + _)
   }
 
   def get_E_H_bond(aminoacids : Seq[SimplifiedAminoAcid]) : Double = {
