@@ -11,10 +11,12 @@ import scala.io.Source
 import ru.biocad.ig.alascan.constants.energy_terms._
 import EOneJsonProtocol._
 import E14JsonProtocol._
+import E14avgJsonProtocol._
 
 object Lattice {
   val eone : EOne = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/EONE.json")).getLines().mkString("")).convertTo[EOne]
   val e14 : E14 = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/r14aa12.json")).getLines().mkString("")).convertTo[E14]
+  val e14avg : E14avg = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/r14avg12.json")).getLines().mkString("")).convertTo[E14avg]
 
   /** helper methods*/
   //this returns true if they can, false otherwise - quite simple
@@ -30,7 +32,7 @@ object Lattice {
 
   /** energy methods*/
   def get_E_CA_trace(aminoacids : Array[SimplifiedAminoAcid]) : Double = {
-    (1 to aminoacids.size - 2).map( i =>
+    (1 to aminoacids.size - 3).map( i =>
       {
         val b = (Seq(i, i + 1, i + 2), Seq(i - 1, i, i + 1)).zipped.map({
           case (x : Int, y : Int) => {
@@ -39,7 +41,8 @@ object Lattice {
         })
         val r14 = math.round(b.reduceLeft(_ + _).lengthSquared*math.signum(ManifoldUtils.getDeterminant(b.map(_.coordinates))))
         println(r14)
-        val v  = e14.get(r14, aminoacids(i).name, aminoacids(i + 1).name)
+        val v  = 3*e14.get(r14, aminoacids(i).name, aminoacids(i + 1).name) +
+          e14avg.get(r14, r14)
         println(v)
         v
       }
