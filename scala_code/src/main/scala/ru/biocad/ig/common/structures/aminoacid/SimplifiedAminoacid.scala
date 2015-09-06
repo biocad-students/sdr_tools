@@ -16,15 +16,18 @@ class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
   If there were no changes, we can probably use original coordinates of atoms.
   */
   //rotamer has off-lattice coordinates vs. Ca's are projected onto lattice
+  //TODO: fix this (ca, should be center of masses)
   var rotamer : Rotamer = new Rotamer(atomsVectorMap, ca) // atoms.filterNot{s=>Seq("N", "H", "CA", "C", "O").contains(s.atom.trim)}, ca)//todo: check this
   //TODO: should add relative coords, filter atoms to include only rotamer atoms
-  
+
   def isInContactWith(aa : SimplifiedAminoAcid, distance_cutoff : Double = 4.2) : Boolean = {
-    atoms.forall({case atom => {
+    /*atoms.forall({case atom => {
       val atom_vector = Vector3d(atom.x, atom.y, atom.z)
       val len = aa.atoms.map({case atom2 => (atom_vector - Vector3d(atom2.x, atom2.y, atom2.z)).length}).min
       len > distance_cutoff
-    }})
+    }})*/
+    // when we use reduced representation, we can compute 'contact' between rotamer's centers of masses
+    (rotamer.center - aa.rotamer.center).length < distance_cutoff
     //return false
     //TODO: should implement
   }
