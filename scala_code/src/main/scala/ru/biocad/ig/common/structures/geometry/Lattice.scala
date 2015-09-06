@@ -18,9 +18,18 @@ object Lattice {
   val e14 : E14 = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/r14aa12.json")).getLines().mkString("")).convertTo[E14]
   val e14avg : E14avg = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/r14avg12.json")).getLines().mkString("")).convertTo[E14avg]
 
+  /*
+  return value indicates that aminoacids i and j are in contact
+  array can be aminoacid-pair specific.
+  now there is no KDTree, just simple and slow code - should replace it
+  */
+  def buildContactMap(aminoacids : Seq[SimplifiedAminoAcid]) : Array[Array[Boolean]] = {
+    aminoacids.map({case aa1 => aminoacids.map(_.isInContactWith(aa1)).toArray}).toArray
+  }
+
   /** helper methods*/
   //this returns true if they can, false otherwise - quite simple
-  def can_form_H_bond(aminoacids: Seq[SimplifiedAminoAcid], i : Int, j : Int) : Boolean = {
+  def can_form_H_bond(aminoacids : Seq[SimplifiedAminoAcid], i : Int, j : Int) : Boolean = {
     val r_ij = aminoacids(j).ca - aminoacids(i).ca
     val b_i_b_i_1 = aminoacids(i - 1).ca - aminoacids(i).ca //TODO: check if i == 0
     val b_j_b_j_1 = aminoacids(j - 1).ca - aminoacids(j).ca
@@ -74,8 +83,15 @@ object Lattice {
     ???
   }
 
+  //this is very-very SLOW implementation, should refactor
   def get_E_one(aminoacids : Seq[SimplifiedAminoAcid]) : Double = {
-    ???
+    val contactMap = buildContactMap(aminoacids)
+    (0 to aminoacids.size - 1).map({
+      i => {
+        val numberOfContacts = (i + 1 to aminoacids.size - 1).count({ case j => contactMap(i)(j) })
+        eone.get(aminoacids(i).name, numberOfContacts)
+      }
+    }).reduceLeft(_ + _)
   }
 
   def get_E_pair(aminoacids : Seq[SimplifiedAminoAcid]) : Double = {
@@ -88,11 +104,13 @@ object Lattice {
 
   //TODO: we have pair of chains, that means we somehow should utilize that when we compute total energy
   def getEnergy(aminoacids : Array[SimplifiedAminoAcid]) : Double = {
-    get_E_CA_trace(aminoacids) /*+
+    0.25*get_E_CA_trace(aminoacids) +
+    /*
     get_E_H_bond(aminoacids) +
     get_E_rot(aminoacids) +
-    get_E_SG_local(aminoacids) +
-    get_E_one(aminoacids) +
+    get_E_SG_local(aminoacids) +*/
+    0.5*get_E_one(aminoacids)
+    /*+
     get_E_pair(aminoacids) +
     get_E_tem(aminoacids)*/
   }
