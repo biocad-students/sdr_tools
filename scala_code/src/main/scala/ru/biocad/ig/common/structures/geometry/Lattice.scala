@@ -12,12 +12,13 @@ import ru.biocad.ig.alascan.constants.energy_terms._
 import EOneJsonProtocol._
 import E14JsonProtocol._
 import E14avgJsonProtocol._
+import ESgLocalJsonProtocol._
 
 object Lattice {
   val eone : EOne = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/EONE.json")).getLines().mkString("")).convertTo[EOne]
   val e14 : E14 = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/r14aa12.json")).getLines().mkString("")).convertTo[E14]
   val e14avg : E14avg = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/r14avg12.json")).getLines().mkString("")).convertTo[E14avg]
-
+  val eSglocal : ESgLocal = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/BGB2345.json")).getLines().mkString("")).convertTo[ESgLocal]
   /*
   return value indicates that aminoacids i and j are in contact
   array can be aminoacid-pair specific.
@@ -80,7 +81,12 @@ object Lattice {
   }
 
   def get_E_SG_local(aminoacids : Seq[SimplifiedAminoAcid]) : Double = {
-    ???
+    (1 to aminoacids.size - 2).flatMap({
+      i => (1 to 4).map({ k => if (i + k < aminoacids.size)
+        eSglocal.get(aminoacids(i), aminoacids(i + k), k) else 0.0
+        })
+    }).reduceLeft(_ +_)
+
   }
 
   //this is very-very SLOW implementation, should refactor
