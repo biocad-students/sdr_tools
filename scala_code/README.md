@@ -22,10 +22,13 @@ TODO \ FIX
 [+] E_CA-trace
 [+] E_one (число контактов считается перебором, с отсечкой по расстоянию 4.2 A)
 [+] E_SG-local
-E_pair
-E_tem
+[+-]E_pair
+[+-]E_tem
 E_rot
 E_H-bond
+
+current step: load Rij, R_rep, E_rep from file with rotamer info, find E_rot
+
 
 3. вообще придумать, как хранить упрощенную амк, чтобы максимально упростить жизнь
 
