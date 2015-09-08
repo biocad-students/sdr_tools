@@ -17,7 +17,20 @@ class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
   */
   //rotamer has off-lattice coordinates vs. Ca's are projected onto lattice
   //TODO: fix this (ca, should be center of masses)
-  var rotamer : Rotamer = new Rotamer(atomsVectorMap, ca) // atoms.filterNot{s=>Seq("N", "H", "CA", "C", "O").contains(s.atom.trim)}, ca)//todo: check this
+  def computeCenterCoordinates(atoms : Seq[PDBAtomInfo]) : GeometryVector = {
+    val rotamerAtoms  = atoms.filterNot({
+        s => Seq("N", "H", "CA", "C", "O").contains(s.atom)
+      }).map({
+        a => Vector3d(a.x, a.y, a.z) - ca
+        })
+    val center = rotamerAtoms.size match {
+      case 0 => Vector3d(0, 0, 0)
+      case n => rotamerAtoms.reduceLeft(_ + _) / n
+    }
+    center
+  }
+
+  var rotamer : Rotamer = new Rotamer(atomsVectorMap, computeCenterCoordinates(atoms)) //
   //TODO: should add relative coords, filter atoms to include only rotamer atoms
 
   def isInContactWith(aa : SimplifiedAminoAcid, distance_cutoff : Double = 4.2) : Boolean = {
