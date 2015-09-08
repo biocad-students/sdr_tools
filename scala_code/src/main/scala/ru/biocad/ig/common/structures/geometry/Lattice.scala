@@ -10,6 +10,7 @@ import scala.io.Source
 
 import ru.biocad.ig.alascan.constants.energy_terms._
 import EOneJsonProtocol._
+import EPairJsonProtocol._
 import E14JsonProtocol._
 import E14avgJsonProtocol._
 import ESgLocalJsonProtocol._
@@ -19,6 +20,9 @@ object Lattice {
   val e14 : E14 = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/r14aa12.json")).getLines().mkString("")).convertTo[E14]
   val e14avg : E14avg = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/r14avg12.json")).getLines().mkString("")).convertTo[E14avg]
   val eSglocal : ESgLocal = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/BGB2345.json")).getLines().mkString("")).convertTo[ESgLocal]
+  //
+  val epair : EPair = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/PMFHIX_SCALE.json")).getLines().mkString("")).convertTo[EPair]
+
   /*
   return value indicates that aminoacids i and j are in contact
   array can be aminoacid-pair specific.
@@ -99,8 +103,8 @@ object Lattice {
       }
     }).reduceLeft(_ + _)
   }
-
-  def get_E_two(i : Int, j : Int, ai : SimplifiedAminoAcid, aj : SimplifiedAminoAcid) : Double = {
+  //TODO: rewrite later
+  def get_E_two(i : Int, j : Int, ai : SimplifiedAminoAcid, aj : SimplifiedAminoAcid, f : Double) : Double = {
     (ai.rotamer.center - aj.rotamer.center).length match {
       //case x if x < rRep(ai.name, aj.name) => eRep
       //case x if x < r(ai.name, aj.name) && epsilon(ai.name)(aj.name) >= 0.0 => epsilon(ai.name)(aj.name)*a(i)(j)
@@ -110,9 +114,15 @@ object Lattice {
     ???
   }
   def get_E_pair(aminoacids : Seq[SimplifiedAminoAcid]) : Double = {
-    (0 to aminoacids.size - 1).flatMap({
-      i => (i + 4 to aminoacids.size - 1).map({
-        j => get_E_two(i, j, aminoacids(i), aminoacids(j))
+    (2 to aminoacids.size - 3).flatMap({
+      i => (i + 4 to aminoacids.size - 3).map({
+        j => {
+          //TODO: check actual +- 2 for f
+          val ui_uj = (aminoacids(i + 2).ca - aminoacids(i - 2).ca).normalize *
+                      (aminoacids(j + 2).ca - aminoacids(j - 2).ca).normalize
+          val f = 1.0 - math.pow((ui_uj*ui_uj - math.pow(math.cos(20.0*3.14/180), 2)), 2)
+          get_E_two(i, j, aminoacids(i), aminoacids(j), f)
+        }
       })
     }).reduceLeft(_ + _)
   }
@@ -127,8 +137,8 @@ object Lattice {
     // get_E_H_bond(aminoacids) +
     //get_E_rot(aminoacids) +
     1.0 * get_E_SG_local(aminoacids) +
-    0.5 * get_E_one(aminoacids)  //+
-    //5*get_E_pair(aminoacids)
+    0.5 * get_E_one(aminoacids)  +
+    5*get_E_pair(aminoacids)
     //+4.25*get_E_tem(aminoacids)
   }
 
