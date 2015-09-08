@@ -15,10 +15,10 @@ case class ESgLocal(
     if (!local12.getOrElse(aa1.name, Map[String, Array[Double]]()).contains(aa2.name))
       return get(aa2, aa1, distance)
     val cosPhi = aa1.rotamer.center.normalize * aa2.rotamer.center.normalize
-    
-    val index = (-0.8 to 0.8 by 0.2).zipWithIndex.find({ c => cosPhi < c._1}) match {
+
+    val index = (-0.9 to 0.9 by 0.1).zipWithIndex.find({ c => cosPhi < c._1}) match {
       case Some(v) => v._2
-      case _ => 9
+      case _ => 19
     }
     distance match {
       case 1 => local12(aa1.name)(aa2.name)(index)
