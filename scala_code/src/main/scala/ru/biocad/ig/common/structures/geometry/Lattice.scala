@@ -103,15 +103,18 @@ object Lattice {
       }
     }).reduceLeft(_ + _)
   }
+  def rRep(ai:String, aj:String) = {
+    0.0 //FIX: change to values from rotamer lib
+  }
+
   //TODO: rewrite later
   def get_E_two(i : Int, j : Int, ai : SimplifiedAminoAcid, aj : SimplifiedAminoAcid, f : Double) : Double = {
     (ai.rotamer.center - aj.rotamer.center).length match {
-      //case x if x < rRep(ai.name, aj.name) => eRep
-      //case x if x < r(ai.name, aj.name) && epsilon(ai.name)(aj.name) >= 0.0 => epsilon(ai.name)(aj.name)*a(i)(j)
-      case _ => 1*//epsilon(ai.name)(aj.name) *
-        (if (j - i == 5 || j-i == 6) 0.6 else 1.0)//this is a(i, j)
+      case x if x < rRep(ai.name, aj.name) => ???
+      case x if x < 4.2 && epair.apab(ai.name)(aj.name) >= 0.0 => epair.apab(ai.name)(aj.name)*(if (j - i == 5 || j-i == 6) 0.6 else 1.0)
+      case _ => epair.apab(ai.name)(aj.name) *
+        (if (j - i == 5 || j-i == 6) 0.6 else 1.0)*f//this is a(i, j)
     }
-    ???
   }
   def get_E_pair(aminoacids : Seq[SimplifiedAminoAcid]) : Double = {
     (2 to aminoacids.size - 3).flatMap({
@@ -128,7 +131,24 @@ object Lattice {
   }
 
   def get_E_tem(aminoacids : Seq[SimplifiedAminoAcid]) : Double = {
-    ???
+    val contactMap = buildContactMap(aminoacids)
+    //TODO: check borders
+    (4 to aminoacids.size - 5).flatMap({
+      i => (i + 4 to aminoacids.size - 5).map({
+        j => {
+          Seq(-4,-3,3,4).map({k => {
+            (if (contactMap(i)(j) && contactMap(i + k)(j + k))
+              epair.apab(aminoacids(i).name)(aminoacids(j).name) +
+              epair.apab(aminoacids(i + k).name)(aminoacids(j + k).name)
+            else 0.0)+
+            (if (contactMap(i)(j) && contactMap(i + k)(j - k))
+              epair.apab(aminoacids(i).name)(aminoacids(j).name) +
+              epair.apab(aminoacids(i + k).name)(aminoacids(j - k).name)
+            else 0.0)}}).reduceLeft(_ + _)
+        }
+      })
+    }).reduceLeft(_ + _)
+    //???
   }
 
   //TODO: we have pair of chains, that means we somehow should utilize that when we compute total energy
@@ -138,8 +158,8 @@ object Lattice {
     //get_E_rot(aminoacids) +
     1.0 * get_E_SG_local(aminoacids) +
     0.5 * get_E_one(aminoacids)  +
-    5*get_E_pair(aminoacids)
-    //+4.25*get_E_tem(aminoacids)
+    5 * get_E_pair(aminoacids) +
+    4.25 * get_E_tem(aminoacids)
   }
 
 }
