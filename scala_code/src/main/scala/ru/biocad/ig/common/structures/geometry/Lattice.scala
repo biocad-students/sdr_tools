@@ -14,6 +14,7 @@ import EPairJsonProtocol._
 import E14JsonProtocol._
 import E14avgJsonProtocol._
 import ESgLocalJsonProtocol._
+import ERotamerJsonProtocol._
 
 object Lattice {
   val eone : EOne = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/EONE.json")).getLines().mkString("")).convertTo[EOne]
@@ -22,6 +23,7 @@ object Lattice {
   val eSglocal : ESgLocal = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/BGB2345.json")).getLines().mkString("")).convertTo[ESgLocal]
   //
   val epair : EPair = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/PMFHIX_SCALE.json")).getLines().mkString("")).convertTo[EPair]
+  val eRotamer : ERotamer = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/PMFHIX_SCALE.json")).getLines().mkString("")).convertTo[ERotamer]
 
   /*
   return value indicates that aminoacids i and j are in contact
@@ -81,6 +83,11 @@ object Lattice {
   }
 
   def get_E_rot(aminoacids : Seq[SimplifiedAminoAcid]): Double = {
+    (1 to aminoacids.size - 2).map({
+      i => {
+        println(i)
+      }
+    })
     ???
   }
 
@@ -103,6 +110,7 @@ object Lattice {
       }
     }).reduceLeft(_ + _)
   }
+
   def rRep(ai:String, aj:String) = {
     0.0 //FIX: change to values from rotamer lib
   }
@@ -111,8 +119,8 @@ object Lattice {
   def get_E_two(i : Int, j : Int, ai : SimplifiedAminoAcid, aj : SimplifiedAminoAcid, f : Double) : Double = {
     (ai.rotamer.center - aj.rotamer.center).length match {
       case x if x < rRep(ai.name, aj.name) => ???
-      case x if x < 4.2 && epair.apab(ai.name)(aj.name) >= 0.0 => epair.apab(ai.name)(aj.name)*(if (j - i == 5 || j-i == 6) 0.6 else 1.0)
-      case _ => epair.apab(ai.name)(aj.name) *
+      case x if x < 4.2 && epair.get(ai.name, aj.name) >= 0.0 => epair.get(ai.name, aj.name)*(if (j - i == 5 || j-i == 6) 0.6 else 1.0)
+      case _ => epair.get(ai.name, aj.name) *
         (if (j - i == 5 || j-i == 6) 0.6 else 1.0)*f//this is a(i, j)
     }
   }
@@ -155,7 +163,7 @@ object Lattice {
   def getEnergy(aminoacids : Array[SimplifiedAminoAcid]) : Double = {
     0.25 * get_E_CA_trace(aminoacids) +
     // get_E_H_bond(aminoacids) +
-    //get_E_rot(aminoacids) +
+    0.5 * get_E_rot(aminoacids) +
     1.0 * get_E_SG_local(aminoacids) +
     0.5 * get_E_one(aminoacids)  +
     5 * get_E_pair(aminoacids) +

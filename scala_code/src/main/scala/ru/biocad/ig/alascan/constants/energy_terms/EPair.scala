@@ -5,8 +5,8 @@ import spray.json._
 case class EPair(
       val abaa : Map[String, Double],
       val apab : Map[String, Map[String, Double]]) {
-  def get(aminoacid : String, numberOfContacts : Int) : Double = {
-0.0
+  def get(aa1 : String, aa2 : String) : Double = {
+    apab(aa1)(aa2)
   }
 }
 
