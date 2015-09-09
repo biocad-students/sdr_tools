@@ -15,6 +15,7 @@ import E14JsonProtocol._
 import E14avgJsonProtocol._
 import ESgLocalJsonProtocol._
 import ERotamerJsonProtocol._
+import RotamerRadiusInfoJsonProtocol._
 
 object Lattice {
   val eone : EOne = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/EONE.json")).getLines().mkString("")).convertTo[EOne]
@@ -23,15 +24,17 @@ object Lattice {
   val eSglocal : ESgLocal = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/BGB2345.json")).getLines().mkString("")).convertTo[ESgLocal]
   //
   val epair : EPair = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/PMFHIX_SCALE.json")).getLines().mkString("")).convertTo[EPair]
-  val eRotamer : ERotamer = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/PMFHIX_SCALE.json")).getLines().mkString("")).convertTo[ERotamer]
-
+  //val eRotamer : ERotamer = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/PMFHIX_SCALE.json")).getLines().mkString("")).convertTo[ERotamer]
+  val rotamerRadiusInfo : RotamerRadiusInfo = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/RADIJC.json")).getLines().mkString("")).convertTo[RotamerRadiusInfo]
   /*
   return value indicates that aminoacids i and j are in contact
   array can be aminoacid-pair specific.
   now there is no KDTree, just simple and slow code - should replace it
   */
   def buildContactMap(aminoacids : Seq[SimplifiedAminoAcid]) : Array[Array[Boolean]] = {
-    aminoacids.map({case aa1 => aminoacids.map(_.isInContactWith(aa1)).toArray}).toArray
+    aminoacids.map({case aa1 => aminoacids.map({
+        aa2 => aa2.isInContactWith(aa1, rotamerRadiusInfo.getR(aa1.name, aa2.name))
+      }).toArray}).toArray
   }
 
   /** helper methods*/
@@ -117,13 +120,16 @@ object Lattice {
 
   //TODO: rewrite later
   def get_E_two(i : Int, j : Int, ai : SimplifiedAminoAcid, aj : SimplifiedAminoAcid, f : Double) : Double = {
+    val rRepulsive = rotamerRadiusInfo.getRrep(ai.name, aj.name)
+    val rInteraction = rotamerRadiusInfo.getR(ai.name, aj.name)
     (ai.rotamer.center - aj.rotamer.center).length match {
-      case x if x < rRep(ai.name, aj.name) => ???
-      case x if x < 4.2 && epair.get(ai.name, aj.name) >= 0.0 => epair.get(ai.name, aj.name)*(if (j - i == 5 || j-i == 6) 0.6 else 1.0)
+      case x if x < rRepulsive => rotamerRadiusInfo.eRepulsive
+      case x if x < rInteraction && epair.get(ai.name, aj.name) >= 0.0 => epair.get(ai.name, aj.name)*(if (j - i == 5 || j-i == 6) 0.6 else 1.0)
       case _ => epair.get(ai.name, aj.name) *
         (if (j - i == 5 || j-i == 6) 0.6 else 1.0)*f//this is a(i, j)
     }
   }
+
   def get_E_pair(aminoacids : Seq[SimplifiedAminoAcid]) : Double = {
     (2 to aminoacids.size - 3).flatMap({
       i => (i + 4 to aminoacids.size - 3).map({
@@ -163,7 +169,7 @@ object Lattice {
   def getEnergy(aminoacids : Array[SimplifiedAminoAcid]) : Double = {
     0.25 * get_E_CA_trace(aminoacids) +
     // get_E_H_bond(aminoacids) +
-    0.5 * get_E_rot(aminoacids) +
+    //0.5 * get_E_rot(aminoacids) +
     1.0 * get_E_SG_local(aminoacids) +
     0.5 * get_E_one(aminoacids)  +
     5 * get_E_pair(aminoacids) +
