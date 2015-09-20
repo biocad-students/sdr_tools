@@ -1,13 +1,18 @@
 package ru.biocad.ig.common.structures.aminoacid
 
 import ru.biocad.ig.common.io.pdb.{PDBAtomInfo}
+import ru.biocad.ig.alascan.constants.LatticeConstants
 
 import ru.biocad.ig.common.structures.geometry._
 
 class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
   val name = atoms.head.resName
   val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
-  var ca : GeometryVector = Vector3d(atomsMap("CA").x, atomsMap("CA").y, atomsMap("CA").z)
+  var ca : GeometryVector = Vector3d(
+      math.round(atomsMap("CA").x / LatticeConstants.MESH_SIZE),
+      math.round(atomsMap("CA").y / LatticeConstants.MESH_SIZE),
+      math.round(atomsMap("CA").z / LatticeConstants.MESH_SIZE)
+      )
   val atomsVectorMap = atomsMap.map(x=> (x._1, Vector3d(x._2.x, x._2.y, x._2.z) - ca))
 
   //FIX: ..
