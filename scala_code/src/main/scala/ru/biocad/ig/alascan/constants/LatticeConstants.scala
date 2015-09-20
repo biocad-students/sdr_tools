@@ -4,7 +4,7 @@ package ru.biocad.ig.alascan.constants
 Later should refactor to class with file parameters loading, thus making creation of different lattice objects possible
 */
 object LatticeConstants {
-  val MESH_SIZE = 1.7
+  val MESH_SIZE = 1.22
 
   object Borders extends Enumeration() {
     val Min, Max = Value
