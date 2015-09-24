@@ -35,7 +35,36 @@ object SimplifiedAACreationTest {
 import ru.biocad.ig.alascan.constants.energy_terms._
 
 import ru.biocad.ig.common.structures.geometry.Lattice
+import ru.biocad.ig.common.structures.geometry._
 
+import ru.biocad.ig.common.algorithms._
+object MCTest{
+  def loadStructure(filename : String) = {
+    println("loading structure from sample pdb...")
+    val structure : PDBStructure = new PDBStructure()
+    structure.readFile(getClass.getResource(filename).getFile())
+    println("local file read - done")
+    val aa_by_chain = new PDBAminoAcidCollection(structure)
+    val aas = aa_by_chain.aminoacidIds('L')
+    val filtered_map = aas.map(aa => new SimplifiedAminoAcid(aa_by_chain.aminoacids('L')(aa))).toArray
+    println(filtered_map.head.toString)
+    filtered_map
+  }
+
+  def main(args : Array[String]) : Unit = {
+    println("testing backbone reconstruction...")
+    val simplifiedChain = loadStructure("/2OSL.pdb")
+    println(Lattice.getEnergy(simplifiedChain))
+    //println(Lattice.getEnergy(simplifiedChain))
+    val ch1 = MonteCarloRunner.run(simplifiedChain,
+      Seq(new BondMove(3)),
+      x=>Lattice.getEnergy(x.toArray),
+      10)
+    println(Lattice.getEnergy(ch1.toArray))
+
+  }
+
+}
 
 object energyTermsJSONLoadingTest{
   def loadStructure(filename : String) = {
