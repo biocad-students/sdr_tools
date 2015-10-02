@@ -15,12 +15,19 @@ import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol._
 import ru.biocad.ig.alascan.constants.{AminoacidLibrary, BackboneInfo}
 //TODO: update scala, find out wtf wrong with alphabet's calling
 
-import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
+import ru.biocad.ig.alascan.constants.json.BasicVectorLibraryJsonProtocol._
+import ru.biocad.ig.alascan.constants.json.BasicVectorLibrary
 
+import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
+import ru.biocad.ig.common.structures.geometry.GeometryVector
 
 object SimplifiedAACreationTest {
   def main(args : Array[String]) = {
     println("testing")
+    val backboneVectors : Seq[GeometryVector] = JsonParser(Source.fromURL(getClass.getResource("/basic_vectors.json")).getLines()
+      .mkString("")).convertTo[BasicVectorLibrary].vectors.map({x:Seq[Double] => new Vector(x)})
+    println(backboneVectors(0))
+
     val structure : PDBStructure = new PDBStructure()
     structure.readFile(getClass.getResource("/2OSL.pdb").getFile())//"2OSL.pdb")
     //println(typename(aa_by_chain.aminoacids) )

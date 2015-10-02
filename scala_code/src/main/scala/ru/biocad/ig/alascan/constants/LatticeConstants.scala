@@ -14,6 +14,7 @@ object LatticeConstants {
   val CA_ANGLE_CONSTRAINTS = Map(Min -> 78.5, Max -> 143.1)
   val CA_MIN_DISTANCE = 0.0 // unspecified
 
+  val basicVectors = ???
   //H-bond energies
   val E_H = 0.5
   val E_HH = 0.75
