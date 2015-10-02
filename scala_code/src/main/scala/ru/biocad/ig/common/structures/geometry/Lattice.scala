@@ -17,6 +17,11 @@ import ESgLocalJsonProtocol._
 import ERotamerJsonProtocol._
 import RotamerRadiusInfoJsonProtocol._
 
+import ru.biocad.ig.alascan.constants.json.{BasicVectorLibrary, BasicVectorLibraryJsonProtocol}
+import BasicVectorLibraryJsonProtocol._
+
+//import ru.biocad.ig.common.structures.geometry.GeometryVector
+
 object Lattice {
   val eone : EOne = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/EONE.json")).getLines().mkString("")).convertTo[EOne]
   val e14 : E14 = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/r14aa12.json")).getLines().mkString("")).convertTo[E14]
@@ -26,6 +31,11 @@ object Lattice {
   val epair : EPair = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/PMFHIX_SCALE.json")).getLines().mkString("")).convertTo[EPair]
   //val eRotamer : ERotamer = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/PMFHIX_SCALE.json")).getLines().mkString("")).convertTo[ERotamer]
   val rotamerRadiusInfo : RotamerRadiusInfo = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/RADIJC.json")).getLines().mkString("")).convertTo[RotamerRadiusInfo]
+
+  val backboneVectors : BasicVectorLibrary = JsonParser(
+      Source.fromURL(getClass.getResource("/basic_vectors.json")
+    ).getLines().mkString("")).convertTo[BasicVectorLibrary]//.map({x:Seq[Double] => new Vector(x)})
+
   /*
   return value indicates that aminoacids i and j are in contact
   array can be aminoacid-pair specific.

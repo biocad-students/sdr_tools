@@ -12,7 +12,7 @@ object GeometryVectorJsonProtocol extends DefaultJsonProtocol {
     def read(value: JsValue) : GeometryVector = {
       value.asJsObject.getFields("coordinates") match {
         case Seq(JsArray(coordinates)) => new Vector(coordinates.map(_.convertTo[Double]))
-        case _ => throw new DeserializationException("BackboneInfo expected")
+        case _ => throw new DeserializationException("GeometryVector's coordinates expected")
       }
         //
     }
