@@ -62,9 +62,12 @@ object MCTest{
     println("testing backbone reconstruction...")
     val simplifiedChain = loadStructure("/2OSL.pdb")
     println(Lattice.getEnergy(simplifiedChain))
+    val backboneVectors : Array[GeometryVector] = JsonParser(Source.fromURL(getClass.getResource("/basic_vectors.json")).getLines()
+      .mkString("")).convertTo[BasicVectorLibrary].vectors.map({x:Seq[Double] => new Vector(x)}).toArray
+
     //println(Lattice.getEnergy(simplifiedChain))
     val ch1 = MonteCarloRunner.run(simplifiedChain,
-      Seq(new BondMove(3)),
+      Seq(new BondMove(backboneVectors, 3)),
       x=>Lattice.getEnergy(x.toArray),
       10)
     println(Lattice.getEnergy(ch1.toArray))
