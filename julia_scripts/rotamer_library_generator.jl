@@ -5,6 +5,29 @@ using ArgParse, Iterators
 import JSON
 push!(LOAD_PATH, dirname(@__FILE__()))
 
+aa3letter = {
+  "A" => "ALA",
+  "R" => "ARG",
+  "N" => "ASN",
+  "D" => "ASP",
+  "C" => "CYS",
+  "Q" => "GLN",
+  "E" => "GLU",
+  "G" => "GLY",
+  "H" => "HIS",
+  "I" => "ILE",
+  "L" => "LEU",
+  "K" => "LYS",
+  "M" => "MET",
+  "F" => "PHE",
+  "P" => "PRO",
+  "S" => "SER",
+  "T" => "THR",
+  "W" => "TRP",
+  "Y" => "TYR",
+  "V" => "VAL"
+}
+
 function parse_commandline()
     s = ArgParseSettings()
 
@@ -60,7 +83,7 @@ function readRotamerLibraryInfo(angles_input_file_name, energies_input_file_name
   while !eof(energies_file)
     info = split(readline(energies_file))
     ibin = int(info[2])
-    aa = info[1]
+    aa = aa3letter[info[1]]
     bdeg = int(info[4])
     if !haskey(by_aa, aa)
       by_aa[aa] = Dict{Int, Array{Float64, 1}}()

@@ -29,7 +29,7 @@ object Lattice {
   val eSglocal : ESgLocal = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/BGB2345.json")).getLines().mkString("")).convertTo[ESgLocal]
   //
   val epair : EPair = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/PMFHIX_SCALE.json")).getLines().mkString("")).convertTo[EPair]
-  //val eRotamer : ERotamer = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/PMFHIX_SCALE.json")).getLines().mkString("")).convertTo[ERotamer]
+  val eRotamer : ERotamer = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/rotamer_energies.json")).getLines().mkString("")).convertTo[ERotamer]
   val rotamerRadiusInfo : RotamerRadiusInfo = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/RADIJC.json")).getLines().mkString("")).convertTo[RotamerRadiusInfo]
 
   val backboneVectors : BasicVectorLibrary = JsonParser(
@@ -96,12 +96,11 @@ object Lattice {
   }
 
   def get_E_rot(aminoacids : Seq[SimplifiedAminoAcid]): Double = {
-    (1 to aminoacids.size - 2).map({
-      i => {
-        println(i)
+    (2 to aminoacids.size - 2).map({
+      case i => {
+        eRotamer.get(aminoacids(i), aminoacids(i - 1), aminoacids(i + 1))
       }
-    })
-    ???
+    }).reduceLeft(_ + _)
   }
 
   def get_E_SG_local(aminoacids : Seq[SimplifiedAminoAcid]) : Double = {
@@ -179,7 +178,7 @@ object Lattice {
   def getEnergy(aminoacids : Array[SimplifiedAminoAcid]) : Double = {
     0.25 * get_E_CA_trace(aminoacids) +
     // get_E_H_bond(aminoacids) +
-    //0.5 * get_E_rot(aminoacids) +
+    0.5 * get_E_rot(aminoacids) +
     1.0 * get_E_SG_local(aminoacids) +
     0.5 * get_E_one(aminoacids)  +
     5 * get_E_pair(aminoacids) +
