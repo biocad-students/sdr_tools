@@ -5,33 +5,33 @@ import DefaultJsonProtocol._
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoAcid
 
 case class ERotamer(
-      val local12 : Map[String, Map[String, Array[Double]]],
-      val local13 : Map[String, Map[String, Array[Double]]],
-      val local14 : Map[String, Map[String, Array[Double]]],
-      val local15 : Map[String, Map[String, Array[Double]]]) {
-  def get(aa1 : SimplifiedAminoAcid, aa2 : SimplifiedAminoAcid, distance : Int) : Double = {
-    if (!local12.contains(aa1.name))
-      return ??? //TODO: throw some error
-    if (!local12.getOrElse(aa1.name, Map[String, Array[Double]]()).contains(aa2.name))
-      return get(aa2, aa1, distance)
-    val cosPhi = aa1.rotamer.center.normalize * aa2.rotamer.center.normalize
+      val phi : Map[Int, Array[Double]],
+      val energies : Map[String, Map[Int, Array[Double]]]) {
 
-    val index = (-0.9 to 0.9 by 0.1).zipWithIndex.find({ c => cosPhi < c._1}) match {
-      case Some(v) => v._2
-      case _ => 19
-    }
-    distance match {
-      case 1 => local12(aa1.name)(aa2.name)(index)
-      case 2 => local13(aa1.name)(aa2.name)(index)
-      case 3 => local14(aa1.name)(aa2.name)(index)
-      case 4 => local15(aa1.name)(aa2.name)(index)
-      case _ => 0.0
-    }
+  def get(aa1 : SimplifiedAminoAcid, aa2 : SimplifiedAminoAcid, distance : Int) : Double = {
+    1.0
   }
 }
 
 object ERotamerJsonProtocol extends DefaultJsonProtocol {
-  implicit val ERotamerFormat = jsonFormat4(ERotamer)
+  implicit val ERotamerFormat = jsonFormat2(ERotamer)
+
+  implicit object ERotamerLibraryJsonFormat extends RootJsonFormat[ERotamer] {
+    def write(info: ERotamer) = info.toJson
+
+    def read(value: JsValue) = {
+      value.asJsObject.getFields("phi", "energies") match {
+        case Seq(JsObject(phi), JsObject(energies)) => {
+          new ERotamer(
+            phi.map({case (k, v) => (k.toInt, v.convertTo[Array[Double]])}),
+            energies.mapValues(_.convertTo[Map[String, Array[Double]]].map(
+              {case (k, v) => (k.toInt, v)}))
+          )
+        }
+        case _ => throw new DeserializationException("ERotamer expected")
+      }
+    }
+  }
 }
 
 import ERotamerJsonProtocol._
