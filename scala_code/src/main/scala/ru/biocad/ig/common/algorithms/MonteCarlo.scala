@@ -13,10 +13,14 @@ object MonteCarloRunner{
       val newStructure = move.makeMove(currentStructure, position)
       val oldE = getEnergy(currentStructure)
       val newE = getEnergy(newStructure)
+      println("in attemptMove: ")
+      println(newE)
       if (oldE < newE) {
+        println("accept new")
         newStructure
       }
       else {
+        println("reject new")
         currentStructure
       }
   }

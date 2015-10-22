@@ -32,6 +32,7 @@ object Lattice {
   val epair : EPair = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/PMFHIX_SCALE.json")).getLines().mkString("")).convertTo[EPair]
   val eRotamer : ERotamer = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/rotamer_energies.json")).getLines().mkString("")).convertTo[ERotamer]
   val rotamerRadiusInfo : RotamerRadiusInfo = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/RADIJC.json")).getLines().mkString("")).convertTo[RotamerRadiusInfo]
+  //val rotamerLibrary = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[RotamerInfo]]
 
   val backboneVectors : BasicVectorLibrary = JsonParser(
       Source.fromURL(getClass.getResource("/basic_vectors.json")
@@ -172,4 +173,47 @@ object Lattice {
     4.25 * get_E_tem(aminoacids)
   }
 
+  //val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
+
+  /**Returns full-atom representation for given simplified aminoacid
+    */
+  def toFullAtomRepresentation(aminoacids : Seq[SimplifiedAminoAcid]) = {
+    val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
+    val sidechainsInfo = JsonParser(
+      Source.fromURL(
+        getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
+
+    aa.sliding(4, 1).map({case Seq(a1, a2, a3, a4) => {
+      aa2.getUpdatedAtomInfo("CA", aa2.ca * LatticeConstants.MESH_SIZE) :+
+      restoreBackboneInfo(a1, a2, a3, a4, backboneInfo) ++
+      restoreSidechainsInfo(a1, a2, a3, a4, sidechainsInfo)
+    }
+    })
+  }
+
+  def restoreBackboneInfo(
+      a1 : SimplifiedAminoAcid,
+      a2 : SimplifiedAminoAcid,
+      a3 : SimplifiedAminoAcid,
+      a4 : SimplifiedAminoAcid) : Seq[PDBAtomInfo] = {
+    val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
+    val coordinatesMap = backboneInfo.restoreInfo(a2.name, d1, d2, d3)
+    val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
+    coordinatesMap.data.map({
+      case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.toSeq))
+    }).map({case (k, v) => aa2.getUpdatedAtomInfo(k, v) }).toSeq
+  }
+
+  def restoreSidechainsInfo(
+      a1 : SimplifiedAminoAcid,
+      a2 : SimplifiedAminoAcid,
+      a3 : SimplifiedAminoAcid,
+      a4 : SimplifiedAminoAcid) : Seq[PDBAtomInfo] = {
+    val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
+    val coordinatesMap = backboneInfo.restoreInfo(a2.name, d1, d2, d3)
+    val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
+    coordinatesMap.data.map({
+      case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.toSeq))
+    })
+  }
 }

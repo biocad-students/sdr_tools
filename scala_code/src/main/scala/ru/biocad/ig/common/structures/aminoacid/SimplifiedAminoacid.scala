@@ -13,8 +13,18 @@ class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
       math.round(atomsMap("CA").y / LatticeConstants.MESH_SIZE),
       math.round(atomsMap("CA").z / LatticeConstants.MESH_SIZE)
       )
-  val atomsVectorMap = atomsMap.map(x=> (x._1, Vector3d(x._2.x, x._2.y, x._2.z) - ca))
+  val atomsVectorMap = atomsMap.map(x => (x._1, Vector3d(x._2.x, x._2.y, x._2.z) - ca))
 
+  def getUpdatedAtomInfo(atom : String, updatedCoordinates : GeometryVector) : PDBAtomInfo = {
+    val a = atomsMap(atom)
+    new PDBAtomInfo(a.serial, a.atom, a.altLoc, a.resName, a.chainID,
+      a.resSeq, a.iCode,
+      updatedCoordinates.coordinates(1),
+      updatedCoordinates.coordinates(2),
+      updatedCoordinates.coordinates(3),
+      a.occupancy, a.tempFactor, a.element, a.charge
+    )
+  }
   //FIX: ..
   /** there should be rotamer center+radius.
   If rotamer center is changed and ca moved,  we should recompute all atoms when moving back to full-atom model.
