@@ -13,6 +13,7 @@ case class SidechainInfo(
 
     override def getPDBAtomInfo(aminoacid : SimplifiedAminoAcid,
             x : GeometryVector, y : GeometryVector, z : GeometryVector) : Seq[PDBAtomInfo] = {
+        //println("11111")
         /*data.map({
           case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.toSeq))
         }).map({case (k, v) => aminoacid.getUpdatedAtomInfo(k, v) }).toSeq**/

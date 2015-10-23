@@ -192,11 +192,12 @@ object Lattice {
         getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
 
     aminoacids.sliding(4, 1).map({case Seq(a1, a2, a3, a4) => {
-      Seq(a2.getUpdatedAtomInfo("CA", a2.ca * LatticeConstants.MESH_SIZE)) ++
-      restoreInfoFragment(a1, a2, a3, a4, backboneInfo) ++
+      //Seq(a2.getUpdatedAtomInfo("CA", a2.ca * LatticeConstants.MESH_SIZE)) ++
+      //restoreInfoFragment(a1, a2, a3, a4, backboneInfo) ++
       restoreInfoFragment(a1, a2, a3, a4, sidechainsInfo)
     }
-    })
+  }).foreach(println)
+    println("done all")
   }
 
   def restoreInfoFragment[T <: AminoacidFragment](
