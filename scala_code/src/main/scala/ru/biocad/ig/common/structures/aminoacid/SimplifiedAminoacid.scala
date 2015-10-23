@@ -19,9 +19,9 @@ class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
     val a = atomsMap(atom)
     new PDBAtomInfo(a.serial, a.atom, a.altLoc, a.resName, a.chainID,
       a.resSeq, a.iCode,
+      updatedCoordinates.coordinates(0),
       updatedCoordinates.coordinates(1),
       updatedCoordinates.coordinates(2),
-      updatedCoordinates.coordinates(3),
       a.occupancy, a.tempFactor, a.element, a.charge
     )
   }

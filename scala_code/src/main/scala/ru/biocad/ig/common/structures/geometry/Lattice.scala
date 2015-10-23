@@ -185,19 +185,21 @@ object Lattice {
 
   /**Returns full-atom representation for given simplified aminoacid
     */
-  def toFullAtomRepresentation(aminoacids : Seq[SimplifiedAminoAcid]) = {
+  def toFullAtomRepresentation(aminoacids : Seq[SimplifiedAminoAcid]) : Seq[PDBAtomInfo] = {
     val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
     val sidechainsInfo = JsonParser(
       Source.fromURL(
         getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
 
-    aminoacids.sliding(4, 1).map({case Seq(a1, a2, a3, a4) => {
-      //Seq(a2.getUpdatedAtomInfo("CA", a2.ca * LatticeConstants.MESH_SIZE)) ++
-      //restoreInfoFragment(a1, a2, a3, a4, backboneInfo) ++
+    val pdbData = aminoacids.sliding(4, 1).flatMap({case Seq(a1, a2, a3, a4) => {
+      Seq(a2.getUpdatedAtomInfo("CA", a2.ca * LatticeConstants.MESH_SIZE)) ++
+      restoreInfoFragment(a1, a2, a3, a4, backboneInfo) ++
       restoreInfoFragment(a1, a2, a3, a4, sidechainsInfo)
-    }
-  }).foreach(println)
+      }
+    }).toSeq
+    pdbData.foreach(println)
     println("done all")
+    pdbData
   }
 
   def restoreInfoFragment[T <: AminoacidFragment](
