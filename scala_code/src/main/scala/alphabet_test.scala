@@ -71,7 +71,7 @@ object MCTest{
       x=>Lattice.getEnergy(x.toArray),
       10)
     println(Lattice.getEnergy(ch1.toArray))
-    //ch1.map(Lattice.toFullAtomRepresentation)
+    Lattice.toFullAtomRepresentation(ch1)
     //val sidechainInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
 
 
