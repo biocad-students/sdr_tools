@@ -6,7 +6,7 @@ import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoAcid
 import ru.biocad.ig.common.structures.geometry.GeometryVector
 import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
 
-case class RotamerInfo(
+case class SidechainInfo(
   val representatives : Seq[Rotamer],
   val amounts : Seq[Int],
   var total : Int) extends AminoacidFragment {

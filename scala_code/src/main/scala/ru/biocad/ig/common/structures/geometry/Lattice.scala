@@ -7,10 +7,12 @@ import ru.biocad.ig.common.algorithms.geometry.HydrogenBondsFinder
 import ru.biocad.ig.common.io.pdb.{PDBAtomInfo}
 
 
-import ru.biocad.ig.alascan.constants.{AminoacidLibrary, BackboneInfo}
+import ru.biocad.ig.alascan.constants.{AminoacidLibrary, BackboneInfo, SidechainInfo}
 import spray.json._
 import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol
 import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol._
+import ru.biocad.ig.alascan.constants.json.SidechainLibraryJsonProtocol
+import ru.biocad.ig.alascan.constants.json.SidechainLibraryJsonProtocol._
 //import DefaultJsonProtocol._
 import scala.io.Source
 
@@ -22,6 +24,7 @@ import E14avgJsonProtocol._
 import ESgLocalJsonProtocol._
 import ERotamerJsonProtocol._
 import RotamerRadiusInfoJsonProtocol._
+
 
 import ru.biocad.ig.alascan.constants.json.{BasicVectorLibrary, BasicVectorLibraryJsonProtocol}
 import BasicVectorLibraryJsonProtocol._
@@ -37,7 +40,7 @@ object Lattice {
   val epair : EPair = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/PMFHIX_SCALE.json")).getLines().mkString("")).convertTo[EPair]
   val eRotamer : ERotamer = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/rotamer_energies.json")).getLines().mkString("")).convertTo[ERotamer]
   val rotamerRadiusInfo : RotamerRadiusInfo = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/RADIJC.json")).getLines().mkString("")).convertTo[RotamerRadiusInfo]
-  //val rotamerLibrary = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[RotamerInfo]]
+  //val rotamerLibrary = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
 
   val backboneVectors : BasicVectorLibrary = JsonParser(
       Source.fromURL(getClass.getResource("/basic_vectors.json")
@@ -186,7 +189,7 @@ object Lattice {
     val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
     val sidechainsInfo = JsonParser(
       Source.fromURL(
-        getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
+        getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
 
     aminoacids.sliding(4, 1).map({case Seq(a1, a2, a3, a4) => {
       Seq(a2.getUpdatedAtomInfo("CA", a2.ca * LatticeConstants.MESH_SIZE)) ++
