@@ -35,4 +35,11 @@ case class AminoacidLibrary[T <: AminoacidFragment](
         coordinatesMap.getPDBAtomInfo(aminoacid, x, y, z)
     }
 
+    //TODO: decide where to implement this
+    def setRotamerFromLibrary(aminoacidToModify : SimplifiedAminoAcid,
+    d1: Double, d2: Double, d3:Double) = {
+      val coordinatesMap = restoreAminoAcidInfo(aminoacid.name, d1, d2, d3)
+      coordinatesMap.setRotamerFromLibrary(aminoacidToModify, d1, d2, d3)
+    }
+
 }
