@@ -26,7 +26,7 @@ import RotamerRadiusInfoJsonProtocol._
 import ru.biocad.ig.alascan.constants.json.{BasicVectorLibrary, BasicVectorLibraryJsonProtocol}
 import BasicVectorLibraryJsonProtocol._
 import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
-import ru.biocad.ig.common.structures.geometry.GeometryVector
+
 
 object Lattice {
   val eone : EOne = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/EONE.json")).getLines().mkString("")).convertTo[EOne]
@@ -190,36 +190,20 @@ object Lattice {
 
     aminoacids.sliding(4, 1).map({case Seq(a1, a2, a3, a4) => {
       Seq(a2.getUpdatedAtomInfo("CA", a2.ca * LatticeConstants.MESH_SIZE)) ++
-      restoreBackboneInfo(a1, a2, a3, a4, backboneInfo) ++
-      restoreSidechainsInfo(a1, a2, a3, a4, sidechainsInfo)
+      restoreInfoFragment(a1, a2, a3, a4, backboneInfo) ++
+      restoreInfoFragment(a1, a2, a3, a4, sidechainsInfo)
     }
     })
   }
 
-  def restoreBackboneInfo(
+  def restoreInfoFragment[T <: AminoacidFragment](
       a1 : SimplifiedAminoAcid,
       a2 : SimplifiedAminoAcid,
       a3 : SimplifiedAminoAcid,
       a4 : SimplifiedAminoAcid,
-      backboneInfo : AminoacidLibrary[BackboneInfo]) : Seq[PDBAtomInfo] = {
+      fragmentInfo : AminoacidLibrary[T]) : Seq[PDBAtomInfo] = {
     val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
-    val coordinatesMap = backboneInfo.restoreInfo(a2.name, d1, d2, d3)
     val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
-    coordinatesMap.data.map({
-      case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.toSeq))
-    }).map({case (k, v) => a2.getUpdatedAtomInfo(k, v) }).toSeq
-  }
-
-  def restoreSidechainsInfo(
-      a1 : SimplifiedAminoAcid,
-      a2 : SimplifiedAminoAcid,
-      a3 : SimplifiedAminoAcid,
-      a4 : SimplifiedAminoAcid, backboneInfo : AminoacidLibrary[BackboneInfo]) : Seq[PDBAtomInfo] = {
-    val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
-    val coordinatesMap = backboneInfo.restoreInfo(a2.name, d1, d2, d3)
-    val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
-    coordinatesMap.data.map({
-      case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.toSeq))
-    }).map({case (k, v) => a2.getUpdatedAtomInfo(k, v) }).toSeq
+    fragmentInfo.restorePDBInfo(a2, d1, d2, d3, x, y, z)
   }
 }

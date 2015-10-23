@@ -120,7 +120,7 @@ object SubchainBackboneReconstructionTest{
     val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
     val result = filtered_map.sliding(4, 1).map({case Seq(a1, a2, a3, a4) => {
       val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
-      val coordinatesMap = backboneInfo.restoreInfo(a2.name, d1, d2, d3)
+      val coordinatesMap = backboneInfo.restoreAminoAcidInfo(a2.name, d1, d2, d3)
       val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
       coordinatesMap.data.map({
         case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.toSeq))

@@ -1,10 +1,14 @@
 package ru.biocad.ig.alascan.constants
 
-case class AminoacidLibrary[T](
+import ru.biocad.ig.common.io.pdb.PDBAtomInfo
+import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoAcid
+import ru.biocad.ig.common.structures.geometry.GeometryVector
+
+case class AminoacidLibrary[T <: AminoacidFragment](
   val data : Map[String, Map[Int, Map[Int, Map[Int, T]]]],
   val meshSize : Double = 1.0,
   val threshold : Double = 0.0)(implicit m: scala.reflect.Manifest[T]) {
-    def restoreInfo(aminoacid : String,
+    def restoreAminoAcidInfo(aminoacid : String,
       d1 : Double,
       d2 : Double,
       d3 : Double) : T = {
@@ -21,4 +25,14 @@ case class AminoacidLibrary[T](
       m3
       //TODO: add existance check and lookup for nearest point - or at least smth located near
     }
+
+    def restorePDBInfo(aminoacid : SimplifiedAminoAcid,
+            d1 : Double, d2 : Double, d3 : Double,
+            x : GeometryVector, y : GeometryVector, z : GeometryVector) : Seq[PDBAtomInfo] = {
+        //val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
+        val coordinatesMap = restoreAminoAcidInfo(aminoacid.name, d1, d2, d3)
+        //val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
+        coordinatesMap.getPDBAtomInfo(aminoacid, x, y, z)
+    }
+
 }
