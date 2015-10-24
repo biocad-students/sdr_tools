@@ -6,7 +6,13 @@ import ru.biocad.ig.common.structures.geometry.GeometryVector
 import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
 
 case class BackboneInfo(val data : Map[String, GeometryVector]) extends AminoacidFragment {
-
+  
+  /** Updates current aminoacid's atom coordinates (for backbone) with new ones and returns them
+    * @param aminoacid object containing original PDBAtomInfo structures
+    * Following parameters (x, y, z) -- describe local coordinate system's axes directions.
+    * They play role in convertion to global coordinate system.
+    * @return a list (Seq) of atom descriptions as PDBAtomInfo objects with updated coordinates
+    */
   override def getPDBAtomInfo(aminoacid : SimplifiedAminoAcid,
           x : GeometryVector, y : GeometryVector, z : GeometryVector) : Seq[PDBAtomInfo] = {
       data.map({
