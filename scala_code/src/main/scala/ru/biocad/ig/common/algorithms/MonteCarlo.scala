@@ -2,6 +2,7 @@ package ru.biocad.ig.common.algorithms
 
 import ru.biocad.ig.common.structures.geometry.LatticeBasicMove
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoAcid
+import ru.biocad.ig.common.structures.geometry.Lattice
 import scala.util.Random
 
 object MonteCarloRunner{
@@ -37,7 +38,10 @@ object MonteCarloRunner{
       )
     ).zipWithIndex.take(numberOfMoves).foldLeft(structure) {
       case (currentStructure, (shuffledMoves, time)) => {
-        attemptMove(currentStructure, moves.head, 1, getEnergy)
+        val newStructure = attemptMove(currentStructure, moves.head, 1, getEnergy)
+        if (Lattice.validateStructure(newStructure))
+          newStructure
+        else currentStructure
       }
 
     }
