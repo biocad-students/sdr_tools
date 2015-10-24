@@ -7,7 +7,7 @@ import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 import ru.biocad.ig.common.structures.geometry._
 
 case class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
-  val name = atoms.head.resName
+  val name : String = if (atoms.size > 0) atoms.head.resName else ""
   val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
   var ca : GeometryVector = Vector3d(
       math.round(atomsMap("CA").x / LatticeConstants.MESH_SIZE),

@@ -33,6 +33,8 @@ case class SidechainInfo(
       * @param aminoacidToModify aminoacid, which rotamer portion gets modified
       */
     def setRotamerFromLibrary(aminoacidToModify : SimplifiedAminoAcid) : SimplifiedAminoAcid = {
+        if (representatives.size == 0)
+            return aminoacidToModify
         val a = representatives.sortWith({
           (a, b) => (aminoacidToModify.rotamer.center - a.center).lengthSquared <
           (aminoacidToModify.rotamer.center - b.center).lengthSquared
@@ -48,7 +50,7 @@ case class SidechainInfo(
       * Following method implementation demonstrates usage example:
       * {{{
       * import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
-      * 
+      *
       * def moveRotamer(structure : Seq[SimplifiedAminoAcid], position : Int ) : SimplifiedAminoAcid = {
       *  val (a1, a2, a3, a4) = Seq(position - 1, position, position + 1, position + 2).map({i=>structure(i)})
       *  val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
@@ -59,6 +61,8 @@ case class SidechainInfo(
       * }}}
       */
     def changeRotamerToRandom(aminoacidToModify : SimplifiedAminoAcid) : SimplifiedAminoAcid = {
+        if (representatives.size < 2)
+            return aminoacidToModify
         val a = representatives.sortWith(
         {
           (a, b) =>
