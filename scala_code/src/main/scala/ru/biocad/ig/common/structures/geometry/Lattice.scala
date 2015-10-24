@@ -212,4 +212,28 @@ object Lattice {
     val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
     fragmentInfo.restorePDBInfo(a2, d1, d2, d3, x, y, z)
   }
+
+  def validateStructure(structure : Seq[SimplifiedAminoAcid]) : Boolean = {
+    val r1 = (0 to structure.size - 3).forall({
+      i => {
+        val a1 = structure(i).ca
+        val a2 = structure(i + 1).ca
+        val a3 = structure(i + 2).ca
+        val v1 = a1 - a2
+        val v2 = a3 - a2
+        val angle = v1.angleTo(v2)
+        (angle >= 72.5 && angle <= 154)
+      }
+    })
+    if (!r1)
+        return false
+    val r2 = (0 to structure.size - 4).forall({
+      i=>{
+        val a1 = structure(i).ca
+        val a2 = structure(i+3).ca
+        a1.distanceTo(a2) >= 4.05
+      }
+    })
+    return r2
+  }
 }

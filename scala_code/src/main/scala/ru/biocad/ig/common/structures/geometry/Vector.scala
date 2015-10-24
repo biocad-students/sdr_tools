@@ -31,6 +31,7 @@ sealed trait GeometryVector {
   def /(divider : Double) : GeometryVector = new Vector( coordinates.map( _ / divider) )
 
   def distanceTo(v : GeometryVector) = (this - v).length
+  def angleTo(v : GeometryVector) = math.toDegrees(math.acos((this * v) / (this.length*v.length)))
 
   def toSeq : Seq[Double]
   def lifted : GeometryVector // = coordinates ++ Seq(lengthSquared)
