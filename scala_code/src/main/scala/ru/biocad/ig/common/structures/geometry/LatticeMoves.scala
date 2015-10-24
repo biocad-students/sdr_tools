@@ -1,6 +1,8 @@
 package ru.biocad.ig.common.structures.geometry
 
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoAcid
+import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
+import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 import util.Random.nextInt
 
 trait LatticeBasicMove {
@@ -8,12 +10,20 @@ trait LatticeBasicMove {
   def makeMove(structure : Seq[SimplifiedAminoAcid], position : Int) : Seq[SimplifiedAminoAcid] = ???
 }
 /***/
-class RotamerMove extends LatticeBasicMove {
+class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo]) extends LatticeBasicMove {
+  def moveRotamer(structure : Seq[SimplifiedAminoAcid], position : Int ) : SimplifiedAminoAcid = {
+    val Seq(a1, a2, a3, a4) = Seq(position - 1, position, position+1, position + 2).map({i=>structure(i)})
+    val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
+    val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
+    val sidechainInfo = rotamerLibrary.restoreAminoAcidInfo(a2.name, d1, d2, d3)
+    sidechainInfo.changeRotamerToRandom(a2)
+  }
   override def makeMove(structure : Seq[SimplifiedAminoAcid], position : Int) : Seq[SimplifiedAminoAcid] = {
+    println("in RotamerMove")
     structure.zipWithIndex.map({
       case (el, i) => {
         if (i == position)
-        el.moveRotamer(Vector3d(1,1,1))
+        moveRotamer(structure, position)
         else el
       }
     })

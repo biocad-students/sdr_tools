@@ -180,16 +180,16 @@ object Lattice {
     5 * get_E_pair(aminoacids) +
     4.25 * get_E_tem(aminoacids)
   }
+  val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
+  val sidechainsInfo = JsonParser(
+    Source.fromURL(
+      getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
 
   //val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
 
   /**Returns full-atom representation for given simplified aminoacid
     */
   def toFullAtomRepresentation(aminoacids : Seq[SimplifiedAminoAcid]) : Seq[PDBAtomInfo] = {
-    val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
-    val sidechainsInfo = JsonParser(
-      Source.fromURL(
-        getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
 
     val pdbData = aminoacids.sliding(4, 1).flatMap({case Seq(a1, a2, a3, a4) => {
       Seq(a2.getUpdatedAtomInfo("CA", a2.ca * LatticeConstants.MESH_SIZE)) ++
