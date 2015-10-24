@@ -2,6 +2,7 @@ package ru.biocad.ig.common.structures.aminoacid
 
 import ru.biocad.ig.common.io.pdb.{PDBAtomInfo}
 import ru.biocad.ig.alascan.constants.LatticeConstants
+import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 
 import ru.biocad.ig.common.structures.geometry._
 
@@ -76,5 +77,8 @@ class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
     result
   }
 
-  def moveRotamer(shift : GeometryVector) : SimplifiedAminoAcid = ???
+  def moveRotamer(rotamerLibraryFragment : SidechainInfo) : SimplifiedAminoAcid = {
+      rotamerLibraryFragment.changeRotamerToRandom(this)
+  }
+
 }

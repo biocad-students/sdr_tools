@@ -2,8 +2,9 @@ package ru.biocad.ig.alascan.constants
 
 import ru.biocad.ig.common.io.pdb.PDBAtomInfo
 import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoAcid, Rotamer}
-import ru.biocad.ig.common.structures.geometry.{GeometryVector, AminoacidUtils}
-import java.util.Random
+import ru.biocad.ig.common.structures.geometry.GeometryVector
+import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
+import scala.util.Random
 
 case class SidechainInfo(
   val representatives : Seq[Rotamer],
@@ -31,24 +32,39 @@ case class SidechainInfo(
       *
       * @param aminoacidToModify aminoacid, which rotamer portion gets modified
       */
-    def setRotamerFromLibrary(aminoacidToModify : SimplifiedAminoAcid) : Unit = {
+    def setRotamerFromLibrary(aminoacidToModify : SimplifiedAminoAcid) : SimplifiedAminoAcid = {
         val a = representatives.sortWith({
           (a, b) => (aminoacidToModify.rotamer.center - a.center).lengthSquared <
           (aminoacidToModify.rotamer.center - b.center).lengthSquared
         })
         aminoacidToModify.rotamer = a.head
+        aminoacidToModify
     }
 
     /** Finds nearest rotamer in library fragment and replaces current aa's rotamer to some other (randomly picked)
       *
       * @param aminoacidToModify aminoacid, which rotamer portion gets modified
+      *
+      * Following method implementation demonstrates usage example:
+      * {{{
+      * import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
+      * 
+      * def moveRotamer(structure : Seq[SimplifiedAminoAcid], position : Int ) : SimplifiedAminoAcid = {
+      *  val (a1, a2, a3, a4) = Seq(position - 1, position, position + 1, position + 2).map({i=>structure(i)})
+      *  val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
+      *  val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
+      *  val sidechainInfo = rotamerLibrary.restoreAminoAcidInfo(aaToModify, d1, d2, d3)
+      *  sidechainInfo.changeRotamerToRandom(a2)
+      * }
+      * }}}
       */
-    def changeRotamerToRandom(aminoacidToModify : SimplifiedAminoAcid) : Unit = {
+    def changeRotamerToRandom(aminoacidToModify : SimplifiedAminoAcid) : SimplifiedAminoAcid = {
         val a = representatives.sortWith(
         {
           (a, b) =>
           (aminoacidToModify.rotamer.center - a.center).lengthSquared < (aminoacidToModify.rotamer.center - b.center).lengthSquared
         })
         aminoacidToModify.rotamer = Random.shuffle(a.tail).head
+        aminoacidToModify
     }
 }
