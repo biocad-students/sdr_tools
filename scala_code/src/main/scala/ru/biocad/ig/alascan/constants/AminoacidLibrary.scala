@@ -8,6 +8,13 @@ case class AminoacidLibrary[T <: AminoacidFragment](
   val data : Map[String, Map[Int, Map[Int, Map[Int, T]]]],
   val meshSize : Double = 1.0,
   val threshold : Double = 0.0)(implicit m: scala.reflect.Manifest[T]) {
+    /** Finds corresponding AminoacidFragment in database (based on d1, d2 and d3 parameters) and returns it
+      * @param aminoacid current library fragments are aminoacid-specific, so this param correspongs to first level of grouping - aminoacid name
+      * @param d1 distance-based grouping parameter in global coordinates (gets converted to discrete mesh units inside method call).
+      * @param d2 distance-based grouping parameter in global coordinates (gets converted to discrete mesh units inside method call).
+      * @param d3 distance-based grouping parameter in global coordinates (gets converted to discrete mesh units inside method call).
+      * @return corresponding AminoacidFragment in current library or empty object of that type
+      */
     def restoreAminoAcidInfo(aminoacid : String,
       d1 : Double,
       d2 : Double,
@@ -26,6 +33,16 @@ case class AminoacidLibrary[T <: AminoacidFragment](
       //TODO: add existance check and lookup for nearest point - or at least smth located near
     }
 
+    /** Gets fragment of full-atom representation for given simplified aminoacid based on local geometry params (d1, d2, d3) and local coordinate system.
+      * @param aminoacid simplified object, for which portion of full-atom representation gets retrieved
+      * @param d1 distance-based clustering parameter
+      * @param d2 distance-based clustering parameter
+      * @param d2 distance-based clustering parameter
+      * @param x local coordinate system's x axis vector
+      * @param y local coordinate system's y axis vector
+      * @param z local coordinate system's z axis vector
+      * @return list of PDBAtomInfo for given fragment with updated coordinates
+      */
     def restorePDBInfo(aminoacid : SimplifiedAminoAcid,
             d1 : Double, d2 : Double, d3 : Double,
             x : GeometryVector, y : GeometryVector, z : GeometryVector) : Seq[PDBAtomInfo] = {
@@ -33,13 +50,6 @@ case class AminoacidLibrary[T <: AminoacidFragment](
         val coordinatesMap = restoreAminoAcidInfo(aminoacid.name, d1, d2, d3)
         //val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
         coordinatesMap.getPDBAtomInfo(aminoacid, x, y, z)
-    }
-
-    //TODO: decide where to implement this
-    def setRotamerFromLibrary(aminoacidToModify : SimplifiedAminoAcid,
-    d1: Double, d2: Double, d3:Double) = {
-      val coordinatesMap = restoreAminoAcidInfo(aminoacid.name, d1, d2, d3)
-      coordinatesMap.setRotamerFromLibrary(aminoacidToModify, d1, d2, d3)
     }
 
 }
