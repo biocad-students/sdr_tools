@@ -1,7 +1,7 @@
 package ru.biocad.ig.alascan.constants
 
 import ru.biocad.ig.common.io.pdb.PDBAtomInfo
-import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoacid, RotamerInfo, Rotamer}
+import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoacid, RotamerInfo}
 import ru.biocad.ig.common.structures.geometry.GeometryVector
 import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
 import scala.util.Random
@@ -10,6 +10,11 @@ case class SidechainInfo(
   val representatives : Seq[RotamerInfo],
   val amounts : Seq[Int],
   var total : Int) extends AminoacidFragment {
+
+    def sortRepresentativesByDistanceTo(rotamer : GeometryVector) : Seq[RotamerInfo] = {
+      representatives.sortWith({(a, b) =>
+        (rotamer - a.rotamer).lengthSquared < (rotamer - b.rotamer).lengthSquared})
+    }
 
     /** Updates current aminoacid's atom coordinates (for sidechain) with new ones and returns them
       * @param aminoacid object containing original PDBAtomInfo structures
@@ -20,11 +25,7 @@ case class SidechainInfo(
     override def getPDBAtomInfo(aminoacid : SimplifiedAminoacid,
             x : GeometryVector, y : GeometryVector, z : GeometryVector,
             atomsMap : Map[String, PDBAtomInfo]) : Seq[PDBAtomInfo] = {
-        val a = representatives.sortWith({(a, b) =>
-          (aminoacid.rotamer.center - a.center).lengthSquared < (aminoacid.rotamer.center - b.center).lengthSquared})
-        //println(a.head.atoms)
-
-
+        val a = sortRepresentativesByDistanceTo(aminoacid.rotamer)
         a.head.atoms.map({case (k, v) =>
         (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.toSeq) )}).map({
           case (k, v) => aminoacid.getUpdatedAtomInfo(k, v, atomsMap)
@@ -39,11 +40,8 @@ case class SidechainInfo(
     def setRotamerFromLibrary(aminoacidToModify : SimplifiedAminoacid) : SimplifiedAminoacid = {
         if (representatives.size == 0)
             return aminoacidToModify
-        val a = representatives.sortWith({
-          (a, b) => (aminoacidToModify.rotamer.center - a.center).lengthSquared <
-          (aminoacidToModify.rotamer.center - b.center).lengthSquared
-        })
-        new SimplifiedAminoacid(aminoacidToModify.name, aminoacidToModify.ca, new Rotamer(a.head.center))
+        val a = sortRepresentativesByDistanceTo(aminoacidToModify.rotamer)
+        new SimplifiedAminoacid(aminoacidToModify.name, aminoacidToModify.ca, a.head.rotamer)
     }
 
     /** Finds nearest rotamer in library fragment and replaces current aa's rotamer to some other (randomly picked)
@@ -66,11 +64,7 @@ case class SidechainInfo(
     def changeRotamerToRandom(aminoacidToModify : SimplifiedAminoacid) : SimplifiedAminoacid = {
         if (representatives.size < 2)
             return aminoacidToModify
-        val a = representatives.sortWith(
-        {
-          (a, b) =>
-          (aminoacidToModify.rotamer.center - a.center).lengthSquared < (aminoacidToModify.rotamer.center - b.center).lengthSquared
-        })
-        new SimplifiedAminoacid(aminoacidToModify.name, aminoacidToModify.ca, new Rotamer(Random.shuffle(a.tail).head.center))
+        val a = sortRepresentativesByDistanceTo(aminoacidToModify.rotamer)
+        new SimplifiedAminoacid(aminoacidToModify.name, aminoacidToModify.ca, Random.shuffle(a.tail).head.rotamer)
     }
 }

@@ -8,7 +8,7 @@ import ru.biocad.ig.common.structures.geometry._
 
 case class SimplifiedAminoacid(val name : String,
   val ca : GeometryVector,
-  val rotamer : Rotamer) {
+  val rotamer : GeometryVector) {
   //val atoms : Seq[PDBAtomInfo]) {
   //val name : String = if (atoms.size > 0) atoms.head.resName else ""
   //val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
@@ -43,7 +43,7 @@ case class SimplifiedAminoacid(val name : String,
       len > distance_cutoff
     }})*/
     // when we use reduced representation, we can compute 'contact' between rotamer's centers of masses
-    (rotamer.center - aa.rotamer.center).length < distance_cutoff
+    (rotamer - aa.rotamer).length < distance_cutoff
     //return false
     //TODO: should implement
   }
@@ -108,6 +108,6 @@ object SimplifiedAminoacid{
 
     //val atomsVectorMap = atomsMap.map(x => (x._1, Vector3d(x._2.x, x._2.y, x._2.z) - ca))
 
-    new SimplifiedAminoacid(name, ca, new Rotamer(computeCenterCoordinates(atoms)))
+    new SimplifiedAminoacid(name, ca, computeCenterCoordinates(atoms))
   }
 }

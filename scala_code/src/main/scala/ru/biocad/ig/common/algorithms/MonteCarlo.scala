@@ -14,14 +14,14 @@ object MonteCarloRunner{
       val newStructure = move.makeMove(currentStructure, position)
       val oldE = getEnergy(currentStructure)
       val newE = getEnergy(newStructure)
-      println("in attemptMove: ")
-      println(newE)
+      //println("in attemptMove: ")
+      //println(newE)
       if (oldE < newE) {
-        println("accept new")
+        //println("accept new")
         newStructure
       }
       else {
-        println("reject new")
+        //println("reject new")
         currentStructure
       }
   }
@@ -38,10 +38,16 @@ object MonteCarloRunner{
       )
     ).zipWithIndex.take(numberOfMoves).foldLeft(structure) {
       case (currentStructure, (shuffledMoves, time)) => {
-        val newStructure = attemptMove(currentStructure, moves.head, 1, getEnergy)
-        if (Lattice.validateStructure(newStructure))
-          newStructure
-        else currentStructure
+        shuffledMoves.foldLeft(currentStructure) {
+          case (current, move) => {
+            val position = Random.nextInt(structure.length)
+            val newStructure = attemptMove(currentStructure, move, position, getEnergy)
+            if (Lattice.validateStructure(newStructure))
+              newStructure
+            else currentStructure
+          }
+        }
+
       }
 
     }
