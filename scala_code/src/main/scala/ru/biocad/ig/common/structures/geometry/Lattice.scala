@@ -190,12 +190,14 @@ object Lattice {
   /**Returns full-atom representation for given simplified aminoacid
     */
   def toFullAtomRepresentation(aminoacids : Seq[SimplifiedAminoacid], originalFullAtomChain : Seq[Seq[PDBAtomInfo]]) : Seq[PDBAtomInfo] = {
-
-    val pdbData = (aminoacids, originalFullAtomChain).zipped.toSeq.sliding(4, 1).flatMap({case Seq((a1, _), (a2, atoms), (a3, _), (a4, _)) => {
-      val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
-      Seq(a2.getUpdatedAtomInfo("CA", a2.ca * LatticeConstants.MESH_SIZE, atomsMap)) ++
-      restoreInfoFragment(a1, a2, a3, a4, backboneInfo, atomsMap) ++
-      restoreInfoFragment(a1, a2, a3, a4, sidechainsInfo, atomsMap)
+    val vectors = (aminoacids.tail, aminoacids).zipped.map(_.ca - _.ca)
+    val vectorsWithEdgeOnes = (vectors.head +: vectors) ++ Seq(vectors.init.last, vectors.last)
+    val pdbData = (aminoacids, vectorsWithEdgeOnes.sliding(3, 1).toSeq, originalFullAtomChain).zipped.flatMap({
+      case (aa, Seq(v1, v2, v3), atoms) => {
+        val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
+        Seq(aa.getUpdatedAtomInfo("CA", aa.ca * LatticeConstants.MESH_SIZE, atomsMap)) ++
+        restoreInfoFragment(aa, v1, v2, v3, backboneInfo, atomsMap) ++
+        restoreInfoFragment(aa, v1, v2, v3, sidechainsInfo, atomsMap)
       }
     }).toSeq
     //pdbData.foreach(println)
@@ -204,15 +206,15 @@ object Lattice {
   }
 
   def restoreInfoFragment[T <: AminoacidFragment](
-      a1 : SimplifiedAminoacid,
-      a2 : SimplifiedAminoacid,
-      a3 : SimplifiedAminoacid,
-      a4 : SimplifiedAminoacid,
+      aa : SimplifiedAminoacid,
+      v1 : GeometryVector,
+      v2 : GeometryVector,
+      v3 : GeometryVector,
       fragmentInfo : AminoacidLibrary[T],
       atomsMap : Map[String, PDBAtomInfo]) : Seq[PDBAtomInfo] = {
-    val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
-    val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
-    fragmentInfo.restorePDBInfo(a2, d1, d2, d3, x, y, z, atomsMap)
+    val (d1, d2, d3) = AminoacidUtils.getDistances(v1, v2, v3)
+    val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(v1, v2, v3)
+    fragmentInfo.restorePDBInfo(aa, d1, d2, d3, x, y, z, atomsMap)
   }
 
   def validateStructure(structure : Seq[SimplifiedAminoacid]) : Boolean = {
