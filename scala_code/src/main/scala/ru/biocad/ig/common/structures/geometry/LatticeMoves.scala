@@ -11,13 +11,27 @@ trait LatticeBasicMove {
 }
 /***/
 class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo]) extends LatticeBasicMove {
-  def moveRotamer(structure : Seq[SimplifiedAminoacid], position : Int ) : SimplifiedAminoacid = {
-    val Seq(a1, a2, a3, a4) = Seq(position - 1, position, position+1, position + 2).map({i=>structure(i)})
-    val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
-    val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
-    val sidechainInfo = rotamerLibrary.restoreAminoacidInfo(a2.name, d1, d2, d3)
-    sidechainInfo.changeRotamerToRandom(a2)
+  def moveRotamer(structure : Seq[SimplifiedAminoacid], i : Int ) : SimplifiedAminoacid = {
+    val v1 = i match {
+      case 0 => structure(i + 1).ca - structure(i).ca
+      case _ => structure(i).ca - structure(i - 1).ca
+    }
+    val v2 = i match {
+      case i if i == structure.size - 1 => structure(i - 1).ca - structure(i - 2).ca
+      case _ => structure(i + 1).ca - structure(i).ca
+    }
+    val v3 = i match {
+      case i if i == structure.size - 1 => structure(i).ca - structure(i - 1).ca
+      case i if i == structure.size - 2 => structure(i).ca - structure(i - 1).ca
+      case _ => structure(i + 2).ca - structure(i + 1).ca
+    }
+    val aa = structure(i)
+    val (d1, d2, d3) = AminoacidUtils.getDistances(v1, v2, v3)
+    val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(v1, v2, v3)
+    val sidechainInfo = rotamerLibrary.restoreAminoacidInfo(aa.name, d1, d2, d3)
+    sidechainInfo.changeRotamerToRandom(aa)
   }
+
   override def makeMove(structure : Seq[SimplifiedAminoacid], position : Int) : Seq[SimplifiedAminoacid] = {
     println("in RotamerMove")
     structure.zipWithIndex.map({

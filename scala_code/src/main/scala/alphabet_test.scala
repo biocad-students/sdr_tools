@@ -49,7 +49,7 @@ object MCTest{
     val ch1 = MonteCarloRunner.run(simplifiedChain,
       Seq(new BondMove(backboneVectors, 3),
         new RotamerMove(Lattice.sidechainsInfo)),
-        x => Lattice.getEnergy(x.toArray), 10)
+        x => Lattice.getEnergy(x.toArray), 100)
     println(Lattice.getEnergy(ch1.toArray))
     Lattice.toFullAtomRepresentation(ch1, fullAtomChain)
     //val sidechainInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
