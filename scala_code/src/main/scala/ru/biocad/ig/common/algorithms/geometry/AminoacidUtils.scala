@@ -30,6 +30,19 @@ object AminoacidUtils{
     (x, y, z)
   }
 
+  def getLocalCoordinateSystem(
+    v1 : GeometryVector,
+    v2 : GeometryVector,
+    v3 : GeometryVector
+  ) : (GeometryVector, GeometryVector, GeometryVector) = {
+
+    val vp = v2 + v3
+    val x = (v2 ** vp).normalize
+    val y = (vp ** x).normalize
+    val z = (x ** y).normalize
+    (x, y, z)
+  }
+
   /**
   returns global coordinates for given axes and atom's local coordinates
   */
@@ -54,5 +67,14 @@ object AminoacidUtils{
     val d3 = signum((v1**v2)*v3) * (v1 + v2 + v3).length
     (d1, d2, d3)
   }
+
+  def getDistances(v1 : GeometryVector, v2 : GeometryVector, v3 : GeometryVector)
+          : (Double, Double, Double) = {
+      val d1 = (v2 + v1).length
+      val d2 = (v3 + v2).length
+      val d3 = signum((v1**v2)*v3) * (v1 + v2 + v3).length
+      (d1, d2, d3)
+  }
+
 
 }
