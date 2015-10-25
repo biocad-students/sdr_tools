@@ -15,7 +15,7 @@ class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo]) extends L
     val Seq(a1, a2, a3, a4) = Seq(position - 1, position, position+1, position + 2).map({i=>structure(i)})
     val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
     val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
-    val sidechainInfo = rotamerLibrary.restoreAminoAcidInfo(a2.name, d1, d2, d3)
+    val sidechainInfo = rotamerLibrary.restoreAminoacidInfo(a2.name, d1, d2, d3)
     sidechainInfo.changeRotamerToRandom(a2)
   }
   override def makeMove(structure : Seq[SimplifiedAminoacid], position : Int) : Seq[SimplifiedAminoacid] = {

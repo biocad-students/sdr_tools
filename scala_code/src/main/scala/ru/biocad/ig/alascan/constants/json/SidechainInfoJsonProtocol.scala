@@ -3,7 +3,7 @@ package ru.biocad.ig.alascan.constants.json
 import spray.json._
 import ru.biocad.ig.alascan.constants.SidechainInfo
 
-import ru.biocad.ig.common.structures.aminoacid.Rotamer
+import ru.biocad.ig.common.structures.aminoacid.RotamerInfo
 import RotamerJsonProtocol._
 
 object SidechainInfoJsonProtocol extends DefaultJsonProtocol {
@@ -14,7 +14,7 @@ object SidechainInfoJsonProtocol extends DefaultJsonProtocol {
       println(value)
       value.asJsObject.getFields("representatives", "amounts", "total") match {
         case Seq(JsArray(representatives), JsArray(amounts), JsNumber(total)) => {
-          new SidechainInfo(representatives.map(_.convertTo[Rotamer]), amounts.map(_.convertTo[Int]), total.toInt)
+          new SidechainInfo(representatives.map(_.convertTo[RotamerInfo]), amounts.map(_.convertTo[Int]), total.toInt)
           }
         case _ => throw new DeserializationException("SidechainInfo expected")
       }

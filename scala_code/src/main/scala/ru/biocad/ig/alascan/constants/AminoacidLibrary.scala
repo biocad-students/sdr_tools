@@ -15,7 +15,7 @@ case class AminoacidLibrary[T <: AminoacidFragment](
       * @param d3 distance-based grouping parameter in global coordinates (gets converted to discrete mesh units inside method call).
       * @return corresponding AminoacidFragment in current library or empty object of that type
       */
-    def restoreAminoAcidInfo(aminoacid : String,
+    def restoreAminoacidInfo(aminoacid : String,
       d1 : Double,
       d2 : Double,
       d3 : Double) : T = {
@@ -45,11 +45,12 @@ case class AminoacidLibrary[T <: AminoacidFragment](
       */
     def restorePDBInfo(aminoacid : SimplifiedAminoacid,
             d1 : Double, d2 : Double, d3 : Double,
-            x : GeometryVector, y : GeometryVector, z : GeometryVector) : Seq[PDBAtomInfo] = {
+            x : GeometryVector, y : GeometryVector, z : GeometryVector,
+            atomsMap : Map[String, PDBAtomInfo]) : Seq[PDBAtomInfo] = {
         //val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
-        val coordinatesMap = restoreAminoAcidInfo(aminoacid.name, d1, d2, d3)
+        val coordinatesMap = restoreAminoacidInfo(aminoacid.name, d1, d2, d3)
         //val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
-        coordinatesMap.getPDBAtomInfo(aminoacid, x, y, z)
+        coordinatesMap.getPDBAtomInfo(aminoacid, x, y, z, atomsMap)
     }
 
 }

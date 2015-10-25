@@ -17,7 +17,7 @@ object SidechainLibraryJsonProtocol extends DefaultJsonProtocol {
             case (k,v) => (k.toInt, v.convertTo[SidechainInfo])
           }))}))})), meshSize.toDouble)
           }
-        case _ => throw new DeserializationException("Rotamer expected")
+        case _ => throw new DeserializationException("SidechainLibrary expected")
       }
     }
   }

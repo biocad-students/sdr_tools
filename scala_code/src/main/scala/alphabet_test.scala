@@ -34,7 +34,7 @@ object SimplifiedAACreationTest {
     val aa_by_chain = new PDBAminoAcidCollection(structure)
     val aas = aa_by_chain.aminoacids('L').keys.toSeq.sorted.take(5)
     println(aas)
-    val filtered_map = aas.map(aa => new SimplifiedAminoacid(aa_by_chain.aminoacids('L')(aa)))
+    val filtered_map = aas.map(aa => SimplifiedAminoacid(aa_by_chain.aminoacids('L')(aa)))
     println(filtered_map.head.toString)
   }
 }
@@ -53,14 +53,14 @@ object MCTest{
     println("local file read - done")
     val aa_by_chain = new PDBAminoAcidCollection(structure)
     val aas = aa_by_chain.aminoacidIds('L')
-    val filtered_map = aas.map(aa => new SimplifiedAminoacid(aa_by_chain.aminoacids('L')(aa))).toArray
+    val filtered_map = aas.map(aa => SimplifiedAminoacid(aa_by_chain.aminoacids('L')(aa))).toArray
     println(filtered_map.head.toString)
-    filtered_map
+    (filtered_map, aas.map(aa => aa_by_chain.aminoacids('L')(aa)).toArray)
   }
 
   def main(args : Array[String]) : Unit = {
     println("testing backbone reconstruction...")
-    val simplifiedChain = loadStructure("/2OSL.pdb")
+    val (simplifiedChain, fullAtomChain) = loadStructure("/2OSL.pdb")
     println(Lattice.getEnergy(simplifiedChain))
     val backboneVectors : Array[GeometryVector] = JsonParser(Source.fromURL(getClass.getResource("/basic_vectors.json")).getLines()
       .mkString("")).convertTo[BasicVectorLibrary].vectors.map({x:Seq[Double] => new Vector(x)}).toArray
@@ -72,7 +72,7 @@ object MCTest{
       x=>Lattice.getEnergy(x.toArray),
       10)
     println(Lattice.getEnergy(ch1.toArray))
-    //Lattice.toFullAtomRepresentation(ch1)
+    Lattice.toFullAtomRepresentation(ch1, fullAtomChain)
     //val sidechainInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
 
 
@@ -90,7 +90,7 @@ object energyTermsJSONLoadingTest{
     val aa_by_chain = new PDBAminoAcidCollection(structure)
     val aas = aa_by_chain.aminoacidIds('L')
     println(aas)
-    val filtered_map = aas.map(aa => new SimplifiedAminoacid(aa_by_chain.aminoacids('L')(aa))).toArray
+    val filtered_map = aas.map(aa => SimplifiedAminoacid(aa_by_chain.aminoacids('L')(aa))).toArray
     println(filtered_map.head.toString)
     filtered_map
   }
@@ -115,13 +115,13 @@ object SubchainBackboneReconstructionTest{
     println("local file read - ok")
     val aa_by_chain = new PDBAminoAcidCollection(structure)
     val aas = aa_by_chain.aminoacids('L').keys.toSeq.sorted.take(5)
-    println(aas)
-    val filtered_map = aas.map(aa => new SimplifiedAminoacid(aa_by_chain.aminoacids('L')(aa)))
-    println(filtered_map.head.atomsMap.toString)
+    //println(aas)
+    val filtered_map = aas.map(aa => SimplifiedAminoacid(aa_by_chain.aminoacids('L')(aa)))
+    //println(filtered_map.head.atomsMap.toString)
     val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
     val result = filtered_map.sliding(4, 1).map({case Seq(a1, a2, a3, a4) => {
       val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
-      val coordinatesMap = backboneInfo.restoreAminoAcidInfo(a2.name, d1, d2, d3)
+      val coordinatesMap = backboneInfo.restoreAminoacidInfo(a2.name, d1, d2, d3)
       val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
       coordinatesMap.data.map({
         case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.toSeq))
