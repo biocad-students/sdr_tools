@@ -1,6 +1,6 @@
 package ru.biocad.ig.common.algorithms.geometry
 
-import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoAcid
+import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
 import ru.biocad.ig.common.structures.geometry.GeometryVector
 import scala.math.signum
 /**

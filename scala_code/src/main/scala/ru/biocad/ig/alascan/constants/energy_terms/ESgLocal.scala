@@ -2,14 +2,14 @@ package ru.biocad.ig.alascan.constants.energy_terms
 
 import spray.json._
 import DefaultJsonProtocol._
-import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoAcid
+import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
 
 case class ESgLocal(
       val local12 : Map[String, Map[String, Array[Double]]],
       val local13 : Map[String, Map[String, Array[Double]]],
       val local14 : Map[String, Map[String, Array[Double]]],
       val local15 : Map[String, Map[String, Array[Double]]]) {
-  def get(aa1 : SimplifiedAminoAcid, aa2 : SimplifiedAminoAcid, distance : Int) : Double = {
+  def get(aa1 : SimplifiedAminoacid, aa2 : SimplifiedAminoacid, distance : Int) : Double = {
     if (!local12.contains(aa1.name))
       return ??? //TODO: throw some error
     if (!local12.getOrElse(aa1.name, Map[String, Array[Double]]()).contains(aa2.name))

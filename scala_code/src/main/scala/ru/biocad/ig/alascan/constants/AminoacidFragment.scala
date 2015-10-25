@@ -1,7 +1,7 @@
 package ru.biocad.ig.alascan.constants
 
 import ru.biocad.ig.common.io.pdb.PDBAtomInfo
-import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoAcid
+import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
 import ru.biocad.ig.common.structures.geometry.GeometryVector
 
 trait AminoacidFragment {
@@ -12,6 +12,6 @@ trait AminoacidFragment {
     * They play role in convertion to global coordinate system.
     * @return a list (Seq) of atom descriptions as PDBAtomInfo objects with updated coordinates
     */
-  def getPDBAtomInfo(aminoacid : SimplifiedAminoAcid,
+  def getPDBAtomInfo(aminoacid : SimplifiedAminoacid,
     x : GeometryVector, y : GeometryVector, z : GeometryVector) : Seq[PDBAtomInfo]
 }

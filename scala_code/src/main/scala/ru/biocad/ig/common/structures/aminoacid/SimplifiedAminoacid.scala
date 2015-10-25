@@ -6,7 +6,7 @@ import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 
 import ru.biocad.ig.common.structures.geometry._
 
-case class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
+case class SimplifiedAminoacid(val atoms : Seq[PDBAtomInfo]) {
   val name : String = if (atoms.size > 0) atoms.head.resName else ""
   val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
   var ca : GeometryVector = Vector3d(
@@ -49,7 +49,7 @@ case class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
   var rotamer : Rotamer = new Rotamer(atomsVectorMap, computeCenterCoordinates(atoms)) //
   //TODO: should add relative coords, filter atoms to include only rotamer atoms
 
-  def isInContactWith(aa : SimplifiedAminoAcid, distance_cutoff : Double = 4.2) : Boolean = {
+  def isInContactWith(aa : SimplifiedAminoacid, distance_cutoff : Double = 4.2) : Boolean = {
     /*atoms.forall({case atom => {
       val atom_vector = Vector3d(atom.x, atom.y, atom.z)
       val len = aa.atoms.map({case atom2 => (atom_vector - Vector3d(atom2.x, atom2.y, atom2.z)).length}).min
@@ -71,13 +71,13 @@ case class SimplifiedAminoAcid(val atoms : Seq[PDBAtomInfo]) {
     rotamer.toString
   ).mkString("SimplifiedAminoacid{\n", "\n ", "\n}")
 
-  def move(shift : GeometryVector) : SimplifiedAminoAcid = {
-    val result = new SimplifiedAminoAcid(atoms)
+  def move(shift : GeometryVector) : SimplifiedAminoacid = {
+    val result = new SimplifiedAminoacid(atoms)
     result.ca = this.ca + shift
     result
   }
 
-  def moveRotamer(rotamerLibraryFragment : SidechainInfo) : SimplifiedAminoAcid = {
+  def moveRotamer(rotamerLibraryFragment : SidechainInfo) : SimplifiedAminoacid = {
       rotamerLibraryFragment.changeRotamerToRandom(this)
   }
 
