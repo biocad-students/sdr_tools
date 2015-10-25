@@ -127,7 +127,7 @@ object Lattice {
   def get_E_two(i : Int, j : Int, ai : SimplifiedAminoacid, aj : SimplifiedAminoacid, f : Double) : Double = {
     val rRepulsive = rotamerRadiusInfo.getRrep(ai.name, aj.name)
     val rInteraction = rotamerRadiusInfo.getR(ai.name, aj.name)
-    (ai.rotamer.center - aj.rotamer.center).length match {
+    (ai.rotamer - aj.rotamer).length match {
       case x if x < rRepulsive => rotamerRadiusInfo.eRepulsive
       case x if x < rInteraction && epair.get(ai.name, aj.name) >= 0.0 => epair.get(ai.name, aj.name)*(if (j - i == 5 || j-i == 6) 0.6 else 1.0)
       case _ => epair.get(ai.name, aj.name) *
@@ -198,7 +198,7 @@ object Lattice {
       restoreInfoFragment(a1, a2, a3, a4, sidechainsInfo, atomsMap)
       }
     }).toSeq
-    pdbData.foreach(println)
+    //pdbData.foreach(println)
     println("done all")
     pdbData
   }

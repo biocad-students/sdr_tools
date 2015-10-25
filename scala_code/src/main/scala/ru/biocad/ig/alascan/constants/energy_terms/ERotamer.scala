@@ -13,11 +13,11 @@ case class ERotamer(
     val v1 : GeometryVector = prev.ca - current.ca
     val v2 : GeometryVector = next.ca - current.ca
     val distance : Int = (prev.ca - next.ca).lengthSquared.toInt
-    println(distance)
+    //println(distance)
     if (phi.contains(distance)) {
       val angle = Math.round(Math.toDegrees(Math.acos((v1*v2) /(v1.length*v2.length))))
-      phi(distance).foreach(println)
-      println(angle)
+      //phi(distance).foreach(println)
+      //println(angle)
       val index = phi(distance).indexWhere({case x => Math.abs(x - angle) < 1.0}) // TODO: add epsilon or some sort of approx
       if (index >= 0){
         val values = energies.getOrElse(current.name, Map[Int, Seq[Double]]()).getOrElse(distance, Seq[Double]())

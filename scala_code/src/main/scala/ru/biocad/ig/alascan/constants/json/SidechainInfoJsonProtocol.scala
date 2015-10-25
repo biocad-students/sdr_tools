@@ -11,7 +11,6 @@ object SidechainInfoJsonProtocol extends DefaultJsonProtocol {
     def write(info: SidechainInfo) = info.toJson
 
     def read(value: JsValue) = {
-      println(value)
       value.asJsObject.getFields("representatives", "amounts", "total") match {
         case Seq(JsArray(representatives), JsArray(amounts), JsNumber(total)) => {
           new SidechainInfo(representatives.map(_.convertTo[RotamerInfo]), amounts.map(_.convertTo[Int]), total.toInt)

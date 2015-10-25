@@ -36,7 +36,7 @@ class BondMove(val basicVectors :  Array[GeometryVector], val numberOfBonds : In
   def prepareMove(moveVector : GeometryVector,
       structure : Seq[SimplifiedAminoacid],
       position : Int) : Seq[SimplifiedAminoacid] = {
-
+    println("in BondMove")
     structure.zipWithIndex.map({case ( el, i) => {
       if (i >= position && i < position + numberOfBonds - 1)
       el.move(moveVector)
