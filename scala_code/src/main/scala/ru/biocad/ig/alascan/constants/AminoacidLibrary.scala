@@ -1,7 +1,7 @@
 package ru.biocad.ig.alascan.constants
 
 import ru.biocad.ig.common.io.pdb.PDBAtomInfo
-import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoAcid
+import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
 import ru.biocad.ig.common.structures.geometry.GeometryVector
 
 case class AminoacidLibrary[T <: AminoacidFragment](
@@ -43,7 +43,7 @@ case class AminoacidLibrary[T <: AminoacidFragment](
       * @param z local coordinate system's z axis vector
       * @return list of PDBAtomInfo for given fragment with updated coordinates
       */
-    def restorePDBInfo(aminoacid : SimplifiedAminoAcid,
+    def restorePDBInfo(aminoacid : SimplifiedAminoacid,
             d1 : Double, d2 : Double, d3 : Double,
             x : GeometryVector, y : GeometryVector, z : GeometryVector) : Seq[PDBAtomInfo] = {
         //val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)

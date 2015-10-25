@@ -5,7 +5,7 @@ import ru.biocad.ig.common.io.pdb.{PDBStructure, PDBAtomInfo, PDBAminoAcidCollec
 import ru.biocad.ig.common.structures.geometry.{
     Vector, Vector2d, Vector3d,InfiniteVector}
 
-import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoAcid}
+import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoacid}
 import spray.json._
 //import DefaultJsonProtocol._
 import scala.io.Source
@@ -34,7 +34,7 @@ object SimplifiedAACreationTest {
     val aa_by_chain = new PDBAminoAcidCollection(structure)
     val aas = aa_by_chain.aminoacids('L').keys.toSeq.sorted.take(5)
     println(aas)
-    val filtered_map = aas.map(aa => new SimplifiedAminoAcid(aa_by_chain.aminoacids('L')(aa)))
+    val filtered_map = aas.map(aa => new SimplifiedAminoacid(aa_by_chain.aminoacids('L')(aa)))
     println(filtered_map.head.toString)
   }
 }
@@ -53,7 +53,7 @@ object MCTest{
     println("local file read - done")
     val aa_by_chain = new PDBAminoAcidCollection(structure)
     val aas = aa_by_chain.aminoacidIds('L')
-    val filtered_map = aas.map(aa => new SimplifiedAminoAcid(aa_by_chain.aminoacids('L')(aa))).toArray
+    val filtered_map = aas.map(aa => new SimplifiedAminoacid(aa_by_chain.aminoacids('L')(aa))).toArray
     println(filtered_map.head.toString)
     filtered_map
   }
@@ -90,7 +90,7 @@ object energyTermsJSONLoadingTest{
     val aa_by_chain = new PDBAminoAcidCollection(structure)
     val aas = aa_by_chain.aminoacidIds('L')
     println(aas)
-    val filtered_map = aas.map(aa => new SimplifiedAminoAcid(aa_by_chain.aminoacids('L')(aa))).toArray
+    val filtered_map = aas.map(aa => new SimplifiedAminoacid(aa_by_chain.aminoacids('L')(aa))).toArray
     println(filtered_map.head.toString)
     filtered_map
   }
@@ -116,7 +116,7 @@ object SubchainBackboneReconstructionTest{
     val aa_by_chain = new PDBAminoAcidCollection(structure)
     val aas = aa_by_chain.aminoacids('L').keys.toSeq.sorted.take(5)
     println(aas)
-    val filtered_map = aas.map(aa => new SimplifiedAminoAcid(aa_by_chain.aminoacids('L')(aa)))
+    val filtered_map = aas.map(aa => new SimplifiedAminoacid(aa_by_chain.aminoacids('L')(aa)))
     println(filtered_map.head.atomsMap.toString)
     val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
     val result = filtered_map.sliding(4, 1).map({case Seq(a1, a2, a3, a4) => {

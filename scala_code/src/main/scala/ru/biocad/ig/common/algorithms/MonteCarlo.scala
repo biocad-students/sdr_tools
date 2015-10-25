@@ -1,16 +1,16 @@
 package ru.biocad.ig.common.algorithms
 
 import ru.biocad.ig.common.structures.geometry.LatticeBasicMove
-import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoAcid
+import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
 import ru.biocad.ig.common.structures.geometry.Lattice
 import scala.util.Random
 
 object MonteCarloRunner{
   /** helper method to hide move attempt*/
-  def attemptMove(currentStructure : Seq[SimplifiedAminoAcid],
+  def attemptMove(currentStructure : Seq[SimplifiedAminoacid],
     move : LatticeBasicMove,
     position : Int,
-    getEnergy : Seq[SimplifiedAminoAcid] => Double) : Seq[SimplifiedAminoAcid] = {
+    getEnergy : Seq[SimplifiedAminoacid] => Double) : Seq[SimplifiedAminoacid] = {
       val newStructure = move.makeMove(currentStructure, position)
       val oldE = getEnergy(currentStructure)
       val newE = getEnergy(newStructure)
@@ -25,9 +25,9 @@ object MonteCarloRunner{
         currentStructure
       }
   }
-  def run(structure : Seq[SimplifiedAminoAcid],
+  def run(structure : Seq[SimplifiedAminoacid],
           moves : Seq[LatticeBasicMove],
-          getEnergy : Seq[SimplifiedAminoAcid] => Double,
+          getEnergy : Seq[SimplifiedAminoacid] => Double,
           //ck_rule : Int => Double,
           numberOfMoves : Int = 1000) = {
 

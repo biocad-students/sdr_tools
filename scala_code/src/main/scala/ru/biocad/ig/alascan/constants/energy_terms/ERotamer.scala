@@ -2,14 +2,14 @@ package ru.biocad.ig.alascan.constants.energy_terms
 
 import spray.json._
 import DefaultJsonProtocol._
-import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoAcid
+import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
 import ru.biocad.ig.common.structures.geometry.GeometryVector
 
 case class ERotamer(
       val phi : Map[Int, Seq[Double]],
       val energies : Map[String, Map[Int, Seq[Double]]]) {
 
-  def get(current : SimplifiedAminoAcid, prev : SimplifiedAminoAcid, next : SimplifiedAminoAcid) : Double = {
+  def get(current : SimplifiedAminoacid, prev : SimplifiedAminoacid, next : SimplifiedAminoacid) : Double = {
     val v1 : GeometryVector = prev.ca - current.ca
     val v2 : GeometryVector = next.ca - current.ca
     val distance : Int = (prev.ca - next.ca).lengthSquared.toInt

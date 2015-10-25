@@ -1,7 +1,7 @@
 package ru.biocad.ig.alascan.constants
 
 import ru.biocad.ig.common.io.pdb.PDBAtomInfo
-import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoAcid, Rotamer}
+import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoacid, Rotamer}
 import ru.biocad.ig.common.structures.geometry.GeometryVector
 import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
 import scala.util.Random
@@ -17,7 +17,7 @@ case class SidechainInfo(
       * They play role in convertion to global coordinate system.
       * @return a list (Seq) of atom descriptions as PDBAtomInfo objects with updated coordinates
       */
-    override def getPDBAtomInfo(aminoacid : SimplifiedAminoAcid,
+    override def getPDBAtomInfo(aminoacid : SimplifiedAminoacid,
             x : GeometryVector, y : GeometryVector, z : GeometryVector) : Seq[PDBAtomInfo] = {
         val a = representatives.sortWith({(a, b) =>
           (aminoacid.rotamer.center - a.center).lengthSquared < (aminoacid.rotamer.center - b.center).lengthSquared})
@@ -28,11 +28,11 @@ case class SidechainInfo(
         }).toSeq
     }
 
-    /** Replaces rotamer of given SimplifiedAminoAcid with some Rotamer from current library fragment
+    /** Replaces rotamer of given SimplifiedAminoacid with some Rotamer from current library fragment
       *
       * @param aminoacidToModify aminoacid, which rotamer portion gets modified
       */
-    def setRotamerFromLibrary(aminoacidToModify : SimplifiedAminoAcid) : SimplifiedAminoAcid = {
+    def setRotamerFromLibrary(aminoacidToModify : SimplifiedAminoacid) : SimplifiedAminoacid = {
         if (representatives.size == 0)
             return aminoacidToModify
         val a = representatives.sortWith({
@@ -51,7 +51,7 @@ case class SidechainInfo(
       * {{{
       * import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
       *
-      * def moveRotamer(structure : Seq[SimplifiedAminoAcid], position : Int ) : SimplifiedAminoAcid = {
+      * def moveRotamer(structure : Seq[SimplifiedAminoacid], position : Int ) : SimplifiedAminoacid = {
       *  val (a1, a2, a3, a4) = Seq(position - 1, position, position + 1, position + 2).map({i=>structure(i)})
       *  val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
       *  val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
@@ -60,7 +60,7 @@ case class SidechainInfo(
       * }
       * }}}
       */
-    def changeRotamerToRandom(aminoacidToModify : SimplifiedAminoAcid) : SimplifiedAminoAcid = {
+    def changeRotamerToRandom(aminoacidToModify : SimplifiedAminoacid) : SimplifiedAminoacid = {
         if (representatives.size < 2)
             return aminoacidToModify
         val a = representatives.sortWith(

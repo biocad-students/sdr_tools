@@ -2,7 +2,7 @@ package ru.biocad.ig.alascan.constants.energy_terms
 
 import spray.json._
 import DefaultJsonProtocol._
-import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoAcid
+import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
 
 case class RotamerRadiusInfo(
       val aminoacids : Map[String, Int],

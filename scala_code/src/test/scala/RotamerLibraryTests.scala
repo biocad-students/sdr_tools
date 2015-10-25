@@ -7,7 +7,7 @@ import ru.biocad.ig.alascan.constants.json.SidechainLibraryJsonProtocol
 import ru.biocad.ig.alascan.constants.json.SidechainLibraryJsonProtocol._
 
 import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
-import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoAcid
+import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
 import ru.biocad.ig.common.io.pdb.PDBAtomInfo
 
 class RotamerLibraryTests extends FlatSpec with Matchers {
@@ -20,7 +20,7 @@ class RotamerLibraryTests extends FlatSpec with Matchers {
 
   it should "correctly call setRotamerFromLibrary for empty SidechainInfo" in {
     val s = SidechainInfo(Seq(), Seq(), 0)
-    val aa = new SimplifiedAminoAcid(Seq(
+    val aa = new SimplifiedAminoacid(Seq(
       PDBAtomInfo(1, "CA", ' ',"ARG", 'L', 2, ' ', 0, 0, 0, 0,0, "C", "")
     ))
     noException should be thrownBy s.setRotamerFromLibrary(aa)
@@ -31,7 +31,7 @@ class RotamerLibraryTests extends FlatSpec with Matchers {
 
   it should "correctly call changeRotamerToRandom for empty SidechainInfo" in {
     val s = SidechainInfo(Seq(), Seq(), 0)
-    val aa = new SimplifiedAminoAcid(Seq(
+    val aa = new SimplifiedAminoacid(Seq(
       PDBAtomInfo(1, "CA", ' ',"ARG", 'L', 2, ' ', 0, 0, 0, 0,0, "C", "")
       ))
     noException should be thrownBy s.changeRotamerToRandom(aa)
