@@ -4,13 +4,15 @@ import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
 import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
 import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 import util.Random.nextInt
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
 trait LatticeBasicMove {
   def isValid() : Boolean = ???
   def makeMove(structure : Seq[SimplifiedAminoacid], position : Int) : Seq[SimplifiedAminoacid] = ???
 }
 /***/
-class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo]) extends LatticeBasicMove {
+class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
+        extends LatticeBasicMove with LazyLogging {
   def moveRotamer(structure : Seq[SimplifiedAminoacid], i : Int ) : SimplifiedAminoacid = {
     val v1 = i match {
       case 0 => structure(i + 1).ca - structure(i).ca
@@ -33,7 +35,7 @@ class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo]) extends L
   }
 
   override def makeMove(structure : Seq[SimplifiedAminoacid], position : Int) : Seq[SimplifiedAminoacid] = {
-    println("in RotamerMove")
+    logger.debug("in RotamerMove at position: " + position.toString)
     structure.zipWithIndex.map({
       case (el, i) => {
         if (i == position)
@@ -46,11 +48,13 @@ class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo]) extends L
 
 /**there should be several kinds of bond makeMoves,
 this class takes number of bonds to makeMove, starting from zero*/
-class BondMove(val basicVectors :  Array[GeometryVector], val numberOfBonds : Int) extends LatticeBasicMove {
+class BondMove(val basicVectors :  Array[GeometryVector],
+        val numberOfBonds : Int) extends LatticeBasicMove with LazyLogging {
+
   def prepareMove(moveVector : GeometryVector,
       structure : Seq[SimplifiedAminoacid],
       position : Int) : Seq[SimplifiedAminoacid] = {
-    println("in BondMove")
+    logger.debug("in " + numberOfBonds.toString + "-BondMove starting at position: " + position.toString)
     structure.zipWithIndex.map({case ( el, i) => {
       if (i >= position && i < position + numberOfBonds - 1)
       el.move(moveVector)
@@ -67,7 +71,7 @@ class BondMove(val basicVectors :  Array[GeometryVector], val numberOfBonds : In
     position : Int) : Seq[SimplifiedAminoacid] = prepareMove(getRandomVector(), structure, position)
 }
 
-//direction == 1.0 means towards N-terminus, direction = -1 means tovards C
+//direction == 1.0 means towards N-terminus, direction = -1 means towards C
 class DisplacementMove(val basicVectors :  Array[GeometryVector], val direction : Int) extends LatticeBasicMove {
   override def makeMove(structure : Seq[SimplifiedAminoacid], position : Int) : Seq[SimplifiedAminoacid] = {
     structure.zipWithIndex.map({case (el, i) => {
