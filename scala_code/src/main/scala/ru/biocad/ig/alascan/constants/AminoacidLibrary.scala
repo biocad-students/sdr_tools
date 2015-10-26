@@ -4,6 +4,13 @@ import ru.biocad.ig.common.io.pdb.PDBAtomInfo
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
 import ru.biocad.ig.common.structures.geometry.GeometryVector
 
+/** Storage, which contains information about aminoacid fragment's positions collected from Protein Data Bank, based on local topology
+  *
+  * @constructor creates object from given collected information
+  * @param data contains Map of AminoacidFragment objects, collected for given aminoacid (first level Map key) and set of distance-based parameters (next levels of Map's keys)
+  * @param meshSize collected data and int keys in Map are discretized based on this parameter
+  * @param threshold ??? i don't remember //TODO: remember!
+  */
 case class AminoacidLibrary[T <: AminoacidFragment](
   val data : Map[String, Map[Int, Map[Int, Map[Int, T]]]],
   val meshSize : Double = 1.0,
