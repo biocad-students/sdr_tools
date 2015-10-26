@@ -5,7 +5,7 @@ import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
 import ru.biocad.ig.common.structures.geometry.Lattice
 import scala.util.Random
 
-object MonteCarloRunner{
+object MonteCarlo{
   /** helper method to hide move attempt*/
   def attemptMove(currentStructure : Seq[SimplifiedAminoacid],
     move : LatticeBasicMove,

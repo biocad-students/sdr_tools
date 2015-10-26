@@ -42,10 +42,11 @@ object Lattice {
   val rotamerRadiusInfo : RotamerRadiusInfo = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/RADIJC.json")).getLines().mkString("")).convertTo[RotamerRadiusInfo]
   //val rotamerLibrary = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
 
-  val backboneVectors : BasicVectorLibrary = JsonParser(
+  val backboneVectors : Array[GeometryVector] = JsonParser(
       Source.fromURL(getClass.getResource("/basic_vectors.json")
-    ).getLines().mkString("")).convertTo[BasicVectorLibrary]//.map({x:Seq[Double] => new Vector(x)})
-
+    ).getLines().mkString("")).convertTo[BasicVectorLibrary].vectors.map({
+          x : Seq[Double] => new Vector(x)
+        }).toArray
   /*
   return value indicates that aminoacids i and j are in contact
   array can be aminoacid-pair specific.
