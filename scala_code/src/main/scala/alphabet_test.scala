@@ -17,16 +17,16 @@ import ru.biocad.ig.common.algorithms.MonteCarloRunner
   */
 object MCTest extends LazyLogging {
 
-  private case class Config(input_pdb_file : File = new File("2OSL.pdb"),
-      output_pdb_file : File = null,
-      number_of_moves : Int = 100,
+  private case class Config(inputFile : File = new File("2OSL.pdb"),
+      outputFile : File = new File("result.pdb"),
+      numberOfMoves : Int = 100,
       //TODO: add option - refine/fold/alascan - default refine
       debug : Boolean = false)
 
   private def getParser = new scopt.OptionParser[Config]("sdr_tools") {
-      opt[File]('i', "input_pdb_file") action {(s, c) => c.copy(input_pdb_file = s)} text "input file in PDB format"
-      opt[File]('o', "output_pdb_file") action {(s, c) => c.copy(output_pdb_file = s)} text "output file in PDB format"
-      opt[Int]('n', "number_of_moves") action {(s, c) => c.copy(number_of_moves = s)} text "number of iterations (moves) to call MC"
+      opt[File]('i', "inputFile") action {(s, c) => c.copy(inputFile = s)} text "input file in PDB format"
+      opt[File]('o', "outputFile") action {(s, c) => c.copy(outputFile = s)} text "output file in PDB format"
+      opt[Int]('n', "numberOfMoves") action {(s, c) => c.copy(numberOfMoves = s)} text "number of iterations (moves) to call MC"
       opt[Unit]("debug") action {(_, c) => c.copy(debug = true)} text "enable debug output"
       help("help") text "this message"
   }
@@ -36,7 +36,7 @@ object MCTest extends LazyLogging {
     parser.parse(args, Config()) match {
       case Some(config) =>
         try {
-          MonteCarloRunner.run(config.input_pdb_file, config.output_pdb_file, config.number_of_moves)
+          MonteCarloRunner.run(config.inputFile, config.outputFile, config.numberOfMoves)
         } catch {
           case e : Exception =>
             logger.error(s"Fatal error: ${e.getMessage}")

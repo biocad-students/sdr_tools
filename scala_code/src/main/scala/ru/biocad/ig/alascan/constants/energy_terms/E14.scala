@@ -21,8 +21,8 @@ case class E14avg(val aros : Array[Array[Double]],
       }
   }
 
-  def get(r14 : Double, r14_prev : Double) : Double = {
-    return aros(getBinNumber(r14))(getBinNumber(r14_prev))
+  def get(r14 : Double, r14prev : Double) : Double = {
+    return aros(getBinNumber(r14))(getBinNumber(r14prev))
   }
 }
 

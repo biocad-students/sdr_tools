@@ -25,6 +25,7 @@ import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
 
 import ru.biocad.ig.alascan.constants.energy_terms._
 
+import ru.biocad.ig.common.io.pdb.PDBWriter
 
 
 /** Selects method of data processing from command line parameters
@@ -36,14 +37,13 @@ object MonteCarloRunner extends LazyLogging {
     val structure : PDBStructure = new PDBStructure()
     structure.readFile(getClass.getResource(filename).getFile())
     println("local file read - done")
-    val aa_by_chain = new PDBAminoAcidCollection(structure)
-    val aas = aa_by_chain.aminoacidIds(chain)
-    val filtered_map = aas.map(aa => SimplifiedAminoacid(aa_by_chain.aminoacids(chain)(aa))).toArray
-    //println(filtered_map.head.toString)
-    (filtered_map, aas.map(aa => aa_by_chain.aminoacids(chain)(aa)).toArray)
+    val aaByChain = new PDBAminoAcidCollection(structure)
+    val aas = aaByChain.aminoacidIds(chain)
+    val filteredMap = aas.map(aa => SimplifiedAminoacid(aaByChain.aminoacids(chain)(aa))).toArray
+    (filteredMap, aas.map(aa => aaByChain.aminoacids(chain)(aa)).toArray)
   }
 
-  def run(input_pdb_file : File, output_pdb_file : File, number_of_moves : Int) = {
+  def run(inputFile : File, outputFile : File, numberOfMoves : Int) = {
     println("testing backbone reconstruction...")
     val (simplifiedChain, fullAtomChain) = loadStructure("/2OSL.pdb")
     logger.info("Energy before structure refinement: " + Lattice.getEnergy(simplifiedChain).toString)
@@ -52,11 +52,13 @@ object MonteCarloRunner extends LazyLogging {
     val ch1 = MonteCarlo.run(simplifiedChain,
       Seq(new BondMove(Lattice.backboneVectors, 3),
         new RotamerMove(Lattice.sidechainsInfo)),
-        x => Lattice.getEnergy(x.toArray), number_of_moves)
+        x => Lattice.getEnergy(x.toArray), numberOfMoves)
     logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1.toArray))
-    Lattice.toFullAtomRepresentation(ch1, fullAtomChain)
+    val result = Lattice.toFullAtomRepresentation(ch1, fullAtomChain)
     //val sidechainInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
-
+    val w = new PDBWriter(outputFile)
+    w.writeAtomInfo(result)
+    w.close()
 
   }
 

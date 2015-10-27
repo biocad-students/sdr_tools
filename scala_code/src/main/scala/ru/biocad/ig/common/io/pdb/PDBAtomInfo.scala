@@ -18,6 +18,10 @@ case class PDBAtomInfo(
     element : String,
     charge : String
   ) {
+
+  override def toString = {
+    Seq(serial, atom, altLoc, resName, chainID, resSeq, iCode, x, y, z, occupancy, tempFactor, element, charge).mkString("")
+  }
 }
 
 object PDBAtomInfo {
