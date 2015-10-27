@@ -37,15 +37,10 @@ class AminoacidsTests extends FlatSpec with Matchers {
         -10*LatticeConstants.MESH_SIZE,
         0*LatticeConstants.MESH_SIZE, 0,0, "C", "")
     val info2 = PDBAtomInfo(2, "C", ' ',"ARG", 'L', 2, ' ',
-            2*LatticeConstants.MESH_SIZE + 0.5,
-            -10*2*LatticeConstants.MESH_SIZE+0.5,
-            0.5, 0,0, "C", "")
-    val aa = SimplifiedAminoacid(Seq(
-      info,
-      info2
-      ))
+            info.x + 0.5, info.y + 0.5, info.z + 0.5, 0, 0, "C", "")
+    val aa = SimplifiedAminoacid(Seq(info, info2))
     val updatedAA = aa.getUpdatedAtomInfo("CA", aa.ca * LatticeConstants.MESH_SIZE, Map(
-      "CA" -> info
+      "CA" ->  PDBAtomInfo(1, "CA", ' ', "ARG", 'L', 2, ' ', 0, 0, 0, 0,0, "C", "")
     ))
     (updatedAA.x) should equal (aa.ca.coordinates(0)*LatticeConstants.MESH_SIZE)
     (updatedAA.y) should equal (aa.ca.coordinates(1)*LatticeConstants.MESH_SIZE)
@@ -66,13 +61,13 @@ class AminoacidsTests extends FlatSpec with Matchers {
     val (x, y, z) = (Vector3d(1, 0, 0), Vector3d(0, 1, 0), Vector3d(0, 0, 1))
     val cBackboneInfo : PDBAtomInfo = fragmentInfo.restorePDBInfo(aa, 1, 2, 3, x, y, z, Map(
       "CA" -> info, "C" -> info2
-    )).map(x=>x.atom -> x).toMap.getOrElse("C", info)
+    )).map(x => x.atom -> x).toMap.getOrElse("C", info)
     (cBackboneInfo.x) should equal (info2.x +- 0.1)
     (cBackboneInfo.y) should equal (info2.y +- 0.1)
     (cBackboneInfo.z) should equal (info2.z +- 0.1)
     (cBackboneInfo.resSeq) should equal (info2.resSeq)
     (cBackboneInfo.serial) should equal (info2.serial)
-
   }
+  
   it should "restore sidechains from backbone+united atom"
 }
