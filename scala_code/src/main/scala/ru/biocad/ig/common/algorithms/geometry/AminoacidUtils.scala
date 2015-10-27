@@ -47,7 +47,6 @@ object AminoacidUtils{
   returns global coordinates for given axes and atom's local coordinates
   */
   def getGlobalCoordinates(localAxes : Seq[GeometryVector], localCoordinates : Seq[Double], zeroShift : GeometryVector) : GeometryVector = {
-    println(localCoordinates)
     (localAxes, localCoordinates).zipped.map(_ * _).reduceLeft(_ + _) + zeroShift
   }
 

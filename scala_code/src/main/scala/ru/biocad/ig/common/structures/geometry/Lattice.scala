@@ -143,7 +143,7 @@ object Lattice {
           //TODO: check actual +- 2 for f
           val ui_uj = (aminoacids(i + 2).ca - aminoacids(i - 2).ca).normalize *
                       (aminoacids(j + 2).ca - aminoacids(j - 2).ca).normalize
-          val f = 1.0 - math.pow((ui_uj*ui_uj - math.pow(math.cos(20.0*3.14/180), 2)), 2)
+          val f = 1.0 - math.pow((ui_uj*ui_uj - math.pow(math.cos(math.toRadians(20.0)), 2)), 2)
           get_E_two(i, j, aminoacids(i), aminoacids(j), f)
         }
       })
