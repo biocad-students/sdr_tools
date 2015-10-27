@@ -31,16 +31,16 @@ import ru.biocad.ig.alascan.constants.energy_terms._
   */
 object MonteCarloRunner extends LazyLogging {
 
-  def loadStructure(filename : String) = {
+  def loadStructure(filename : String, chain : Char = 'L') = {
     println("loading structure from sample pdb...")
     val structure : PDBStructure = new PDBStructure()
     structure.readFile(getClass.getResource(filename).getFile())
     println("local file read - done")
     val aa_by_chain = new PDBAminoAcidCollection(structure)
-    val aas = aa_by_chain.aminoacidIds('L')
-    val filtered_map = aas.map(aa => SimplifiedAminoacid(aa_by_chain.aminoacids('L')(aa))).toArray
+    val aas = aa_by_chain.aminoacidIds(chain)
+    val filtered_map = aas.map(aa => SimplifiedAminoacid(aa_by_chain.aminoacids(chain)(aa))).toArray
     //println(filtered_map.head.toString)
-    (filtered_map, aas.map(aa => aa_by_chain.aminoacids('L')(aa)).toArray)
+    (filtered_map, aas.map(aa => aa_by_chain.aminoacids(chain)(aa)).toArray)
   }
 
   def run(input_pdb_file : File, output_pdb_file : File, number_of_moves : Int) = {
