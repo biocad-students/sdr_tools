@@ -27,7 +27,7 @@ case class SidechainInfo(
             atomsMap : Map[String, PDBAtomInfo]) : Seq[PDBAtomInfo] = {
         val a = sortRepresentativesByDistanceTo(aminoacid.rotamer)
         a.head.atoms.map({case (k, v) =>
-        (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.toSeq) )}).map({
+        (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.ca*LatticeConstants.MESH_SIZE) )}).map({
           case (k, v) => aminoacid.getUpdatedAtomInfo(k, v, atomsMap)
         }).toSeq
 

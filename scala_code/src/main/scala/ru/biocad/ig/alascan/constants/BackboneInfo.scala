@@ -25,7 +25,7 @@ case class BackboneInfo(val data : Map[String, GeometryVector]) extends Aminoaci
           atomsMap : Map[String, PDBAtomInfo]) : Seq[PDBAtomInfo] = {
 
       data.map({
-        case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.toSeq))
+        case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.ca*LatticeConstants.MESH_SIZE))
       }).map({case (k, v) => aminoacid.getUpdatedAtomInfo(k, v, atomsMap) }).toSeq
 
   }
