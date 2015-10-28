@@ -15,12 +15,13 @@ case class PDBAtomInfo(
     z : Double,
     occupancy : Double,
     tempFactor : Double,
+    segmentID : String,
     element : String,
     charge : String
   ) {
 
   override def toString = {
-    Seq(serial, atom, altLoc, resName, chainID, resSeq, iCode, x, y, z, occupancy, tempFactor, element, charge).mkString("")
+    "ATOM  %5x %4s%c%3s %c%4x%c   %8.3f%8.3f%8.3f%6.2f%6.2f      %-4s%2s%2s".format(productIterator.toSeq : _*)
   }
 }
 
@@ -38,7 +39,8 @@ object PDBAtomInfo {
     z = line.substring(46, 54).toDouble,
     occupancy = line.substring(54, 60).toDouble,
     tempFactor = line.substring(60, 66).toDouble,
-    element = line.substring(76, 78),
-    charge = line.substring(78, 80)
+    segmentID = line.substring(72, 76).trim,
+    element = line.substring(76, 78).trim,
+    charge = line.substring(78, 80).trim
   )
 }

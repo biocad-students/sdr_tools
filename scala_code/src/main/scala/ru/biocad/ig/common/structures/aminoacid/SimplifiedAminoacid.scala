@@ -28,7 +28,7 @@ case class SimplifiedAminoacid(val name : String,
       updatedCoordinates.coordinates(0),
       updatedCoordinates.coordinates(1),
       updatedCoordinates.coordinates(2),
-      a.occupancy, a.tempFactor, a.element, a.charge
+      a.occupancy, a.tempFactor, a.segmentID, a.element, a.charge
     )
   }
 
