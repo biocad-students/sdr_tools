@@ -39,9 +39,10 @@ object MCTest extends LazyLogging {
           MonteCarloRunner.run(config.inputFile, config.outputFile, config.numberOfMoves)
         } catch {
           case e : Exception =>
-            logger.error(s"Fatal error: ${e.getMessage}")
+            //logger.error(s"Fatal error: ${e.getMessage}")
+            e.printStackTrace()
             if (config.debug) {
-              e.printStackTrace()
+              //e.printStackTrace()
             }
         }
       case None => parser.showUsage
