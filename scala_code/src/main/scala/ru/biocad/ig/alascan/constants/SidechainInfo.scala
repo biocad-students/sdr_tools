@@ -32,6 +32,16 @@ case class SidechainInfo(
 
     }
 
+    override def getCoordinatesMap(aminoacid : SimplifiedAminoacid,
+            x : GeometryVector,
+            y : GeometryVector,
+            z : GeometryVector) : Map[String, GeometryVector] = {
+        val a = findNearestRepresentativeByDistanceTo(aminoacid.rotamer)
+        a.atoms.map({
+          case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.ca * LatticeConstants.MESH_SIZE) )
+        })
+    }
+
     /** Replaces rotamer of given SimplifiedAminoacid with some Rotamer from current library fragment
       *
       * @param aminoacidToModify aminoacid, which rotamer portion gets modified

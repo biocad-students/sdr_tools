@@ -33,6 +33,8 @@ case class SimplifiedAminoacid(val name : String,
   }
 
 
+
+
   //var rotamer : Rotamer = new Rotamer(computeCenterCoordinates(atoms)) //
   //TODO: should add relative coords, filter atoms to include only rotamer atoms
 
@@ -109,5 +111,15 @@ object SimplifiedAminoacid{
     //val atomsVectorMap = atomsMap.map(x => (x._1, Vector3d(x._2.x, x._2.y, x._2.z) - ca))
 
     new SimplifiedAminoacid(name, ca, computeCenterCoordinates(atoms))
+  }
+
+  def getUpdatedAtomInfo(updatedCoordinates : GeometryVector, a : PDBAtomInfo) : PDBAtomInfo = {
+    new PDBAtomInfo(a.serial, a.atom, a.altLoc, a.resName, a.chainID,
+      a.resSeq, a.iCode,
+      updatedCoordinates.coordinates(0),
+      updatedCoordinates.coordinates(1),
+      updatedCoordinates.coordinates(2),
+      a.occupancy, a.tempFactor, a.segmentID, a.element, a.charge)
+
   }
 }

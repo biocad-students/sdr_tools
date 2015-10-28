@@ -15,4 +15,9 @@ trait AminoacidFragment {
   def getPDBAtomInfo(aminoacid : SimplifiedAminoacid,
     x : GeometryVector, y : GeometryVector, z : GeometryVector,
     atomsMap : Map[String, PDBAtomInfo]) : Seq[PDBAtomInfo]
+
+  def getCoordinatesMap(aminoacid : SimplifiedAminoacid,
+            x : GeometryVector,
+            y : GeometryVector,
+            z : GeometryVector) : Map[String, GeometryVector]
 }
