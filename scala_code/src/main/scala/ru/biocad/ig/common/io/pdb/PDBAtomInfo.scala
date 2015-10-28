@@ -21,7 +21,7 @@ case class PDBAtomInfo(
   ) {
 
   override def toString = {
-    "ATOM  %5x %4s%c%3s %c%4x%c   %8.3f%8.3f%8.3f%6.2f%6.2f      %-4s%2s%2s".format(productIterator.toSeq : _*)
+    "ATOM  %5d %4s%c%3s %c%4d%c   %8.3f%8.3f%8.3f%6.2f%6.2f      %-4s%2s%2s".format(productIterator.toSeq : _*)
   }
 }
 
