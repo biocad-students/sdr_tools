@@ -196,9 +196,14 @@ object Lattice {
     val pdbData = (aminoacids, vectorsWithEdgeOnes.sliding(3, 1).toSeq, originalFullAtomChain).zipped.flatMap({
       case (aa, Seq(v1, v2, v3), atoms) => {
         val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
-        Seq(aa.getUpdatedAtomInfo("CA", aa.ca * LatticeConstants.MESH_SIZE, atomsMap)) ++
-        restoreInfoFragment(aa, v1, v2, v3, backboneInfo, atomsMap) ++
-        restoreInfoFragment(aa, v1, v2, v3, sidechainsInfo, atomsMap)
+        val updatedMap = Map("CA" -> aa.ca * LatticeConstants.MESH_SIZE) ++
+            restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) ++
+            restoreInfoCoordinates(aa, v1, v2, v3, sidechainsInfo)
+        atoms.map({atom =>
+          if (updatedMap.contains(atom.atom))
+              SimplifiedAminoacid.getUpdatedAtomInfo(updatedMap(atom.atom), atom)
+          else atom
+        })
       }
     }).toSeq
     //pdbData.foreach(println)
@@ -216,6 +221,16 @@ object Lattice {
     val (d1, d2, d3) = AminoacidUtils.getDistances(v1, v2, v3)
     val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(v1, v2, v3)
     fragmentInfo.restorePDBInfo(aa, d1, d2, d3, x, y, z, atomsMap)
+  }
+  def restoreInfoCoordinates[T <: AminoacidFragment](
+      aa : SimplifiedAminoacid,
+      v1 : GeometryVector,
+      v2 : GeometryVector,
+      v3 : GeometryVector,
+      fragmentInfo : AminoacidLibrary[T]) : Map[String, GeometryVector] = {
+    val (d1, d2, d3) = AminoacidUtils.getDistances(v1, v2, v3)
+    val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(v1, v2, v3)
+    fragmentInfo.restoreCoordinates(aa, d1, d2, d3, x, y, z)
   }
 
   def validateStructure(structure : Seq[SimplifiedAminoacid]) : Boolean = {

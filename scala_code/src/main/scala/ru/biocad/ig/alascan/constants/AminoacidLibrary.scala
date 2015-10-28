@@ -60,4 +60,14 @@ case class AminoacidLibrary[T <: AminoacidFragment](
         coordinatesMap.getPDBAtomInfo(aminoacid, x, y, z, atomsMap)
     }
 
+    def restoreCoordinates(aminoacid : SimplifiedAminoacid,
+            d1 : Double, d2 : Double, d3 : Double,
+            x : GeometryVector, y : GeometryVector, z : GeometryVector
+          ) : Map[String, GeometryVector] = {
+        //val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
+        val coordinatesMap = restoreAminoacidInfo(aminoacid.name, d1, d2, d3)
+        //val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
+        coordinatesMap.getCoordinatesMap(aminoacid, x, y, z)
+    }
+
 }

@@ -23,10 +23,17 @@ case class BackboneInfo(val data : Map[String, GeometryVector]) extends Aminoaci
   override def getPDBAtomInfo(aminoacid : SimplifiedAminoacid,
           x : GeometryVector, y : GeometryVector, z : GeometryVector,
           atomsMap : Map[String, PDBAtomInfo]) : Seq[PDBAtomInfo] = {
+      getCoordinatesMap(aminoacid, x, y, z).map({
+        case (k, v) => aminoacid.getUpdatedAtomInfo(k, v, atomsMap)
+      }).toSeq
+  }
 
+  override def getCoordinatesMap(aminoacid : SimplifiedAminoacid,
+          x : GeometryVector,
+          y : GeometryVector,
+          z : GeometryVector) : Map[String, GeometryVector] = {
       data.map({
         case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.ca*LatticeConstants.MESH_SIZE))
-      }).map({case (k, v) => aminoacid.getUpdatedAtomInfo(k, v, atomsMap) }).toSeq
-
+      })
   }
 }
