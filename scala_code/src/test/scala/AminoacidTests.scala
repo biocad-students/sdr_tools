@@ -20,12 +20,12 @@ class AminoacidsTests extends FlatSpec with Matchers {
     //val (simplifiedChain, fullAtomChain) = MonteCarloRunner.loadStructure("/2OSL.pdb")
     a [NoSuchElementException] should be thrownBy {
       SimplifiedAminoacid(Seq(
-        PDBAtomInfo(1, "CB", ' ',"ARG", 'L', 2, ' ', 0, 0, 0, 0,0, "C", "")
+        PDBAtomInfo(1, "CB", ' ',"ARG", 'L', 2, ' ', 0, 0, 0, 0,0, "", "C", "")
         ))
     }
     noException should be thrownBy {
       SimplifiedAminoacid(Seq(
-        PDBAtomInfo(1, "CA", ' ',"ARG", 'L', 2, ' ', 0, 0, 0, 0,0, "C", "")
+        PDBAtomInfo(1, "CA", ' ',"ARG", 'L', 2, ' ', 0, 0, 0, 0,0, "", "C", "")
         ))
     }
     //TODO: check input data
@@ -35,12 +35,12 @@ class AminoacidsTests extends FlatSpec with Matchers {
     val info = PDBAtomInfo(1, "CA", ' ',"ARG", 'L', 2, ' ',
         2*LatticeConstants.MESH_SIZE,
         -10*LatticeConstants.MESH_SIZE,
-        0*LatticeConstants.MESH_SIZE, 0,0, "C", "")
+        0*LatticeConstants.MESH_SIZE, 0, 0, "", "C", "")
     val info2 = PDBAtomInfo(2, "C", ' ',"ARG", 'L', 2, ' ',
-            info.x + 0.5, info.y + 0.5, info.z + 0.5, 0, 0, "C", "")
+            info.x + 0.5, info.y + 0.5, info.z + 0.5, 0, 0, "", "C", "")
     val aa = SimplifiedAminoacid(Seq(info, info2))
     val updatedAA = aa.getUpdatedAtomInfo("CA", aa.ca * LatticeConstants.MESH_SIZE, Map(
-      "CA" ->  PDBAtomInfo(1, "CA", ' ', "ARG", 'L', 2, ' ', 0, 0, 0, 0,0, "C", "")
+      "CA" ->  PDBAtomInfo(1, "CA", ' ', "ARG", 'L', 2, ' ', 0, 0, 0, 0, 0, "", "C", "")
     ))
     (updatedAA.x) should equal (aa.ca.coordinates(0)*LatticeConstants.MESH_SIZE)
     (updatedAA.y) should equal (aa.ca.coordinates(1)*LatticeConstants.MESH_SIZE)
@@ -68,6 +68,6 @@ class AminoacidsTests extends FlatSpec with Matchers {
     (cBackboneInfo.resSeq) should equal (info2.resSeq)
     (cBackboneInfo.serial) should equal (info2.serial)
   }
-  
+
   it should "restore sidechains from backbone+united atom"
 }

@@ -21,7 +21,7 @@ class RotamerLibraryTests extends FlatSpec with Matchers {
   it should "correctly call setRotamerFromLibrary for empty SidechainInfo" in {
     val s = SidechainInfo(Seq(), Seq(), 0)
     val aa = SimplifiedAminoacid(Seq(
-      PDBAtomInfo(1, "CA", ' ',"ARG", 'L', 2, ' ', 0, 0, 0, 0,0, "C", "")
+      PDBAtomInfo(1, "CA", ' ',"ARG", 'L', 2, ' ', 0, 0, 0, 0, 0, "", "C", "")
     ))
     noException should be thrownBy s.setRotamerFromLibrary(aa)
     val result = s.setRotamerFromLibrary(aa)
@@ -32,7 +32,7 @@ class RotamerLibraryTests extends FlatSpec with Matchers {
   it should "correctly call changeRotamerToRandom for empty SidechainInfo" in {
     val s = SidechainInfo(Seq(), Seq(), 0)
     val aa = SimplifiedAminoacid(Seq(
-      PDBAtomInfo(1, "CA", ' ',"ARG", 'L', 2, ' ', 0, 0, 0, 0,0, "C", "")
+      PDBAtomInfo(1, "CA", ' ',"ARG", 'L', 2, ' ', 0, 0, 0, 0, 0, "", "C", "")
       ))
     noException should be thrownBy s.changeRotamerToRandom(aa)
     val result = s.changeRotamerToRandom(aa)
