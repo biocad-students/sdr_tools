@@ -15,4 +15,16 @@ class BackboneTests extends FlatSpec with Matchers {
       backboneInfo.restoreAminoacidInfo("LEU",
         20*backboneInfo.meshSize, 22*backboneInfo.meshSize, -32*backboneInfo.meshSize))
   }
+
+  "Backbone database" should "contain only non-zero data" in {
+    val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
+    backboneInfo.data.values.foreach(
+      _.values.foreach(
+        _.values.foreach(
+          _.values.foreach(_.data should not be empty)
+        )
+      )
+    )
+  }
+
 }
