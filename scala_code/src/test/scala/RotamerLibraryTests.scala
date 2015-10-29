@@ -48,7 +48,8 @@ class RotamerLibraryTests extends FlatSpec with Matchers {
           _.values.foreach({i=>{
             i.representatives should not be empty
             i.representatives.foreach({
-              r => if (k != "ALA" && k != "GLY") (r.atoms) should not be empty
+              r => //if (k != "ALA" && k != "GLY")
+              (r.atoms) should not be empty
             })
             }
           })
