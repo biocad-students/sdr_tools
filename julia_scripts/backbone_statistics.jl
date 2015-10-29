@@ -206,6 +206,7 @@ function getLocalVectors(v1, v2, v3, aminoacid)
     end
   end
   sidechain = Rotamer()
+  println(keys(aminoacid))
   for e in keys(aminoacid)
     if !(e in ["CA", "C", "N", "O"])
       sidechain.atoms[e] = projectToAxes(
@@ -282,11 +283,19 @@ function findRotamerGroup(representatives :: Array{Rotamer, 1}, rotamer :: Rotam
   0
 end
 
-function buildLibraryFragment!(destination :: RotamerInfo, positions :: Array{Rotamer, 1})
+function buildLibraryFragment(positions :: Array{Rotamer, 1})
+  destination = RotamerInfo()
   #1. group by number of representatives
   # todo: when select greatest. if 1, take unaffected
   # at first - make it simple, but ugly
+  if (length(positions)==0)
+    println("got zero-length positions")
+  end
   for rotamerGroup in sort(collect(groupby(r-> r.center, positions)), by=length, rev=true)
+    if (length(rotamerGroup[1].atoms) == 0)
+      #println("no atoms in rotamer group found")
+      continue
+    end
     i = findRotamerGroup(destination.representatives, rotamerGroup[1])
     if (i == 0)
       # add new rotamer to library
@@ -298,6 +307,7 @@ function buildLibraryFragment!(destination :: RotamerInfo, positions :: Array{Ro
     end
     destination.total += length(rotamerGroup)
   end
+  destination
 end
 
 function getRotamerDb(rotamers :: Dict{String, Dict{(Int, Int, Int), Array{Rotamer, 1}}})
@@ -306,8 +316,10 @@ function getRotamerDb(rotamers :: Dict{String, Dict{(Int, Int, Int), Array{Rotam
         result[aa] = Dict{(Int, Int, Int), RotamerInfo}()
         for (distances, positions) in aaInfo
             size = length(positions)
-            result[aa][distances] = RotamerInfo()
-            buildLibraryFragment!(result[aa][distances], positions)
+            rotamerInfo = buildLibraryFragment(positions)
+            if (length(rotamerInfo.representatives) > 0)
+                result[aa][distances] = rotamerInfo
+            end
         end
     end
     result2 = Dict{String, Dict{Int, Dict{Int, Dict{Int, RotamerInfo}}}}()
