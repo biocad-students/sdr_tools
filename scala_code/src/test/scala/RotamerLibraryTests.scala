@@ -39,4 +39,21 @@ class RotamerLibraryTests extends FlatSpec with Matchers {
     result should equal(aa)
     (result.rotamer) should equal (aa.rotamer)
   }
+
+  "Rotamer database" should "contain data only with non-zero representatives and non-zero vectors" in {
+    val rotamerInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
+    rotamerInfo.data.values.foreach(
+      _.values.foreach(
+        _.values.foreach(
+          _.values.foreach({i=>{
+            i.representatives should not be empty
+            i.representatives.foreach({
+              r => r.atoms should not be empty
+            })
+            }
+          })
+        )
+      )
+    )
+  }
 }
