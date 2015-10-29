@@ -1,8 +1,11 @@
 require("ArgParse")
 require("Iterators")
+require("Requests")
 
-using ArgParse, Iterators
+using ArgParse, Iterators, Requests
 import JSON
+import GZip
+import Requests
 
 push!(LOAD_PATH, dirname(@__FILE__()))
 
@@ -32,6 +35,35 @@ function parse_commandline()
 
     return parse_args(s)
 end
+
+
+function loadFromRCSB(code :: String, destination_path :: String)
+  pdb_file_name = string(destination_path, code, ".pdb")
+  if isfile(pdb_file_name)
+    #file already loaded, do nothing
+    return
+  end
+  temp_file_name = string(destination_path, code, ".pdb.gz")
+  res = get(string("http://www.rcsb.org/pdb/cgi/export.cgi/", code,
+      ".pdb.gz?format=PDB&pdbId=", code, "&compression=gz"))
+  if (statuscode(res) != 200)
+    println(string("couldn't load PDB file, ID=", code))
+    return
+  end
+
+  open(temp_file_name, "w") do gzfile
+    write(gzfile, Requests.bytes(res))
+  end
+
+  gzstream = GZip.gzopen(temp_file_name)
+    open(pdb_file_name, "w") do destFile
+      write(destFile, readall(gzstream))
+    end
+  close(gzstream)
+  rm(temp_file_name)
+end
+
+
 
 type PDBAtomInfo
   serial :: Int
@@ -129,11 +161,18 @@ end
 Rotamer() = Rotamer(Dict{String, GeometryVector}(), GeometryVector([0, 0, 0]))
 
 
-function getPDBFileNames(input_file_name :: String)
+function getPDBFileNames(input_file_name :: String, directory :: String = "files/")
   input_file = open(input_file_name, "r")
   result = String[]
+  if (!isdir(directory))
+    mkdir(directory)
+  end
   while !eof(input_file)
-    push!(result, string(rstrip(readline(input_file)), ".pdb"))
+    code = rstrip(readline(input_file))
+    if !isfile(string(directory, code, ".pdb"))
+      loadFromRCSB(code, directory)
+    end
+    push!(result, string(directory, code, ".pdb"))
   end
   close(input_file)
   result
@@ -206,7 +245,6 @@ function getLocalVectors(v1, v2, v3, aminoacid)
     end
   end
   sidechain = Rotamer()
-  println(keys(aminoacid))
   for e in keys(aminoacid)
     if !(e in ["CA", "C", "N", "O"])
       sidechain.atoms[e] = projectToAxes(
