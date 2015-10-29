@@ -38,6 +38,9 @@ end
 
 
 function loadFromRCSB(code :: String, destination_path :: String)
+  if length(code) < 4
+    return
+  end
   pdb_file_name = string(destination_path, code, ".pdb")
   if isfile(pdb_file_name)
     #file already loaded, do nothing
@@ -172,7 +175,9 @@ function getPDBFileNames(input_file_name :: String, directory :: String = "files
     if !isfile(string(directory, code, ".pdb"))
       loadFromRCSB(code, directory)
     end
-    push!(result, string(directory, code, ".pdb"))
+    if (length(code) > 0)
+      push!(result, string(directory, code, ".pdb"))
+    end
   end
   close(input_file)
   result
@@ -184,8 +189,16 @@ function readPDB(input_file_name :: String)
   input_file = open(input_file_name, "r")
   while !eof(input_file)
     s = rstrip(readline(input_file), ['\r','\n'])
+    if (length(s) < 4)
+      continue
+    end
     if s[1:4] == "ATOM"
       atom = parseAtomInfoFromString(s)
+      if !(atom.resName in ["ALA", "ARG", "ASN", "ASP",
+          "CYS", "GLN", "GLU", "GLY", "HIS", "ILE", "LEU", "LYS",
+          "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL"])
+          continue
+      end
       if !(atom.chainID in keys(records))
         records[atom.chainID] = Dict{Int, Dict{String, PDBAtomInfo}}()
         recordsAA[atom.chainID] = Int[]
@@ -241,7 +254,7 @@ function getLocalVectors(v1, v2, v3, aminoacid)
         getVector(aminoacid[e]) - getVector(aminoacid[s]),
         x, y, z)
     else
-      vectors[string(s, "_", e)] = (0, 0, 0)
+      vectors[e] = GeometryVector([0, 0, 0])
     end
   end
   sidechain = Rotamer()
@@ -391,27 +404,41 @@ function processChainPortionVec(v1, v2, v3, aminoacid, meshSize = 0.3)
   (distances, aa_name, vectors, sidechains)
 end
 
-function getVectorForSeq(sequence, keys, k)
+function getVectorForSeq(sequence, ks, k, text_file_name)
+  if (length(ks)<4)
+    println("length of keys <=4")
+    println(text_file_name)
+  end
+  for i in [1, 2, 3, k-1, k, k + 1, k + 2, length(ks) - 1, length(ks)]
+    if (i < 1 || i > length(ks))
+      continue
+    end
+
+    if !haskey(sequence[ks[i]], "CA")
+      println(sequence[ks[i]])
+      println(text_file_name)
+    end
+  end
   if (k == 1)
-    return (getVector(sequence[keys[2]]["CA"]) - getVector(sequence[keys[1]]["CA"]),
-            getVector(sequence[keys[2]]["CA"]) - getVector(sequence[keys[1]]["CA"]),
-            getVector(sequence[keys[3]]["CA"]) - getVector(sequence[keys[2]]["CA"]))
+    return (getVector(sequence[ks[2]]["CA"]) - getVector(sequence[ks[1]]["CA"]),
+            getVector(sequence[ks[2]]["CA"]) - getVector(sequence[ks[1]]["CA"]),
+            getVector(sequence[ks[3]]["CA"]) - getVector(sequence[ks[2]]["CA"]))
   end
-  if (k == length(keys))
-    return (getVector(sequence[keys[length(keys)]]["CA"]) - getVector(sequence[keys[length(keys) - 1]]["CA"]),
-            getVector(sequence[keys[length(keys) - 1]]["CA"]) - getVector(sequence[keys[length(keys) - 2]]["CA"]),
-            getVector(sequence[keys[length(keys)]]["CA"]) - getVector(sequence[keys[length(keys) - 1]]["CA"]))
-  end
-
-  if (k == length(keys) - 1)
-    return (getVector(sequence[keys[length(keys) - 1]]["CA"]) - getVector(sequence[keys[length(keys) - 2]]["CA"]),
-            getVector(sequence[keys[length(keys)]]["CA"]) - getVector(sequence[keys[length(keys) - 1]]["CA"]),
-            getVector(sequence[keys[length(keys) - 1]]["CA"]) - getVector(sequence[keys[length(keys) - 2]]["CA"]))
+  if (k == length(ks))
+    return (getVector(sequence[ks[length(ks)]]["CA"]) - getVector(sequence[ks[length(ks) - 1]]["CA"]),
+            getVector(sequence[ks[length(ks) - 1]]["CA"]) - getVector(sequence[ks[length(ks) - 2]]["CA"]),
+            getVector(sequence[ks[length(ks)]]["CA"]) - getVector(sequence[ks[length(ks) - 1]]["CA"]))
   end
 
-  return (getVector(sequence[keys[k]]["CA"]) - getVector(sequence[keys[k - 1]]["CA"]),
-          getVector(sequence[keys[k + 1]]["CA"]) - getVector(sequence[keys[k]]["CA"]),
-          getVector(sequence[keys[k + 2]]["CA"]) - getVector(sequence[keys[k + 1]]["CA"]))
+  if (k == length(ks) - 1)
+    return (getVector(sequence[ks[length(ks) - 1]]["CA"]) - getVector(sequence[ks[length(ks) - 2]]["CA"]),
+            getVector(sequence[ks[length(ks)]]["CA"]) - getVector(sequence[ks[length(ks) - 1]]["CA"]),
+            getVector(sequence[ks[length(ks) - 1]]["CA"]) - getVector(sequence[ks[length(ks) - 2]]["CA"]))
+  end
+
+  return (getVector(sequence[ks[k]]["CA"]) - getVector(sequence[ks[k - 1]]["CA"]),
+          getVector(sequence[ks[k + 1]]["CA"]) - getVector(sequence[ks[k]]["CA"]),
+          getVector(sequence[ks[k + 2]]["CA"]) - getVector(sequence[ks[k + 1]]["CA"]))
 end
 
 function load_atom_info(text_file_name)
@@ -422,8 +449,11 @@ function load_atom_info(text_file_name)
     (atom_infos, atom_info_keys) = readPDB(pdb_file_name)
     for chain in keys(atom_infos)
       ks = atom_info_keys[chain]
+      if (length(ks) <= 4)
+        continue
+      end
       for k in 1 : length(ks)
-        (v1, v2, v3) = getVectorForSeq(atom_infos[chain], ks, k)
+        (v1, v2, v3) = getVectorForSeq(atom_infos[chain], ks, k, pdb_file_name)
         (d, aa, b, s) = processChainPortionVec(v1, v2, v3, atom_infos[chain][ks[k]]) #[atom_infos[chain][i] for i in ks[k - width + 1 : k]])
         if !haskey(basechainInfo, aa)
           basechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
