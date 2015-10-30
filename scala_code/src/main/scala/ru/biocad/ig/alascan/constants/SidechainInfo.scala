@@ -74,7 +74,8 @@ case class SidechainInfo(
         if (representatives.size < 2)
             return aminoacidToModify
         val a = findNearestRepresentativeByDistanceTo(aminoacidToModify.rotamer)
-        val rest = Random.shuffle(representatives.filterNot(_ == a)).head
+        val index = Random.nextInt(representatives.length - 1)
+        val rest = representatives.filterNot(_ == a)(index)
         new SimplifiedAminoacid(aminoacidToModify.name, aminoacidToModify.ca, rest.rotamer)
     }
 }
