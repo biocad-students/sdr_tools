@@ -1,12 +1,12 @@
 package ru.biocad.ig.common.algorithms.geometry
 
-import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
+import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoacid, SimplifiedChain}
 
 /** Finds hydrogen bonds with the help of Greer & Levitt method
   */
-case class HydrogenBondsFinder(HBondCondition : (Seq[SimplifiedAminoacid], Int, Int) => Boolean,
-    structure : Seq[SimplifiedAminoacid]) {
-  def findBondsForStructure(structure : Seq[SimplifiedAminoacid]) = {
+case class HydrogenBondsFinder(HBondCondition : (SimplifiedChain, Int, Int) => Boolean,
+    structure : SimplifiedChain) {
+  def findBondsForStructure(structure : SimplifiedChain) = {
     val hBonds = (0 to structure.size - 1).map({ i =>
       (0 to structure.size - 1).map({j =>
         HBondCondition(structure, i, j)

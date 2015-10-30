@@ -29,7 +29,7 @@ import RotamerRadiusInfoJsonProtocol._
 import ru.biocad.ig.alascan.constants.json.{BasicVectorLibrary, BasicVectorLibraryJsonProtocol}
 import BasicVectorLibraryJsonProtocol._
 import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
-
+import ru.biocad.ig.common.structures.aminoacid.SimplifiedChain
 
 object Lattice {
   val eone : EOne = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/EONE.json")).getLines().mkString("")).convertTo[EOne]
@@ -52,7 +52,7 @@ object Lattice {
   array can be aminoacid-pair specific.
   now there is no KDTree, just simple and slow code - should replace it
   */
-  def buildContactMap(aminoacids : Seq[SimplifiedAminoacid]) : Array[Array[Boolean]] = {
+  def buildContactMap(aminoacids : SimplifiedChain) : Array[Array[Boolean]] = {
     aminoacids.map({case aa1 => aminoacids.map({
         aa2 => aa2.isInContactWith(aa1, rotamerRadiusInfo.getR(aa1.name, aa2.name))
       }).toArray}).toArray
@@ -60,7 +60,7 @@ object Lattice {
 
   /** helper methods*/
   //this returns true if they can, false otherwise - quite simple
-  def can_form_H_bond(aminoacids : Seq[SimplifiedAminoacid], i : Int, j : Int) : Boolean = {
+  def can_form_H_bond(aminoacids : SimplifiedChain, i : Int, j : Int) : Boolean = {
     val r_ij = aminoacids(j).ca - aminoacids(i).ca
     val b_i_b_i_1 = aminoacids(i - 1).ca - aminoacids(i).ca //TODO: check if i == 0
     val b_j_b_j_1 = aminoacids(j - 1).ca - aminoacids(j).ca
@@ -71,7 +71,7 @@ object Lattice {
   }
 
   /** energy methods*/
-  def get_E_CA_trace(aminoacids : Array[SimplifiedAminoacid]) : Double = {
+  def get_E_CA_trace(aminoacids : SimplifiedChain) : Double = {
     val r14Seq : Seq[Double] = (1 to aminoacids.size - 3).map({
       case i : Int =>
       {
@@ -90,13 +90,13 @@ object Lattice {
     }).reduceLeft(_ + _)
   }
 
-  def get_E_H_bond(aminoacids : Seq[SimplifiedAminoacid]) : Double = {
+  def get_E_H_bond(aminoacids : SimplifiedChain) : Double = {
     var E = 0.0
     val b = (new HydrogenBondsFinder(can_form_H_bond, aminoacids))
     LatticeConstants.E_HH*b.cooperativeCount + LatticeConstants.E_H*b.bondsCount//TODO: fix this, add cooperativity
   }
 
-  def get_E_rot(aminoacids : Seq[SimplifiedAminoacid]): Double = {
+  def get_E_rot(aminoacids : SimplifiedChain): Double = {
     (2 to aminoacids.size - 2).map({
       case i => {
         eRotamer.get(aminoacids(i), aminoacids(i - 1), aminoacids(i + 1))
@@ -104,7 +104,7 @@ object Lattice {
     }).reduceLeft(_ + _)
   }
 
-  def get_E_SG_local(aminoacids : Seq[SimplifiedAminoacid]) : Double = {
+  def get_E_SG_local(aminoacids : SimplifiedChain) : Double = {
     (1 to aminoacids.size - 2).flatMap({
       i => (1 to 4).map({ k => if (i + k < aminoacids.size)
         eSglocal.get(aminoacids(i), aminoacids(i + k), k) else 0.0
@@ -114,7 +114,7 @@ object Lattice {
   }
 
   //this is very-very SLOW implementation, should refactor
-  def get_E_one(aminoacids : Seq[SimplifiedAminoacid]) : Double = {
+  def get_E_one(aminoacids : SimplifiedChain) : Double = {
     val contactMap = buildContactMap(aminoacids)
     (0 to aminoacids.size - 1).map({
       i => {
@@ -136,7 +136,7 @@ object Lattice {
     }
   }
 
-  def get_E_pair(aminoacids : Seq[SimplifiedAminoacid]) : Double = {
+  def get_E_pair(aminoacids : SimplifiedChain) : Double = {
     (2 to aminoacids.size - 3).flatMap({
       i => (i + 4 to aminoacids.size - 3).map({
         j => {
@@ -150,7 +150,7 @@ object Lattice {
     }).reduceLeft(_ + _)
   }
 
-  def get_E_tem(aminoacids : Seq[SimplifiedAminoacid]) : Double = {
+  def get_E_tem(aminoacids : SimplifiedChain) : Double = {
     val contactMap = buildContactMap(aminoacids)
     //TODO: check borders
     (4 to aminoacids.size - 5).flatMap({
@@ -172,7 +172,7 @@ object Lattice {
   }
 
   //TODO: we have pair of chains, that means we somehow should utilize that when we compute total energy
-  def getEnergy(aminoacids : Array[SimplifiedAminoacid]) : Double = {
+  def getEnergy(aminoacids : SimplifiedChain) : Double = {
     0.25 * get_E_CA_trace(aminoacids) +
     // get_E_H_bond(aminoacids) +
     0.5 * get_E_rot(aminoacids) +
@@ -233,7 +233,7 @@ object Lattice {
     fragmentInfo.restoreCoordinates(aa, d1, d2, d3, x, y, z)
   }
 
-  def validateStructure(structure : Seq[SimplifiedAminoacid]) : Boolean = {
+  def validateStructure(structure : SimplifiedChain) : Boolean = {
     val r1 = (0 to structure.size - 3).forall({
       i => {
         val a1 = structure(i).ca

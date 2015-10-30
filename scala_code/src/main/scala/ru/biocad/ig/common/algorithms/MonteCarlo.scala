@@ -1,16 +1,16 @@
 package ru.biocad.ig.common.algorithms
 
 import ru.biocad.ig.common.structures.geometry.LatticeBasicMove
-import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
+import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoacid, SimplifiedChain}
 import ru.biocad.ig.common.structures.geometry.Lattice
 import scala.util.Random
 
 object MonteCarlo{
   /** helper method to hide move attempt*/
-  def attemptMove(currentStructure : Seq[SimplifiedAminoacid],
+  def attemptMove(currentStructure : SimplifiedChain,
     move : LatticeBasicMove,
     position : Int,
-    getEnergy : Seq[SimplifiedAminoacid] => Double) : Seq[SimplifiedAminoacid] = {
+    getEnergy : SimplifiedChain => Double) : SimplifiedChain = {
       val newStructure = move.makeMove(currentStructure, position)
       val oldE = getEnergy(currentStructure)
       val newE = getEnergy(newStructure)
@@ -25,9 +25,9 @@ object MonteCarlo{
         currentStructure
       }
   }
-  def run(structure : Seq[SimplifiedAminoacid],
+  def run(structure : SimplifiedChain,
           moves : Seq[LatticeBasicMove],
-          getEnergy : Seq[SimplifiedAminoacid] => Double,
+          getEnergy : SimplifiedChain => Double,
           //ck_rule : Int => Double,
           numberOfMoves : Int = 1000) = {
 
@@ -40,7 +40,7 @@ object MonteCarlo{
       case (currentStructure, (shuffledMoves, time)) => {
         shuffledMoves.foldLeft(currentStructure) {
           case (current, move) => {
-            val position = Random.nextInt(structure.length)
+            val position = Random.nextInt(structure.size)
             val newStructure = attemptMove(currentStructure, move, position, getEnergy)
             if (Lattice.validateStructure(newStructure))
               newStructure

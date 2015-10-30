@@ -10,7 +10,7 @@ import ru.biocad.ig.common.io.pdb.{PDBStructure, PDBAtomInfo, PDBAminoAcidCollec
 
 import ru.biocad.ig.common.structures.geometry._
 
-import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoacid}
+import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoacid, SimplifiedChain}
 
 
 import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol
@@ -32,14 +32,14 @@ import ru.biocad.ig.common.io.pdb.PDBWriter
   */
 object MonteCarloRunner extends LazyLogging {
 
-  def loadStructure(filename : String, chain : Char = 'L')  : (Array[SimplifiedAminoacid], Seq[Seq[PDBAtomInfo]]) = {
+  def loadStructure(filename : String, chain : Char = 'L')  : (SimplifiedChain, Seq[Seq[PDBAtomInfo]]) = {
     println("loading structure from sample pdb...")
     val structure : PDBStructure = new PDBStructure()
     structure.readFile(getClass.getResource(filename).getFile())
     println("local file read - done")
     val aaByChain = new PDBAminoAcidCollection(structure)
     val aas = aaByChain.aminoacidsByChain.toSeq
-    val filteredMap = aas.map(aa => SimplifiedAminoacid(aa)).toArray
+    val filteredMap = SimplifiedChain(aas)
     (filteredMap, aas)
   }
 
@@ -52,9 +52,9 @@ object MonteCarloRunner extends LazyLogging {
     val ch1 = MonteCarlo.run(simplifiedChain,
       Seq(new BondMove(Lattice.backboneVectors, 3),
         new RotamerMove(Lattice.sidechainsInfo)),
-        x => Lattice.getEnergy(x.toArray), numberOfMoves)
-    logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1.toArray))
-    val result = Lattice.toFullAtomRepresentation(ch1, fullAtomChain)
+        x => Lattice.getEnergy(x), numberOfMoves)
+    logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
+    val result = Lattice.toFullAtomRepresentation(ch1.structure, fullAtomChain)
     //val sidechainInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
     val w = new PDBWriter(outputFile)
     w.writeAtomInfo(result)

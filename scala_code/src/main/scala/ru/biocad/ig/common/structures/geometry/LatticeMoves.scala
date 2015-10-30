@@ -1,6 +1,6 @@
 package ru.biocad.ig.common.structures.geometry
 
-import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
+import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoacid, SimplifiedChain}
 import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
 import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 import util.Random.nextInt
@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 
 trait LatticeBasicMove {
   def isValid() : Boolean = ???
-  def makeMove(structure : Seq[SimplifiedAminoacid], position : Int) : Seq[SimplifiedAminoacid] = ???
+  def makeMove(structure : SimplifiedChain, position : Int) : SimplifiedChain = ???
 }
 /***/
 class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
@@ -34,15 +34,11 @@ class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
     sidechainInfo.changeRotamerToRandom(aa)
   }
 
-  override def makeMove(structure : Seq[SimplifiedAminoacid], position : Int) : Seq[SimplifiedAminoacid] = {
+  override def makeMove(chain : SimplifiedChain, position : Int) : SimplifiedChain = {
     logger.debug("in RotamerMove at position: " + position.toString)
-    structure.zipWithIndex.map({
-      case (el, i) => {
-        if (i == position)
-        moveRotamer(structure, position)
-        else el
-      }
-    })
+
+    val newAA = moveRotamer(chain.structure, position)
+    chain.replaceRotamer(newAA.rotamer, position)
   }
 }
 
@@ -52,32 +48,23 @@ class BondMove(val basicVectors :  Array[GeometryVector],
         val numberOfBonds : Int) extends LatticeBasicMove with LazyLogging {
 
   def prepareMove(moveVector : GeometryVector,
-      structure : Seq[SimplifiedAminoacid],
-      position : Int) : Seq[SimplifiedAminoacid] = {
+      structure : SimplifiedChain,
+      position : Int) : SimplifiedChain = {
     logger.debug("in " + numberOfBonds.toString + "-BondMove starting at position: " + position.toString)
-    structure.zipWithIndex.map({case ( el, i) => {
-      if (i >= position && i < position + numberOfBonds - 1)
-      el.move(moveVector)
-      else el
-    }})
-
+    structure.moveFragment(moveVector, position, numberOfBonds)
   }
 
   def getRandomVector() : GeometryVector = {
     basicVectors(nextInt(basicVectors.size))
   }
 
-  override def makeMove(structure : Seq[SimplifiedAminoacid],
-    position : Int) : Seq[SimplifiedAminoacid] = prepareMove(getRandomVector(), structure, position)
+  override def makeMove(structure : SimplifiedChain,
+    position : Int) : SimplifiedChain = prepareMove(getRandomVector(), structure, position)
 }
 
 //direction == 1.0 means towards N-terminus, direction = -1 means towards C
 class DisplacementMove(val basicVectors :  Array[GeometryVector], val direction : Int) extends LatticeBasicMove {
-  override def makeMove(structure : Seq[SimplifiedAminoacid], position : Int) : Seq[SimplifiedAminoacid] = {
-    structure.zipWithIndex.map({case (el, i) => {
-      if (i < position)
-      el.move(Vector3d(1, 1, 1))
-      else el
-    }})
+  override def makeMove(structure : SimplifiedChain, position : Int) : SimplifiedChain = {
+    structure.moveFragment(Vector3d(1, 1, 1), position, structure.size)
   }
 }
