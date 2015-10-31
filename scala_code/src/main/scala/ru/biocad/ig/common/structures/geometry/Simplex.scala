@@ -70,10 +70,10 @@ class Simplex(val vertices : Seq[GeometryVector]) {
   def getPosition(v : GeometryVector) : PointPosition = {
     val result : Double = getPosition_(v)//testFunc(v.toSeq) * flag//math.signum(testFunc(lowerPoint.toSeq))//InfiniteVector(dimensions).toSeq))
     //println("result in getPosition: " + result)
-    if ((result).abs <= EPSILON) //FIX: there should be comparision with near-zero value
+    if (result.abs <= EPSILON) //FIX: there should be comparision with near-zero value
     LaysOnNSphere
     else {
-      if (result > 0.001) LaysOutside
+      if (result > EPSILON) LaysOutside
       else LaysInside
     }
   }

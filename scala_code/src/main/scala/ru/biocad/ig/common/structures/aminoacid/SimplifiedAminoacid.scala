@@ -2,7 +2,7 @@ package ru.biocad.ig.common.structures.aminoacid
 
 import ru.biocad.ig.common.io.pdb.{PDBAtomInfo}
 import ru.biocad.ig.alascan.constants.LatticeConstants
-import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
+import ru.biocad.ig.alascan.constants.{SidechainInfo}
 
 import ru.biocad.ig.common.structures.geometry._
 

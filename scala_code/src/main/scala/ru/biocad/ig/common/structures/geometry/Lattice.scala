@@ -9,9 +9,9 @@ import ru.biocad.ig.common.io.pdb.{PDBAtomInfo}
 
 import ru.biocad.ig.alascan.constants.{AminoacidLibrary, BackboneInfo, SidechainInfo}
 import spray.json._
-import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol
+//import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol
 import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol._
-import ru.biocad.ig.alascan.constants.json.SidechainLibraryJsonProtocol
+//import ru.biocad.ig.alascan.constants.json.SidechainLibraryJsonProtocol
 import ru.biocad.ig.alascan.constants.json.SidechainLibraryJsonProtocol._
 //import DefaultJsonProtocol._
 import scala.io.Source
@@ -44,24 +44,31 @@ object Lattice {
 
   val backboneVectors : Array[GeometryVector] = JsonParser(
       Source.fromURL(getClass.getResource("/basic_vectors.json")
-    ).getLines().mkString("")).convertTo[BasicVectorLibrary].vectors.map({
-          x : Seq[Double] => new Vector(x)
-        }).toArray
+    ).getLines().mkString("")).convertTo[BasicVectorLibrary].vectors.map(new Vector(_)).toArray
+
+
+  val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
+  val sidechainsInfo = JsonParser(
+    Source.fromURL(
+      getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
+
+
   /*
   return value indicates that aminoacids i and j are in contact
   array can be aminoacid-pair specific.
   now there is no KDTree, just simple and slow code - should replace it
   */
-  def buildContactMap(aminoacids : SimplifiedChain) : Array[Array[Boolean]] = {
-    aminoacids.map({case aa1 => aminoacids.map({
-        aa2 => aa2.isInContactWith(aa1, rotamerRadiusInfo.getR(aa1.name, aa2.name))
-      }).toArray}).toArray
+  def buildContactMap(chain : SimplifiedChain) : Array[Array[Boolean]] = {
+    chain.map({case aa1 => chain.map({
+      aa2 => aa2.isInContactWith(aa1, rotamerRadiusInfo.getR(aa1.name, aa2.name))
+    }).toArray}).toArray
   }
-
   /** helper methods*/
   //this returns true if they can, false otherwise - quite simple
   def can_form_H_bond(aminoacids : SimplifiedChain, i : Int, j : Int) : Boolean = {
     val r_ij = aminoacids(j).ca - aminoacids(i).ca
+    if (i == 0 || j == 0)
+      return false
     val b_i_b_i_1 = aminoacids(i - 1).ca - aminoacids(i).ca //TODO: check if i == 0
     val b_j_b_j_1 = aminoacids(j - 1).ca - aminoacids(j).ca
     (i - j).abs >= 3 && LatticeConstants.H_bond_distance_condition(r_ij.length) &&
@@ -76,32 +83,25 @@ object Lattice {
       case i : Int =>
       {
         val b = (Seq(i, i + 1, i + 2), Seq(i - 1, i, i + 1)).zipped.map({
-          case (x : Int, y : Int) => {
-            aminoacids(x).ca - aminoacids(y).ca
-          }
+          case (x : Int, y : Int) => aminoacids(x).ca - aminoacids(y).ca
         })
         b.reduceLeft(_ + _).lengthSquared * math.signum(ManifoldUtils.getDeterminant(b.map(_.coordinates)))
       }})
     (r14Seq, 0.0 +: r14Seq, (1 to aminoacids.size - 3)).zipped.map({
-      case (r14, r14_prev, i)  => {
-        3*e14.get(r14, aminoacids(i).name, aminoacids(i + 1).name) +
-          e14avg.get(r14, r14_prev)
-      }
-    }).reduceLeft(_ + _)
+      case (r14, r14_prev, i)  => 3*e14.get(r14, aminoacids(i).name, aminoacids(i + 1).name) + e14avg.get(r14, r14_prev)
+    }).sum
   }
 
   def get_E_H_bond(aminoacids : SimplifiedChain) : Double = {
     var E = 0.0
-    val b = (new HydrogenBondsFinder(can_form_H_bond, aminoacids))
+    val b = new HydrogenBondsFinder(can_form_H_bond, aminoacids)
     LatticeConstants.E_HH*b.cooperativeCount + LatticeConstants.E_H*b.bondsCount//TODO: fix this, add cooperativity
   }
 
   def get_E_rot(aminoacids : SimplifiedChain): Double = {
     (2 to aminoacids.size - 2).map({
-      case i => {
-        eRotamer.get(aminoacids(i), aminoacids(i - 1), aminoacids(i + 1))
-      }
-    }).reduceLeft(_ + _)
+      case i => eRotamer.get(aminoacids(i), aminoacids(i - 1), aminoacids(i + 1))
+    }).sum
   }
 
   def get_E_SG_local(aminoacids : SimplifiedChain) : Double = {
@@ -109,65 +109,67 @@ object Lattice {
       i => (1 to 4).map({ k => if (i + k < aminoacids.size)
         eSglocal.get(aminoacids(i), aminoacids(i + k), k) else 0.0
         })
-    }).reduceLeft(_ +_)
-
+    }).sum
   }
 
   //this is very-very SLOW implementation, should refactor
-  def get_E_one(aminoacids : SimplifiedChain) : Double = {
-    val contactMap = buildContactMap(aminoacids)
-    (0 to aminoacids.size - 1).map({
+  def get_E_one(chain : SimplifiedChain) : Double = {
+    val contactMap = buildContactMap(chain)
+    (0 to chain.size - 1).map({
       i => {
-        val numberOfContacts = (i + 1 to aminoacids.size - 1).count({ case j => contactMap(i)(j) })
-        eone.get(aminoacids(i).name, numberOfContacts)
+        val numberOfContacts = (i + 1 to chain.size - 1).count({ case j => contactMap(i)(j) })
+        eone.get(chain(i).name, numberOfContacts)
       }
-    }).reduceLeft(_ + _)
+    }).sum
   }
 
   //TODO: rewrite later
   def get_E_two(i : Int, j : Int, ai : SimplifiedAminoacid, aj : SimplifiedAminoacid, f : Double) : Double = {
     val rRepulsive = rotamerRadiusInfo.getRrep(ai.name, aj.name)
     val rInteraction = rotamerRadiusInfo.getR(ai.name, aj.name)
+    val pairEnergy = epair.get(ai.name, aj.name)
     (ai.rotamer - aj.rotamer).length match {
       case x if x < rRepulsive => rotamerRadiusInfo.eRepulsive
-      case x if x < rInteraction && epair.get(ai.name, aj.name) >= 0.0 => epair.get(ai.name, aj.name)*(if (j - i == 5 || j-i == 6) 0.6 else 1.0)
-      case _ => epair.get(ai.name, aj.name) *
-        (if (j - i == 5 || j-i == 6) 0.6 else 1.0)*f//this is a(i, j)
+      case x if x < rInteraction && pairEnergy >= 0.0 && (j - i == 5 || j - i == 6) => pairEnergy * 0.6
+      case x if x < rInteraction && pairEnergy >= 0.0 => pairEnergy
+      case _ if j - i == 5 || j - i == 6 => pairEnergy * f * 0.6
+      case _ => pairEnergy * f
     }
   }
 
   def get_E_pair(aminoacids : SimplifiedChain) : Double = {
+    val constAngle20 = math.pow(math.cos(math.toRadians(20.0)), 2)
     (2 to aminoacids.size - 3).flatMap({
       i => (i + 4 to aminoacids.size - 3).map({
         j => {
           //TODO: check actual +- 2 for f
           val ui_uj = (aminoacids(i + 2).ca - aminoacids(i - 2).ca).normalize *
                       (aminoacids(j + 2).ca - aminoacids(j - 2).ca).normalize
-          val f = 1.0 - math.pow((ui_uj*ui_uj - math.pow(math.cos(math.toRadians(20.0)), 2)), 2)
+          val f = 1.0 - math.pow(ui_uj * ui_uj - constAngle20, 2)
           get_E_two(i, j, aminoacids(i), aminoacids(j), f)
         }
       })
     }).reduceLeft(_ + _)
   }
 
-  def get_E_tem(aminoacids : SimplifiedChain) : Double = {
-    val contactMap = buildContactMap(aminoacids)
+  def get_E_tem(chain : SimplifiedChain) : Double = {
+    val contactMap = buildContactMap(chain)
     //TODO: check borders
-    (4 to aminoacids.size - 5).flatMap({
-      i => (i + 4 to aminoacids.size - 5).map({
+    (4 to chain.size - 5).flatMap({
+      i => (i + 4 to chain.size - 5).map({
         j => {
           Seq(-4,-3,3,4).map({k => {
             (if (contactMap(i)(j) && contactMap(i + k)(j + k))
-              epair.apab(aminoacids(i).name)(aminoacids(j).name) +
-              epair.apab(aminoacids(i + k).name)(aminoacids(j + k).name)
+              epair.apab(chain(i).name)(chain(j).name) +
+              epair.apab(chain(i + k).name)(chain(j + k).name)
             else 0.0)+
             (if (contactMap(i)(j) && contactMap(i + k)(j - k))
-              epair.apab(aminoacids(i).name)(aminoacids(j).name) +
-              epair.apab(aminoacids(i + k).name)(aminoacids(j - k).name)
-            else 0.0)}}).reduceLeft(_ + _)
+              epair.apab(chain(i).name)(chain(j).name) +
+              epair.apab(chain(i + k).name)(chain(j - k).name)
+            else 0.0)}}).sum
         }
       })
-    }).reduceLeft(_ + _)
+    }).sum
     //???
   }
 
@@ -181,10 +183,6 @@ object Lattice {
     5 * get_E_pair(aminoacids) +
     4.25 * get_E_tem(aminoacids)
   }
-  val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
-  val sidechainsInfo = JsonParser(
-    Source.fromURL(
-      getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
 
   //val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
 
@@ -195,7 +193,6 @@ object Lattice {
     val vectorsWithEdgeOnes = (vectors.head +: vectors) ++ Seq(vectors.init.last, vectors.last)
     val pdbData = (aminoacids, vectorsWithEdgeOnes.sliding(3, 1).toSeq, originalFullAtomChain).zipped.flatMap({
       case (aa, Seq(v1, v2, v3), atoms) => {
-        val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
         val updatedMap = Map("CA" -> aa.ca * LatticeConstants.MESH_SIZE) ++
             restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) ++
             restoreInfoCoordinates(aa, v1, v2, v3, sidechainsInfo)
@@ -205,7 +202,7 @@ object Lattice {
           else atom
         })
       }
-    }).toSeq
+    })
     //pdbData.foreach(println)
     println("done all")
     pdbData
@@ -242,18 +239,18 @@ object Lattice {
         val v1 = a1 - a2
         val v2 = a3 - a2
         val angle = v1.angleTo(v2)
-        (angle >= 72.5 && angle <= 154)
+        angle >= 72.5 && angle <= 154
       }
     })
     if (!r1)
         return false
     val r2 = (0 to structure.size - 4).forall({
-      i=>{
+      i => {
         val a1 = structure(i).ca
-        val a2 = structure(i+3).ca
+        val a2 = structure(i + 3).ca
         a1.distanceTo(a2) >= 4.05
       }
     })
-    return r2
+    r2
   }
 }

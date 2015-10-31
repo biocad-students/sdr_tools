@@ -1,8 +1,6 @@
 package ru.biocad.ig.common.algorithms
 
 
-import spray.json._
-import scala.io.Source
 import java.io.File
 import com.typesafe.scalalogging.slf4j.LazyLogging
 
@@ -10,20 +8,7 @@ import ru.biocad.ig.common.io.pdb.{PDBStructure, PDBAtomInfo, PDBAminoAcidCollec
 
 import ru.biocad.ig.common.structures.geometry._
 
-import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoacid, SimplifiedChain}
-
-
-import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol
-import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol._
-import ru.biocad.ig.alascan.constants.{AminoacidLibrary, BackboneInfo}
-
-import ru.biocad.ig.alascan.constants.json.BasicVectorLibraryJsonProtocol._
-import ru.biocad.ig.alascan.constants.json.BasicVectorLibrary
-
-import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
-
-
-import ru.biocad.ig.alascan.constants.energy_terms._
+import ru.biocad.ig.common.structures.aminoacid.SimplifiedChain
 
 import ru.biocad.ig.common.io.pdb.PDBWriter
 
@@ -59,6 +44,7 @@ object MonteCarloRunner extends LazyLogging {
     val w = new PDBWriter(outputFile)
     w.writeAtomInfo(result)
     w.close()
+
 
   }
 

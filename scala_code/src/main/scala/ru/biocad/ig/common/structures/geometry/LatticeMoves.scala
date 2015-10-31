@@ -7,7 +7,6 @@ import util.Random.nextInt
 import com.typesafe.scalalogging.slf4j.LazyLogging
 
 trait LatticeBasicMove {
-  def isValid() : Boolean = ???
   def makeMove(structure : SimplifiedChain, position : Int) : SimplifiedChain = ???
 }
 /***/
