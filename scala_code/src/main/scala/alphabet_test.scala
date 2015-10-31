@@ -1,7 +1,6 @@
 package test.alphabet
 
 //import DefaultJsonProtocol._
-import scala.io.Source
 import scopt.OptionParser
 import java.io.File
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -23,7 +22,7 @@ object MCTest extends LazyLogging {
       //TODO: add option - refine/fold/alascan - default refine
       debug : Boolean = false)
 
-  private def getParser = new scopt.OptionParser[Config]("sdr_tools") {
+  private def getParser = new OptionParser[Config]("sdr_tools") {
       opt[File]('i', "inputFile") action {(s, c) => c.copy(inputFile = s)} text "input file in PDB format"
       opt[File]('o', "outputFile") action {(s, c) => c.copy(outputFile = s)} text "output file in PDB format"
       opt[Int]('n', "numberOfMoves") action {(s, c) => c.copy(numberOfMoves = s)} text "number of iterations (moves) to call MC"

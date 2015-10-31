@@ -26,18 +26,16 @@ class ChainIterator(input_sequence : Seq[PDBAtomInfo], chain : Char = 'L') exten
   def skipToChainStart(sequence : Seq[PDBAtomInfo], chain : Char) : Seq[PDBAtomInfo] = sequence match {
     case Seq() => Seq()
     case x if x.head.chainID == chain => x
-    case x if x.head.chainID != chain => {
-      skipToChainStart(x.tail, chain)
-    }
+    case x if x.head.chainID != chain => skipToChainStart(x.tail, chain)
   }
 
-  def hasNext : Boolean = !tailSequence.isEmpty && tailSequence.head.chainID == chain
+  def hasNext : Boolean = tailSequence.nonEmpty && tailSequence.head.chainID == chain
 
   def next() : Seq[PDBAtomInfo] = {
     var prefix : Seq[PDBAtomInfo] = Seq()
     val currentAA = tailSequence.head.resSeq
     val currentChain = tailSequence.head.chainID
-    while (!tailSequence.isEmpty && tailSequence.head.chainID == currentChain && tailSequence.head.resSeq == currentAA) {
+    while (tailSequence.nonEmpty && tailSequence.head.chainID == currentChain && tailSequence.head.resSeq == currentAA) {
         prefix = prefix :+ tailSequence.head
         tailSequence = tailSequence.tail
     }

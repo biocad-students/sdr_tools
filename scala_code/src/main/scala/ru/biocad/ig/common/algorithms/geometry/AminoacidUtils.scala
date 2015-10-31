@@ -1,6 +1,5 @@
 package ru.biocad.ig.common.algorithms.geometry
 
-import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
 import ru.biocad.ig.common.structures.geometry.GeometryVector
 import scala.math.signum
 /**
@@ -24,9 +23,9 @@ object AminoacidUtils{
 
     val v1 = p3 - p2
     val vp = p4 - p2
-    val x = (v1 ** vp).normalize
-    val y = (vp ** x).normalize
-    val z = (x ** y).normalize
+    val x = (v1 ** vp).normalize()
+    val y = (vp ** x).normalize()
+    val z = (x ** y).normalize()
     (x, y, z)
   }
 
@@ -37,9 +36,9 @@ object AminoacidUtils{
   ) : (GeometryVector, GeometryVector, GeometryVector) = {
 
     val vp = v2 + v3
-    val x = (v2 ** vp).normalize
-    val y = (vp ** x).normalize
-    val z = (x ** y).normalize
+    val x = (v2 ** vp).normalize()
+    val y = (vp ** x).normalize()
+    val z = (x ** y).normalize()
     (x, y, z)
   }
 
