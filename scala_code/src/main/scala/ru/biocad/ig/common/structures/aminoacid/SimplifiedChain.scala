@@ -32,6 +32,16 @@ case class SimplifiedChain(val structure : Array[SimplifiedAminoacid]) extends T
       { case aa => aa.move(moveVector) })
   }
 
+  /** represents part of one alanine scanning step -
+    * performs substitution at given position with new aminoacid, and returns modified chain.
+    * seems to be convenience method, as most of this is made in moveRotamer.
+    * only rotamer and aminoacid name should be replaced here.
+    * slightly differs from replaceRotamer - aminoacid's name also gets changed
+    */
+  def mutateAtPoint(newAminoacidName : String, newRotamer : GeometryVector, position : Int) : SimplifiedChain = {
+    replaceAminoacid({_ == position},
+      { case aa => SimplifiedAminoacid(newAminoacidName, aa.ca, newRotamer) })
+  }
 
 }
 
@@ -39,4 +49,13 @@ object SimplifiedChain {
   def apply(originalSequence : Seq[Seq[PDBAtomInfo]]) = {
     new SimplifiedChain(originalSequence.map(SimplifiedAminoacid(_)).toArray)
   }
+
+
+  /** should build original simplified chain from given string with aminoacid 1-letter names.
+    * Original chain is formed as coiled coil.
+    */
+  def fromSequence(sequence : String) : SimplifiedChain = {
+      ???
+  }
+
 }
