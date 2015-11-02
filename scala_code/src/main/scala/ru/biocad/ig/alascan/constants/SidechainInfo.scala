@@ -78,4 +78,13 @@ case class SidechainInfo(
         val rest = representatives.filterNot(_ == a)(index)
         new SimplifiedAminoacid(aminoacidToModify.name, aminoacidToModify.ca, rest.rotamer)
     }
+
+    def changeRotamerToRandom(rotamerToModify : GeometryVector) : GeometryVector = {
+        if (representatives.size < 2)
+            return rotamerToModify
+        val a = findNearestRepresentativeByDistanceTo(rotamerToModify)
+        val index = Random.nextInt(representatives.length - 1)
+        val rest = representatives.filterNot(_ == a)(index)
+        rest.rotamer
+    }
 }

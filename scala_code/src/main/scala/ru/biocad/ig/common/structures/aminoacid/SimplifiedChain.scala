@@ -3,8 +3,8 @@ package ru.biocad.ig.common.structures.aminoacid
 import scala.collection._
 
 import ru.biocad.ig.common.io.pdb.PDBAtomInfo
-import ru.biocad.ig.common.structures.geometry.GeometryVector
-import ru.biocad.ig.common.structures.geometry.Lattice
+import ru.biocad.ig.common.structures.geometry.{Lattice, Vector3d, GeometryVector, RotamerMove}
+import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 
 /** hides sequence of simplified aminoacids and constructs them from various sources
   */
@@ -50,12 +50,32 @@ object SimplifiedChain {
     new SimplifiedChain(originalSequence.map(SimplifiedAminoacid(_)).toArray)
   }
 
+  val aa3letter = Map('A' -> "ALA", 'R' -> "ARG",
+    'N' -> "ASN", 'D' -> "ASP", 'C' -> "CYS", 'Q' -> "GLN",
+    'E' -> "GLU", 'G' -> "GLY", 'H' -> "HIS", 'I' -> "ILE",
+    'L' -> "LEU", 'K' -> "LYS", 'M' -> "MET", 'F' -> "PHE",
+    'P' -> "PRO", 'S' -> "SER", 'T' -> "THR", 'W' -> "TRP",
+    'Y' -> "TYR", 'V' -> "VAL"
+  )
+
 
   /** should build original simplified chain from given string with aminoacid 1-letter names.
     * Original chain is formed as coiled coil.
     */
-  def fromSequence(sequence : String) : SimplifiedChain = {
-      ???
+  def fromSequence(sequence : String, rotamerLibrary : AminoacidLibrary[SidechainInfo]) : SimplifiedChain = {
+    val d : Seq[String] = sequence.flatMap(aa3letter.get(_))
+    val vectors = Lattice.prepareValidVectors(d.size).foldLeft(Seq(Vector3d(0, 0, 0)) : Seq[GeometryVector])({
+      case (result, v) => {
+        (result.head + v) +: result
+      }
+    }).toSeq.reverse
+    val m = new RotamerMove(rotamerLibrary)
+    val s1 = (d, vectors).zipped.map({case (aaName, ca) => new SimplifiedAminoacid(aaName, ca, Vector3d(0, 0, 0))})
+    val s2 = (0 to s1.size - 1).map({i=> {
+      new SimplifiedAminoacid(s1(i).name, s1(i).ca, m.moveRotamer(s1, i))
+    }}).toArray
+    new SimplifiedChain(s2)
+    //1. generate
   }
 
 }
