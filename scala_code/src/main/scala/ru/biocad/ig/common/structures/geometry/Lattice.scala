@@ -253,4 +253,16 @@ object Lattice {
     })
     r2
   }
+
+  def prepareValidVectors(n : Int) : Seq[GeometryVector] = {
+    //1. should get random pair of vector such as structure validation conditions holds.
+    val l1 = Vector3d(2, 1, 0)
+    val l2 = Vector3d(2, -1, 0)
+    //2. then repeat them continually till the coil is received
+    Stream.continually(Seq(l1, l2).toStream).flatten.take(n).toSeq
+  }
+
+  def validateVectors(v1 : GeometryVector, v2 : GeometryVector, v3 : GeometryVector) = {
+    v2.angleTo(v1) >= 72.5 && v2.angleTo(v1) <= 154 && (v1 + v2 + v3).length >= 4.05
+  }
 }

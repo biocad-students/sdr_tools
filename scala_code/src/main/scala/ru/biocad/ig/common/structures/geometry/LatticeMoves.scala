@@ -12,7 +12,7 @@ trait LatticeBasicMove {
 /***/
 class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
         extends LatticeBasicMove with LazyLogging {
-  def moveRotamer(structure : Seq[SimplifiedAminoacid], i : Int ) : SimplifiedAminoacid = {
+  def moveRotamer(structure : Seq[SimplifiedAminoacid], i : Int ) : GeometryVector = {
     val v1 = i match {
       case 0 => structure(i + 1).ca - structure(i).ca
       case _ => structure(i).ca - structure(i - 1).ca
@@ -30,14 +30,14 @@ class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
     val (d1, d2, d3) = AminoacidUtils.getDistances(v1, v2, v3)
     val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(v1, v2, v3)
     val sidechainInfo = rotamerLibrary.restoreAminoacidInfo(aa.name, d1, d2, d3)
-    sidechainInfo.changeRotamerToRandom(aa)
+    sidechainInfo.changeRotamerToRandom(aa.rotamer)
   }
 
   override def makeMove(chain : SimplifiedChain, position : Int) : SimplifiedChain = {
     logger.debug("in RotamerMove at position: " + position.toString)
 
-    val newAA = moveRotamer(chain.structure, position)
-    chain.replaceRotamer(newAA.rotamer, position)
+    val newRotamer = moveRotamer(chain.structure, position)
+    chain.replaceRotamer(newRotamer, position)
   }
 }
 
