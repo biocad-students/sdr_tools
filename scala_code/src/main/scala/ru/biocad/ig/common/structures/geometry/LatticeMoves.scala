@@ -8,6 +8,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 
 trait LatticeBasicMove {
   def makeMove(structure : SimplifiedChain, position : Int) : SimplifiedChain = ???
+  def size : Int = ???
 }
 /***/
 class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
@@ -32,6 +33,7 @@ class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
     val sidechainInfo = rotamerLibrary.restoreAminoacidInfo(aa.name, d1, d2, d3)
     sidechainInfo.changeRotamerToRandom(aa.rotamer)
   }
+  override val size = 0
 
   override def makeMove(chain : SimplifiedChain, position : Int) : SimplifiedChain = {
     logger.debug("in RotamerMove at position: " + position.toString)
@@ -45,7 +47,7 @@ class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
 this class takes number of bonds to makeMove, starting from zero*/
 class BondMove(val basicVectors :  Array[GeometryVector],
         val numberOfBonds : Int) extends LatticeBasicMove with LazyLogging {
-
+  override val size = numberOfBonds - 1
   def prepareMove(moveVector : GeometryVector,
       structure : SimplifiedChain,
       position : Int) : SimplifiedChain = {

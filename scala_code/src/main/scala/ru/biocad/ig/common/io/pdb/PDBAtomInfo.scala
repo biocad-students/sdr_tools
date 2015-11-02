@@ -1,6 +1,6 @@
 package ru.biocad.ig.common.io.pdb
 
-import ru.biocad.ig.common.structures.geometry.GeometryVector
+import ru.biocad.ig.common.structures.geometry._
 
 // All fields are named as stated in specification:
 // ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf
@@ -47,11 +47,10 @@ object PDBAtomInfo {
   )
 
   def apply(index : Int, atomName : String, aaName : String, chainName : Char, resID: Int,
-    v : GeometryVector) : PDBAtomInfo = {
-      val x = v.coordinates(0)
-      val y = v.coordinates(1)
-      val z = v.coordinates(2)
-      new PDBAtomInfo(index, atomName, ' ', aaName, chainName, resID,
+    v : GeometryVector) : PDBAtomInfo = v match {
+      case Vector(Seq(x, y, z)) => {
+          new PDBAtomInfo(index, atomName, ' ', aaName, chainName, resID,
           ' ', x, y, z, 0.0, 0.0, "", atomName.substring(0, 1), "" )
+        }
     }
 }

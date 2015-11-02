@@ -214,7 +214,7 @@ object Lattice {
     val vectorsWithEdgeOnes = (vectors.head +: vectors) ++ Seq(vectors.init.last, vectors.last)
     val pdbData = (aminoacids, vectorsWithEdgeOnes.sliding(3, 1).toSeq, Stream from 1).zipped.flatMap({
       case (aa, Seq(v1, v2, v3), aaIndex) => {
-        val updatedMap = Map("CA" -> aa.ca * 1.22) ++
+        val updatedMap = Map("CA" -> aa.ca * LatticeConstants.MESH_SIZE) ++
             restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) ++
             restoreInfoCoordinates(aa, v1, v2, v3, sidechainsInfo)
         updatedMap.map({
@@ -254,6 +254,11 @@ object Lattice {
   }
 
   def validateStructure(structure : SimplifiedChain) : Boolean = {
+    val r0 = (0 to structure.size - 2).forall({
+      i => backboneVectors.contains(structure(i + 1).ca - structure(i).ca)
+    })
+    if (!r0)
+      return false
     val r1 = (0 to structure.size - 3).forall({
       i => {
         val a1 = structure(i).ca

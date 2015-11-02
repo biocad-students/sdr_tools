@@ -6,10 +6,13 @@ import ru.biocad.ig.common.structures.geometry.GeometryVector
 import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
 import scala.util.Random
 
-case class SidechainInfo(
+import com.typesafe.scalalogging.slf4j.LazyLogging
+
+
+case class SidechainInfo (
   val representatives : Seq[RotamerInfo],
   val amounts : Seq[Int],
-  var total : Int) extends AminoacidFragment {
+  var total : Int) extends AminoacidFragment with LazyLogging {
 
     def findNearestRepresentativeByDistanceTo(rotamer : GeometryVector) : RotamerInfo =
       representatives.minBy(a => (rotamer - a.rotamer).lengthSquared )
@@ -71,6 +74,7 @@ case class SidechainInfo(
       * }}}
       */
     def changeRotamerToRandom(aminoacidToModify : SimplifiedAminoacid) : SimplifiedAminoacid = {
+      logger.info(representatives.size.toString)
         if (representatives.size < 2)
             return aminoacidToModify
         val a = findNearestRepresentativeByDistanceTo(aminoacidToModify.rotamer)
@@ -80,11 +84,11 @@ case class SidechainInfo(
     }
 
     def changeRotamerToRandom(rotamerToModify : GeometryVector) : GeometryVector = {
-        if (representatives.size < 2)
+        if (representatives.size < 1)
             return rotamerToModify
-        val a = findNearestRepresentativeByDistanceTo(rotamerToModify)
-        val index = Random.nextInt(representatives.length - 1)
-        val rest = representatives.filterNot(_ == a)(index)
+        //val a = findNearestRepresentativeByDistanceTo(rotamerToModify)
+        val index = Random.nextInt(representatives.length)
+        val rest = representatives(index)
         rest.rotamer
     }
 }
