@@ -28,7 +28,7 @@ object MonteCarloRunner extends LazyLogging {
     (filteredMap, aas)
   }
 
-  def run(inputFile : File, outputFile : File, numberOfMoves : Int) = {
+  def refine(inputFile : File, numberOfMoves : Int, outputFile : File) = {
     println("testing backbone reconstruction...")
     val (simplifiedChain, fullAtomChain) = loadStructure("/2OSL.pdb")
     logger.info("Energy before structure refinement: " + Lattice.getEnergy(simplifiedChain).toString)
@@ -44,8 +44,44 @@ object MonteCarloRunner extends LazyLogging {
     val w = new PDBWriter(outputFile)
     w.writeAtomInfo(result)
     w.close()
+  }
 
+  def fold(sequence : String, numberOfMoves : Int, outputFile : File) = {
+    println("testing backbone reconstruction...")
+    val simplifiedChain = SimplifiedChain.fromSequence(sequence, Lattice.sidechainsInfo)
+    logger.info("Energy before structure refinement: " + Lattice.getEnergy(simplifiedChain).toString)
 
+    //println(Lattice.getEnergy(simplifiedChain))
+    val ch1 = MonteCarlo.run(simplifiedChain,
+      Seq(new BondMove(Lattice.backboneVectors, 3),
+        new RotamerMove(Lattice.sidechainsInfo)),
+        x => Lattice.getEnergy(x), numberOfMoves)
+    logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
+    //val result = Lattice.toFullAtomRepresentation(ch1.structure, fullAtomChain)
+    //val sidechainInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
+    //val w = new PDBWriter(outputFile)
+    //w.writeAtomInfo(result)
+    //w.close()
+    //TODO: construct full-atom chain with no pdb atom details
+  }
+
+  //TODO: change to alascan
+  def scan(inputFile : File, numberOfMoves : Int, outputFile : File) = {
+    println("testing backbone reconstruction...")
+    val (simplifiedChain, fullAtomChain) = loadStructure("/2OSL.pdb")
+    logger.info("Energy before structure refinement: " + Lattice.getEnergy(simplifiedChain).toString)
+
+    //println(Lattice.getEnergy(simplifiedChain))
+    val ch1 = MonteCarlo.run(simplifiedChain,
+      Seq(new BondMove(Lattice.backboneVectors, 3),
+        new RotamerMove(Lattice.sidechainsInfo)),
+        x => Lattice.getEnergy(x), numberOfMoves)
+    logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
+    val result = Lattice.toFullAtomRepresentation(ch1.structure, fullAtomChain)
+    //val sidechainInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
+    val w = new PDBWriter(outputFile)
+    w.writeAtomInfo(result)
+    w.close()
   }
 
 }
