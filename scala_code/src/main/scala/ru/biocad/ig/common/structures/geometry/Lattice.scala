@@ -149,7 +149,7 @@ object Lattice {
           get_E_two(i, j, aminoacids(i), aminoacids(j), f)
         }
       })
-    }).reduceLeft(_ + _)
+    }).sum
   }
 
   def get_E_tem(chain : SimplifiedChain) : Double = {
