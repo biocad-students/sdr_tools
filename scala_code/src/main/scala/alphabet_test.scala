@@ -19,7 +19,7 @@ object MCTest extends LazyLogging {
   private case class Config(inputFile : File = new File("2OSL.pdb"),
       outputFile : File = new File("result.pdb"),
       numberOfMoves : Int = 100,
-      mode : String = "fold",
+      mode : String = "refine",
       sequence : String = "GARFIELD",
       //TODO: add option - refine/fold/alascan - default refine
       debug : Boolean = false)

@@ -57,11 +57,10 @@ object MonteCarloRunner extends LazyLogging {
         new RotamerMove(Lattice.sidechainsInfo)),
         x => Lattice.getEnergy(x), numberOfMoves)
     logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
-    //val result = Lattice.toFullAtomRepresentation(ch1.structure, fullAtomChain)
-    //val sidechainInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
-    //val w = new PDBWriter(outputFile)
-    //w.writeAtomInfo(result)
-    //w.close()
+    val result = Lattice.toFullAtomRepresentation(simplifiedChain.structure)
+    val w = new PDBWriter(outputFile)
+    w.writeAtomInfo(result)
+    w.close()
     //TODO: construct full-atom chain with no pdb atom details
   }
 

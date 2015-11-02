@@ -208,6 +208,29 @@ object Lattice {
     pdbData
   }
 
+
+  def toFullAtomRepresentation(aminoacids : Seq[SimplifiedAminoacid])  = {
+    val vectors = (aminoacids.tail, aminoacids).zipped.map(_.ca - _.ca)
+    val vectorsWithEdgeOnes = (vectors.head +: vectors) ++ Seq(vectors.init.last, vectors.last)
+    val pdbData = (aminoacids, vectorsWithEdgeOnes.sliding(3, 1).toSeq, Stream from 1).zipped.flatMap({
+      case (aa, Seq(v1, v2, v3), aaIndex) => {
+        val updatedMap = Map("CA" -> aa.ca * 1.22) ++
+            restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) ++
+            restoreInfoCoordinates(aa, v1, v2, v3, sidechainsInfo)
+        updatedMap.map({
+          case (k, v) => {
+            (aaIndex, aa.name, k, v)
+          }
+        })
+      }
+    })
+    val result = (pdbData, Stream from 1).zipped.map({
+      case ((aaIndex, aaName, k, v), index) => PDBAtomInfo(index, k, aaName, 'A', aaIndex, v)
+    })
+    println("done all")
+    result
+  }
+
   def restoreInfoFragment[T <: AminoacidFragment](
       aa : SimplifiedAminoacid,
       v1 : GeometryVector,
