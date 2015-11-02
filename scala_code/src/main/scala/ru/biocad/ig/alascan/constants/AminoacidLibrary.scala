@@ -13,7 +13,7 @@ import ru.biocad.ig.common.structures.geometry.GeometryVector
   */
 case class AminoacidLibrary[T <: AminoacidFragment](
   val data : Map[String, Map[Int, Map[Int, Map[Int, T]]]],
-  val meshSize : Double = 1.0,
+  val meshSize : Double = 0.3,
   val threshold : Double = 0.0)(implicit m: scala.reflect.Manifest[T]) {
     /** Finds corresponding AminoacidFragment in database (based on d1, d2 and d3 parameters) and returns it
       * @param aminoacid current library fragments are aminoacid-specific, so this param correspongs to first level of grouping - aminoacid name

@@ -28,8 +28,9 @@ case class SimplifiedChain(val structure : Array[SimplifiedAminoacid]) extends T
   }
 
   def moveFragment(moveVector : GeometryVector, position : Int, numberOfBonds : Int) : SimplifiedChain = {
-    replaceAminoacid({i => i >= position && i < position + numberOfBonds - 1},
-      { case aa => aa.move(moveVector) })
+    val deltaVector = moveVector - (structure(position + 1).ca - structure(position).ca)
+    replaceAminoacid({i => i > position && i < position + numberOfBonds - 1},
+      { case aa => aa.move(deltaVector) })
   }
 
   /** represents part of one alanine scanning step -

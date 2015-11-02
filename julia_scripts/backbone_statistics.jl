@@ -124,6 +124,9 @@ function /(a :: GeometryVector, b :: Number)
   GeometryVector(map(x -> x/b, a.coordinates))
 end
 
+function round2(a::GeometryVector)
+  GeometryVector(map(x::Float64->round(x), a.coordinates))
+end
 function *(a :: GeometryVector, b :: Number)
   GeometryVector(map(x -> x*b, a.coordinates))
 end
@@ -404,7 +407,7 @@ function processChainPortionVec(v1, v2, v3, aminoacid, meshSize = 0.3)
   (distances, aa_name, vectors, sidechains)
 end
 
-function getVectorForSeq(sequence, ks, k, text_file_name)
+function getVectorForSeq(sequence, ks, k, text_file_name, latticeSize = 1.22)
   if (length(ks)<4)
     println("length of keys <=4")
     println(text_file_name)
@@ -420,25 +423,25 @@ function getVectorForSeq(sequence, ks, k, text_file_name)
     end
   end
   if (k == 1)
-    return (getVector(sequence[ks[2]]["CA"]) - getVector(sequence[ks[1]]["CA"]),
-            getVector(sequence[ks[2]]["CA"]) - getVector(sequence[ks[1]]["CA"]),
-            getVector(sequence[ks[3]]["CA"]) - getVector(sequence[ks[2]]["CA"]))
+    return (round2((getVector(sequence[ks[2]]["CA"]) - getVector(sequence[ks[1]]["CA"]))/latticeSize),
+            round2((getVector(sequence[ks[2]]["CA"]) - getVector(sequence[ks[1]]["CA"]))/latticeSize),
+            round2((getVector(sequence[ks[3]]["CA"]) - getVector(sequence[ks[2]]["CA"]))/latticeSize))
   end
   if (k == length(ks))
-    return (getVector(sequence[ks[length(ks)]]["CA"]) - getVector(sequence[ks[length(ks) - 1]]["CA"]),
-            getVector(sequence[ks[length(ks) - 1]]["CA"]) - getVector(sequence[ks[length(ks) - 2]]["CA"]),
-            getVector(sequence[ks[length(ks)]]["CA"]) - getVector(sequence[ks[length(ks) - 1]]["CA"]))
+    return (round2((getVector(sequence[ks[length(ks)]]["CA"]) - getVector(sequence[ks[length(ks) - 1]]["CA"]))/latticeSize),
+            round2((getVector(sequence[ks[length(ks) - 1]]["CA"]) - getVector(sequence[ks[length(ks) - 2]]["CA"]))/latticeSize),
+            round2((getVector(sequence[ks[length(ks)]]["CA"]) - getVector(sequence[ks[length(ks) - 1]]["CA"]))/latticeSize))
   end
 
   if (k == length(ks) - 1)
-    return (getVector(sequence[ks[length(ks) - 1]]["CA"]) - getVector(sequence[ks[length(ks) - 2]]["CA"]),
-            getVector(sequence[ks[length(ks)]]["CA"]) - getVector(sequence[ks[length(ks) - 1]]["CA"]),
-            getVector(sequence[ks[length(ks) - 1]]["CA"]) - getVector(sequence[ks[length(ks) - 2]]["CA"]))
+    return (round2((getVector(sequence[ks[length(ks) - 1]]["CA"]) - getVector(sequence[ks[length(ks) - 2]]["CA"]))/latticeSize),
+            round2((getVector(sequence[ks[length(ks)]]["CA"]) - getVector(sequence[ks[length(ks) - 1]]["CA"]))/latticeSize),
+            round2((getVector(sequence[ks[length(ks) - 1]]["CA"]) - getVector(sequence[ks[length(ks) - 2]]["CA"]))/latticeSize))
   end
 
-  return (getVector(sequence[ks[k]]["CA"]) - getVector(sequence[ks[k - 1]]["CA"]),
-          getVector(sequence[ks[k + 1]]["CA"]) - getVector(sequence[ks[k]]["CA"]),
-          getVector(sequence[ks[k + 2]]["CA"]) - getVector(sequence[ks[k + 1]]["CA"]))
+  return (round2((getVector(sequence[ks[k]]["CA"]) - getVector(sequence[ks[k - 1]]["CA"]))/latticeSize),
+          round2((getVector(sequence[ks[k + 1]]["CA"]) - getVector(sequence[ks[k]]["CA"]))/latticeSize),
+          round2((getVector(sequence[ks[k + 2]]["CA"]) - getVector(sequence[ks[k + 1]]["CA"]))/latticeSize))
 end
 
 function load_atom_info(text_file_name)
@@ -470,8 +473,8 @@ function load_atom_info(text_file_name)
   end
   r1 = getAverage(basechainInfo)
   r2 = getRotamerDb(sidechainInfo)
-  ( {"data" => r1, "meshSize" => 0.3},
-    {"data" => r2, "threshold" => 1.7, "meshSize"=> 0.3})
+  ( {"data" => r1, "meshSize" => 0.3, "latticeSize" => 1.22},
+    {"data" => r2, "threshold" => 1.7, "meshSize"=> 0.3, "latticeSize" => 1.22})
 end
 
 

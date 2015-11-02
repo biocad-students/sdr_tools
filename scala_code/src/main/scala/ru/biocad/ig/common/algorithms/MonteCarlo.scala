@@ -40,7 +40,7 @@ object MonteCarlo{
       case (currentStructure, (shuffledMoves, time)) => {
         shuffledMoves.foldLeft(currentStructure) {
           case (current, move) => {
-            val position = Random.nextInt(structure.size)
+            val position = Random.nextInt(structure.size - move.size)
             val newStructure = attemptMove(currentStructure, move, position, getEnergy)
             if (Lattice.validateStructure(newStructure))
               newStructure

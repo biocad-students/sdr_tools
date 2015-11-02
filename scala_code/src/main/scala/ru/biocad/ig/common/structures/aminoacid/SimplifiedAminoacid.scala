@@ -20,19 +20,15 @@ case class SimplifiedAminoacid(val name : String,
       )
   */
   //val atomsVectorMap = atomsMap.map(x => (x._1, Vector3d(x._2.x, x._2.y, x._2.z) - ca))
-
-  def getUpdatedAtomInfo(atom : String, updatedCoordinates : GeometryVector, atomsMap : Map[String, PDBAtomInfo]) : PDBAtomInfo = {
-    val a = atomsMap(atom)
-    new PDBAtomInfo(a.serial, a.atom, a.altLoc, a.resName, a.chainID,
-      a.resSeq, a.iCode,
-      updatedCoordinates.coordinates(0),
-      updatedCoordinates.coordinates(1),
-      updatedCoordinates.coordinates(2),
-      a.occupancy, a.tempFactor, a.segmentID, a.element, a.charge
-    )
+  //TODO : check if it is useful
+  def getUpdatedAtomInfo(atom : String, updatedCoordinates : GeometryVector,
+          atomsMap : Map[String, PDBAtomInfo]) : PDBAtomInfo = updatedCoordinates match {
+      case Vector(Seq(x, y, z)) => {
+          val a = atomsMap(atom)
+          new PDBAtomInfo(a.serial, a.atom, a.altLoc, a.resName, a.chainID,
+            a.resSeq, a.iCode, x, y, z, a.occupancy, a.tempFactor, a.segmentID, a.element, a.charge)
+      }
   }
-
-
 
 
   //var rotamer : Rotamer = new Rotamer(computeCenterCoordinates(atoms)) //
@@ -113,13 +109,9 @@ object SimplifiedAminoacid{
     new SimplifiedAminoacid(name, ca, computeCenterCoordinates(atoms))
   }
 
-  def getUpdatedAtomInfo(updatedCoordinates : GeometryVector, a : PDBAtomInfo) : PDBAtomInfo = {
-    new PDBAtomInfo(a.serial, a.atom, a.altLoc, a.resName, a.chainID,
-      a.resSeq, a.iCode,
-      updatedCoordinates.coordinates(0),
-      updatedCoordinates.coordinates(1),
-      updatedCoordinates.coordinates(2),
-      a.occupancy, a.tempFactor, a.segmentID, a.element, a.charge)
-
+  def getUpdatedAtomInfo(updatedCoordinates : GeometryVector,
+    a : PDBAtomInfo) : PDBAtomInfo = updatedCoordinates match {
+      case Vector(Seq(x, y, z)) => new PDBAtomInfo(a.serial, a.atom, a.altLoc, a.resName, a.chainID,
+        a.resSeq, a.iCode, x, y, z, a.occupancy, a.tempFactor, a.segmentID, a.element, a.charge)
   }
 }
