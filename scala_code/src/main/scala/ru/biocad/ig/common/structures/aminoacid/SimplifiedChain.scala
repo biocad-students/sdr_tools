@@ -65,7 +65,7 @@ object SimplifiedChain {
     */
   def fromSequence(sequence : String, rotamerLibrary : AminoacidLibrary[SidechainInfo]) : SimplifiedChain = {
     val d : Seq[String] = sequence.flatMap(aa3letter.get(_))
-    val vectors = Lattice.prepareValidVectors(d.size).foldLeft(Seq(Vector3d(0, 0, 0)) : Seq[GeometryVector])({
+    val vectors = Lattice.prepareValidVectors(d.size - 1).foldLeft(Seq(Vector3d(0, 0, 0)) : Seq[GeometryVector])({
       case (result, v) => {
         (result.head + v) +: result
       }

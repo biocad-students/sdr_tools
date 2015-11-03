@@ -209,14 +209,13 @@ object Lattice {
   }
 
 
-  def toFullAtomRepresentation(aminoacids : Seq[SimplifiedAminoacid])  = {
+  def toFullAtomRepresentation(aminoacids : Seq[SimplifiedAminoacid]) = {
     val vectors = (aminoacids.tail, aminoacids).zipped.map(_.ca - _.ca)
     val vectorsWithEdgeOnes = (vectors.head +: vectors) ++ Seq(vectors.init.last, vectors.last)
     val pdbData = (aminoacids, vectorsWithEdgeOnes.sliding(3, 1).toSeq, Stream from 1).zipped.flatMap({
       case (aa, Seq(v1, v2, v3), aaIndex) => {
         val updatedMap = Map("CA" -> aa.ca * LatticeConstants.MESH_SIZE) ++
-            restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) ++
-            restoreInfoCoordinates(aa, v1, v2, v3, sidechainsInfo)
+            restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) //++ restoreInfoCoordinates(aa, v1, v2, v3, sidechainsInfo)
         updatedMap.map({
           case (k, v) => {
             (aaIndex, aa.name, k, v)

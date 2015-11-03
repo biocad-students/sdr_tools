@@ -1,13 +1,13 @@
 package ru.biocad.ig.common.algorithms.geometry
 
-import ru.biocad.ig.common.structures.geometry.GeometryVector
+import ru.biocad.ig.common.structures.geometry.{GeometryVector, Vector3d, Vector}
 import scala.math.signum
 /**
 this file should contain helper methods related to full-atom aminoadif model reconstruction from
 SimplifiedAminoacid representation.
 It is temporary and should be moved to different classes and objects
 */
-object AminoacidUtils{
+object AminoacidUtils {
 
   /**
   this returns local coordinate system for given positions of 4 consecutive alpha-carbons
@@ -47,6 +47,16 @@ object AminoacidUtils{
   */
   def getGlobalCoordinates(localAxes : Seq[GeometryVector], localCoordinates : Seq[Double], zeroShift : GeometryVector) : GeometryVector = {
     (localAxes, localCoordinates).zipped.map(_ * _).reduceLeft(_ + _) + zeroShift
+  }
+
+  def getLocalCoordinates(localAxes : Seq[GeometryVector], v : GeometryVector, zeroShift : GeometryVector = Vector3d(0, 0, 0)) : GeometryVector = {
+    val coordinates = localAxes.foldLeft((v, Seq[Double]())) ({
+      case ((v, localCoordinates), axis) => {
+        val newCoordinate : Double = axis*v
+        (v - axis*newCoordinate, newCoordinate +: localCoordinates)
+      }
+    })._2.reverse
+    new Vector(coordinates)
   }
 
   /**

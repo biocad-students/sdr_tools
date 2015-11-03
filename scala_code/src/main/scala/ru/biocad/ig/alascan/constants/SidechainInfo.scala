@@ -13,8 +13,9 @@ case class SidechainInfo (
   val representatives : Seq[RotamerInfo],
   val amounts : Seq[Int],
   var total : Int) extends AminoacidFragment with LazyLogging {
-
-    def findNearestRepresentativeByDistanceTo(rotamer : GeometryVector) : RotamerInfo =
+    /** @param rotamer in local coordinate system
+      */
+    private def findNearestRepresentativeByDistanceTo(rotamer : GeometryVector) : RotamerInfo =
       representatives.minBy(a => (rotamer - a.rotamer).lengthSquared )
 
 
@@ -43,17 +44,6 @@ case class SidechainInfo (
         a.atoms.map({
           case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.ca * LatticeConstants.MESH_SIZE) )
         })
-    }
-
-    /** Replaces rotamer of given SimplifiedAminoacid with some Rotamer from current library fragment
-      *
-      * @param aminoacidToModify aminoacid, which rotamer portion gets modified
-      */
-    def setRotamerFromLibrary(aminoacidToModify : SimplifiedAminoacid) : SimplifiedAminoacid = {
-        if (representatives.size == 0)
-            return aminoacidToModify
-        val a = findNearestRepresentativeByDistanceTo(aminoacidToModify.rotamer)
-        new SimplifiedAminoacid(aminoacidToModify.name, aminoacidToModify.ca, a.rotamer)
     }
 
     /** Finds nearest rotamer in library fragment and replaces current aa's rotamer to some other (randomly picked)
