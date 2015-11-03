@@ -28,7 +28,8 @@ case class SidechainInfo (
     override def getPDBAtomInfo(aminoacid : SimplifiedAminoacid,
             x : GeometryVector, y : GeometryVector, z : GeometryVector,
             atomsMap : Map[String, PDBAtomInfo]) : Seq[PDBAtomInfo] = {
-        val a = findNearestRepresentativeByDistanceTo(aminoacid.rotamer)
+        val localV = AminoacidUtils.getLocalCoordinates(Seq(x, y, z), aminoacid.rotamer)
+        val a = findNearestRepresentativeByDistanceTo(localV)
         a.atoms.map({case (k, v) =>
         (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.ca*1.22) )}).map({
           case (k, v) => aminoacid.getUpdatedAtomInfo(k, v, atomsMap)
@@ -40,7 +41,8 @@ case class SidechainInfo (
             x : GeometryVector,
             y : GeometryVector,
             z : GeometryVector) : Map[String, GeometryVector] = {
-        val a = findNearestRepresentativeByDistanceTo(aminoacid.rotamer)
+        val localV = AminoacidUtils.getLocalCoordinates(Seq(x, y, z), aminoacid.rotamer)
+        val a = findNearestRepresentativeByDistanceTo(localV)
         a.atoms.map({
           case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.ca * LatticeConstants.MESH_SIZE) )
         })
@@ -63,22 +65,23 @@ case class SidechainInfo (
       * }
       * }}}
       */
-    def changeRotamerToRandom(aminoacidToModify : SimplifiedAminoacid) : SimplifiedAminoacid = {
+    def changeRotamerToRandom(aminoacidToModify : SimplifiedAminoacid, x : GeometryVector, y : GeometryVector, z : GeometryVector) : SimplifiedAminoacid = {
       logger.info(representatives.size.toString)
         if (representatives.size < 2)
             return aminoacidToModify
-        val a = findNearestRepresentativeByDistanceTo(aminoacidToModify.rotamer)
-        val index = Random.nextInt(representatives.length - 1)
-        val rest = representatives.filterNot(_ == a)(index)
-        new SimplifiedAminoacid(aminoacidToModify.name, aminoacidToModify.ca, rest.rotamer)
+        val localV = AminoacidUtils.getLocalCoordinates(Seq(x, y, z), aminoacidToModify.rotamer)
+        val a = findNearestRepresentativeByDistanceTo(localV)
+        val index = Random.nextInt(representatives.length)
+        val rest = AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), representatives(index).rotamer)
+        new SimplifiedAminoacid(aminoacidToModify.name, aminoacidToModify.ca, rest)
     }
 
-    def changeRotamerToRandom(rotamerToModify : GeometryVector) : GeometryVector = {
+    def changeRotamerToRandom(rotamerToModify : GeometryVector, x : GeometryVector, y : GeometryVector, z : GeometryVector) : GeometryVector = {
         if (representatives.size < 1)
             return rotamerToModify
         //val a = findNearestRepresentativeByDistanceTo(rotamerToModify)
         val index = Random.nextInt(representatives.length)
-        val rest = representatives(index)
-        rest.rotamer
+        val rest = AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), representatives(index).rotamer)
+        rest
     }
 }

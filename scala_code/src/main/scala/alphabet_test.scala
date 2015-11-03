@@ -20,7 +20,7 @@ object MCTest extends LazyLogging {
       outputFile : File = new File("result.pdb"),
       numberOfMoves : Int = 100,
       mode : String = "fold",
-      sequence : String = "GARFIELD",
+      sequence : String = "GARFIELD",//"RMAQLEAKVEELLSKNWNLENEVARLKKLVGER",
       //TODO: add option - refine/fold/alascan - default refine
       debug : Boolean = false)
 

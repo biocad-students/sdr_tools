@@ -54,10 +54,6 @@ case class SimplifiedAminoacid(val name : String,
 
   def move(shift : GeometryVector) : SimplifiedAminoacid = new SimplifiedAminoacid(name, ca + shift, rotamer)
 
-  def moveRotamer(rotamerLibraryFragment : SidechainInfo) : SimplifiedAminoacid = {
-      rotamerLibraryFragment.changeRotamerToRandom(this)
-  }
-
 }
 
 object SimplifiedAminoacid extends LazyLogging {

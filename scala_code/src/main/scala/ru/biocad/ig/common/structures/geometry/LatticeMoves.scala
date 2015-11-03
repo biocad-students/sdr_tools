@@ -31,8 +31,9 @@ class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
     val (d1, d2, d3) = AminoacidUtils.getDistances(v1, v2, v3)
     val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(v1, v2, v3)
     val sidechainInfo = rotamerLibrary.restoreAminoacidInfo(aa.name, d1, d2, d3)
-    sidechainInfo.changeRotamerToRandom(aa.rotamer)
+    sidechainInfo.changeRotamerToRandom(aa.rotamer, x, y, z)
   }
+  
   override val size = 0
 
   override def makeMove(chain : SimplifiedChain, position : Int) : SimplifiedChain = {
