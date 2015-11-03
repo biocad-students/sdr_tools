@@ -33,7 +33,7 @@ case class BackboneInfo(val data : Map[String, GeometryVector]) extends Aminoaci
           x : GeometryVector,
           y : GeometryVector,
           z : GeometryVector) : Map[String, GeometryVector] = {
-      logger.info(data.toString)
+      logger.debug(data.toString)
       data.map({
         case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.ca*LatticeConstants.MESH_SIZE))
       })

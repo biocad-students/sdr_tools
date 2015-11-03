@@ -9,6 +9,8 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 trait LatticeBasicMove {
   def makeMove(structure : SimplifiedChain, position : Int) : SimplifiedChain = ???
   def size : Int = ???
+  val typeName = "BasicMove"
+
 }
 /***/
 class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
@@ -33,8 +35,10 @@ class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
     val sidechainInfo = rotamerLibrary.restoreAminoacidInfo(aa.name, d1, d2, d3)
     sidechainInfo.changeRotamerToRandom(aa.rotamer, x, y, z)
   }
-  
+
   override val size = 0
+  override val typeName = "RotamerMove"
+
 
   override def makeMove(chain : SimplifiedChain, position : Int) : SimplifiedChain = {
     logger.debug("in RotamerMove at position: " + position.toString)
@@ -49,6 +53,8 @@ this class takes number of bonds to makeMove, starting from zero*/
 class BondMove(val basicVectors :  Array[GeometryVector],
         val numberOfBonds : Int) extends LatticeBasicMove with LazyLogging {
   override val size = numberOfBonds - 1
+  override val typeName = "BondMove"
+
   def prepareMove(moveVector : GeometryVector,
       structure : SimplifiedChain,
       position : Int) : SimplifiedChain = {
@@ -56,17 +62,25 @@ class BondMove(val basicVectors :  Array[GeometryVector],
     structure.moveFragment(moveVector, position, numberOfBonds)
   }
 
-  def getRandomVector() : GeometryVector = {
-    basicVectors(nextInt(basicVectors.size))
-  }
+  def getRandomVector() : GeometryVector = basicVectors(nextInt(basicVectors.size))
 
   override def makeMove(structure : SimplifiedChain,
     position : Int) : SimplifiedChain = prepareMove(getRandomVector(), structure, position)
 }
 
 //direction == 1.0 means towards N-terminus, direction = -1 means towards C
-class DisplacementMove(val basicVectors :  Array[GeometryVector], val direction : Int) extends LatticeBasicMove {
-  override def makeMove(structure : SimplifiedChain, position : Int) : SimplifiedChain = {
-    structure.moveFragment(Vector3d(1, 1, 1), position, structure.size)
+class DisplacementMove(val basicVectors :  Array[GeometryVector]) extends LatticeBasicMove {
+  def getRandomVector() : GeometryVector = basicVectors(nextInt(basicVectors.size))
+  override val typeName = "DisplacementMove"
+
+  override val size = 1
+
+  def prepareMove(moveVector : GeometryVector,
+      structure : SimplifiedChain,
+      position : Int) : SimplifiedChain = {
+    structure.moveFragment(moveVector, position, structure.size)
   }
+
+  override def makeMove(structure : SimplifiedChain, position : Int)
+      : SimplifiedChain = prepareMove(getRandomVector(), structure, position)
 }

@@ -58,7 +58,16 @@ object MonteCarloRunner extends LazyLogging {
         new BondMove(Lattice.backboneVectors, 4),
         new BondMove(Lattice.backboneVectors, 6),
         new BondMove(Lattice.backboneVectors, 8),
-        new RotamerMove(Lattice.sidechainsInfo)),
+        new BondMove(Lattice.backboneVectors, 10),
+        new DisplacementMove(Lattice.backboneVectors),
+        new DisplacementMove(Lattice.backboneVectors),
+        new RotamerMove(Lattice.sidechainsInfo),
+        new RotamerMove(Lattice.sidechainsInfo),
+        new RotamerMove(Lattice.sidechainsInfo),
+        new RotamerMove(Lattice.sidechainsInfo),
+        new RotamerMove(Lattice.sidechainsInfo),
+        new RotamerMove(Lattice.sidechainsInfo)
+        ),
         x => Lattice.getEnergy(x), numberOfMoves)
     logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
     val result = Lattice.toFullAtomRepresentation(ch1.structure)

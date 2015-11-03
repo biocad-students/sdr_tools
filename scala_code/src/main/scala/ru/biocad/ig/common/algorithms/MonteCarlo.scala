@@ -4,8 +4,9 @@ import ru.biocad.ig.common.structures.geometry.LatticeBasicMove
 import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoacid, SimplifiedChain}
 import ru.biocad.ig.common.structures.geometry.Lattice
 import scala.util.Random
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
-object MonteCarlo{
+object MonteCarlo extends LazyLogging {
   /** helper method to hide move attempt*/
   def attemptMove(currentStructure : SimplifiedChain,
     move : LatticeBasicMove,
@@ -25,6 +26,7 @@ object MonteCarlo{
         currentStructure
       }
   }
+
   def run(structure : SimplifiedChain,
           moves : Seq[LatticeBasicMove],
           getEnergy : SimplifiedChain => Double,
@@ -40,11 +42,17 @@ object MonteCarlo{
       case (currentStructure, (shuffledMoves, time)) => {
         shuffledMoves.foldLeft(currentStructure) {
           case (current, move) => {
-            val position = Random.nextInt(structure.size - move.size)
-            val newStructure = attemptMove(currentStructure, move, position, getEnergy)
-            if (Lattice.validateStructure(newStructure))
-              newStructure
-            else currentStructure
+            logger.debug("%d, %s".format(currentStructure.size - move.size, move.typeName))
+            if (currentStructure.size - move.size < 0)
+              currentStructure
+            else{
+              val position = Random.nextInt(currentStructure.size - move.size)
+              val newStructure = attemptMove(currentStructure, move, position, getEnergy)
+              if (Lattice.validateStructure(newStructure))
+                newStructure
+              else currentStructure
+            }
+
           }
         }
 
