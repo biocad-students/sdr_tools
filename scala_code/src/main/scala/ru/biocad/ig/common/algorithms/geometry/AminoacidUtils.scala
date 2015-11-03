@@ -49,6 +49,10 @@ object AminoacidUtils {
     (localAxes, localCoordinates).zipped.map(_ * _).reduceLeft(_ + _) + zeroShift
   }
 
+  def getGlobalCoordinates(localAxes : Seq[GeometryVector], localCoordinates : GeometryVector, zeroShift : GeometryVector = Vector3d(0, 0, 0)) : GeometryVector = {
+    getGlobalCoordinates(localAxes, localCoordinates.coordinates, zeroShift)
+  }
+
   def getLocalCoordinates(localAxes : Seq[GeometryVector], v : GeometryVector, zeroShift : GeometryVector = Vector3d(0, 0, 0)) : GeometryVector = {
     val coordinates = localAxes.foldLeft((v, Seq[Double]())) ({
       case ((v, localCoordinates), axis) => {

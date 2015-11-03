@@ -24,8 +24,8 @@ class RotamerLibraryTests extends FlatSpec with Matchers {
     val aa = SimplifiedAminoacid(Seq(
       PDBAtomInfo(1, "CA", ' ',"ARG", 'L', 2, ' ', 0, 0, 0, 0, 0, "", "C", "")
       ))
-    noException should be thrownBy s.changeRotamerToRandom(aa)
-    val result = s.changeRotamerToRandom(aa)
+    noException should be thrownBy s.changeRotamerToRandom(aa, Vector3d(1, 0, 0), Vector3d(0, 1, 0), Vector3d(0, 0, 1))
+    val result = s.changeRotamerToRandom(aa, Vector3d(1, 0, 0), Vector3d(0, 1, 0), Vector3d(0, 0, 1))
     result should equal(aa)
     (result.rotamer) should equal (aa.rotamer)
   }
