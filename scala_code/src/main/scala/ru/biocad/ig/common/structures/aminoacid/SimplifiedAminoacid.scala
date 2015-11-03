@@ -5,6 +5,7 @@ import ru.biocad.ig.alascan.constants.LatticeConstants
 import ru.biocad.ig.alascan.constants.{SidechainInfo}
 
 import ru.biocad.ig.common.structures.geometry._
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
 case class SimplifiedAminoacid(val name : String,
   val ca : GeometryVector,
@@ -47,14 +48,9 @@ case class SimplifiedAminoacid(val name : String,
   }
 
   override def toString = Seq(name,
-    //",",
-    //"original atoms: ",
-    //atoms.mkString("\n[ \n  ", ", \n  ", " ],"),
-    "ca: ",
-    ca.toString + ",",
-    "\nrotamer: ",
-    rotamer.toString
-  ).mkString("SimplifiedAminoacid{\n", "\n ", "\n}")
+    "ca: " + ca.toString,
+    "rotamer: " + rotamer.toString
+  ).mkString("SimplifiedAminoacid{", ",  ", "}")
 
   def move(shift : GeometryVector) : SimplifiedAminoacid = new SimplifiedAminoacid(name, ca + shift, rotamer)
 
@@ -64,7 +60,7 @@ case class SimplifiedAminoacid(val name : String,
 
 }
 
-object SimplifiedAminoacid{
+object SimplifiedAminoacid extends LazyLogging {
 
   //FIX: ..
   /** there should be rotamer center+radius.
@@ -75,7 +71,7 @@ object SimplifiedAminoacid{
   //TODO: fix this (ca, should be center of masses)
   def computeCenterCoordinates(atoms : Seq[PDBAtomInfo]) : GeometryVector = {
     val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
-
+    logger.info("in computeCenterCoordinates")
     val ca : GeometryVector = Vector3d(
         math.round(atomsMap("CA").x / LatticeConstants.MESH_SIZE),
         math.round(atomsMap("CA").y / LatticeConstants.MESH_SIZE),

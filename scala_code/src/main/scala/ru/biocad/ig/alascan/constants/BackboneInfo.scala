@@ -4,6 +4,7 @@ import ru.biocad.ig.common.io.pdb.PDBAtomInfo
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
 import ru.biocad.ig.common.structures.geometry.GeometryVector
 import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
 /** Storage for set of given aminoacid fragments, forming backbone
   * @constructor creates such a storage (normally from json)
@@ -12,7 +13,7 @@ import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
   * data's values are given in local coordinate system, with center in alpha-carbon coordinates and based on local topology.
   *
   */
-case class BackboneInfo(val data : Map[String, GeometryVector]) extends AminoacidFragment {
+case class BackboneInfo(val data : Map[String, GeometryVector]) extends AminoacidFragment with LazyLogging{
 
   /** Updates current aminoacid's atom coordinates (for backbone) with new ones and returns them
     * @param aminoacid object containing original PDBAtomInfo structures
@@ -32,6 +33,7 @@ case class BackboneInfo(val data : Map[String, GeometryVector]) extends Aminoaci
           x : GeometryVector,
           y : GeometryVector,
           z : GeometryVector) : Map[String, GeometryVector] = {
+      logger.info(data.toString)
       data.map({
         case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.ca*LatticeConstants.MESH_SIZE))
       })
