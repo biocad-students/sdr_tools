@@ -176,7 +176,7 @@ object Lattice {
   //TODO: we have pair of chains, that means we somehow should utilize that when we compute total energy
   def getEnergy(aminoacids : SimplifiedChain) : Double = {
     0.25 * get_E_CA_trace(aminoacids) +
-    // get_E_H_bond(aminoacids) +
+     get_E_H_bond(aminoacids) +
     0.5 * get_E_rot(aminoacids) +
     1.0 * get_E_SG_local(aminoacids) +
     0.5 * get_E_one(aminoacids)  +

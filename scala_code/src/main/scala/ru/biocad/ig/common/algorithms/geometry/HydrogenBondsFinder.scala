@@ -17,8 +17,7 @@ case class HydrogenBondsFinder(HBondCondition : (SimplifiedChain, Int, Int) => B
     }).foldLeft(0)(_ + _)
     val c = (0 to structure.size - 1).map({i =>
       (i + 1 to structure.size - 1).count({j=>
-
-          (j <= structure.size - 1 && i > 0 && hBonds(i)(j)) && (
+          (j < structure.size - 1 && i > 0 && i < structure.size - 1 && hBonds(i)(j)) && (
             (hBonds(i + 1)(j + 1)) ||
             (hBonds(i - 1)(j + 1)))
         })
