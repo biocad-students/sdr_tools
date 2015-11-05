@@ -4,6 +4,8 @@ import ru.biocad.ig.common.io.pdb.PDBAtomInfo
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
 import ru.biocad.ig.common.structures.geometry.GeometryVector
 
+import com.typesafe.scalalogging.slf4j.LazyLogging
+
 /** Storage, which contains information about aminoacid fragment's positions collected from Protein Data Bank, based on local topology
   *
   * @constructor creates object from given collected information
@@ -14,7 +16,7 @@ import ru.biocad.ig.common.structures.geometry.GeometryVector
 case class AminoacidLibrary[T <: AminoacidFragment](
   val data : Map[String, Map[Int, Map[Int, Map[Int, T]]]],
   val meshSize : Double = 0.3,
-  val threshold : Double = 0.0)(implicit m: scala.reflect.Manifest[T]) {
+  val threshold : Double = 0.0)(implicit m: scala.reflect.Manifest[T]) extends LazyLogging {
     /** Finds corresponding AminoacidFragment in database (based on d1, d2 and d3 parameters) and returns it
       * @param aminoacid current library fragments are aminoacid-specific, so this param correspongs to first level of grouping - aminoacid name
       * @param d1 distance-based grouping parameter in global coordinates (gets converted to discrete mesh units inside method call).
@@ -23,19 +25,43 @@ case class AminoacidLibrary[T <: AminoacidFragment](
       * @return corresponding AminoacidFragment in current library or empty object of that type
       */
     def restoreAminoacidInfo(aminoacid : String,
-      d1 : Double,
-      d2 : Double,
-      d3 : Double) : T = {
+            d1 : Double, d2 : Double, d3 : Double) : Option[T] = {
       val i1 = math.round(d1 / meshSize).toInt
       val i2 = math.round(d2 / meshSize).toInt
       val i3 = math.round(d3 / meshSize).toInt
+      val m0 = data.get(aminoacid) match {
+        case Some(x) => x
+        case None => Map[Int, Map[Int, Map[Int, T]]]()
+      }
 
-      val m1 : Map[Int, Map[Int, T]] = data(aminoacid).getOrElse(i1, data(aminoacid).getOrElse(
-        data(aminoacid).keys.minBy(x => math.abs(x - i1)),
-        Map[Int, Map[Int, T]]()))
-      val m2 : Map[Int, T] = m1.getOrElse(i2, m1.getOrElse(m1.keys.minBy(x => math.abs(x - i2)),
-        Map[Int, T]()))
-      val m3 = m2.getOrElse(i3, m2.getOrElse(m2.keys.minBy(x => math.abs(x - i3)) , m.erasure.newInstance().asInstanceOf[T]))
+      val m1 : Map[Int, Map[Int, T]] = m0.get(i1) match {
+        case Some(v) => v
+        case None => {
+          if (m0.nonEmpty) {
+            m0.minBy(x => math.abs(x._1 - i1))._2
+          }
+          else Map[Int, Map[Int, T]]()
+        }
+
+      }
+      val m2 : Map[Int, T] = m1.get(i2) match {
+        case Some(v) => v
+        case None => {
+          if (m1.nonEmpty){
+            m1.minBy(x => math.abs(x._1 - i2))._2
+          }
+          else Map[Int, T]()
+        }
+      }
+      val m3 : Option[T] = m2.get(i3) match {
+        case None => {
+          if (m2.nonEmpty) {
+            Some(m2.minBy(x => math.abs(x._1 - i3))._2)
+          }
+          else None
+        }
+        case x => x
+      }
       m3
       //TODO: add existance check and lookup for nearest point - or at least smth located near
     }
@@ -55,9 +81,11 @@ case class AminoacidLibrary[T <: AminoacidFragment](
             x : GeometryVector, y : GeometryVector, z : GeometryVector,
             atomsMap : Map[String, PDBAtomInfo]) : Seq[PDBAtomInfo] = {
         //val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
-        val coordinatesMap = restoreAminoacidInfo(aminoacid.name, d1, d2, d3)
+        restoreAminoacidInfo(aminoacid.name, d1, d2, d3) match {
+          case Some(coordinatesMap) => coordinatesMap.getPDBAtomInfo(aminoacid, x, y, z, atomsMap)
+          case None => Seq() // TODO: add some check to avoid problems
+        }
         //val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
-        coordinatesMap.getPDBAtomInfo(aminoacid, x, y, z, atomsMap)
     }
 
     def restoreCoordinates(aminoacid : SimplifiedAminoacid,
@@ -65,9 +93,12 @@ case class AminoacidLibrary[T <: AminoacidFragment](
             x : GeometryVector, y : GeometryVector, z : GeometryVector
           ) : Map[String, GeometryVector] = {
         //val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
-        val coordinatesMap = restoreAminoacidInfo(aminoacid.name, d1, d2, d3)
+        restoreAminoacidInfo(aminoacid.name, d1, d2, d3) match {
+          case Some(coordinatesMap) => coordinatesMap.getCoordinatesMap(aminoacid, x, y, z)
+          case None => Map[String, GeometryVector]()
+        }
         //val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
-        coordinatesMap.getCoordinatesMap(aminoacid, x, y, z)
+
     }
 
 }

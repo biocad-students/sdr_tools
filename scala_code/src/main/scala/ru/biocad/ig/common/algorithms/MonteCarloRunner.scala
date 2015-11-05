@@ -70,7 +70,7 @@ object MonteCarloRunner extends LazyLogging {
         ),
         x => Lattice.getEnergy(x), numberOfMoves)
     logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
-    val result = Lattice.toFullAtomRepresentation(ch1.structure)
+    val result = Lattice.toFullAtomRepresentation(simplifiedChain.structure)
     val w = new PDBWriter(outputFile)
     w.writeAtomInfo(result)
     w.close()
