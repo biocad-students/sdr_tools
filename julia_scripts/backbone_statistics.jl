@@ -13,24 +13,32 @@ function parse_commandline()
     s = ArgParseSettings()
 
     @add_arg_table s begin
-        "--score-matrix", "-s"
-            help = "an option with an argument"
+        "--input-file", "-i"
+            help = "file name with list of pdb ids to process"
+            default = "list_short.txt"
             arg_type = String
             #required = true
-        "--clustering", "-c"
-            help = "clustering type: N for neighbour joining, U for UPGMA, W for WPGMA"
-            arg_type = String
-            default = "N"
+        "--mesh-size", "-m"
+            help = "mesh size for saving structures and group data"
+            arg_type = Float64
+            default = 0.3
+            #required = false
+        "--threshold", "-t"
+            help = "threshold for rotamer's clustering in sidechains' database"
+            arg_type = Float64
+            default = 1.7
             #required = false
         "--verbose"
-          help = "show debug messages while processing data"
-          action = :store_true
-        "fasta-file"
-            help = "file in .fasta format with a set of protein strings"
-            required = true
-        "output-file"
-            help = "file in .fasta format for saving results"
-            required = true
+            help = "show debug messages while processing data"
+            action = :store_true
+        "--output-backbone", "-b"
+            help = "file in .json format for saving backbone database"
+            default = "backbone.json"
+            #required = true
+        "--output-sidechain", "-s"
+            help = "file in .json format for saving sidechain database"
+            default = "sidechains.json"
+            #required = true
     end
 
     return parse_args(s)
@@ -186,6 +194,9 @@ function getPDBFileNames(input_file_name :: String, directory :: String = "files
   result
 end
 
+# reads and preprocesses data.
+# leaves only heavy atoms, and only aminoacids with full representation
+#
 function readPDB(input_file_name :: String)
   records = Dict{Char, Dict{Int, Dict{String, PDBAtomInfo}}}()
   recordsAA = Dict{Char, Array{Int, 1}}()
@@ -202,6 +213,9 @@ function readPDB(input_file_name :: String)
           "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL"])
           continue
       end
+      if (atom.element in ["H"])
+        continue #ignore hydrogens
+      end
       if !(atom.chainID in keys(records))
         records[atom.chainID] = Dict{Int, Dict{String, PDBAtomInfo}}()
         recordsAA[atom.chainID] = Int[]
@@ -216,6 +230,55 @@ function readPDB(input_file_name :: String)
   end
   close(input_file)
   (records, recordsAA)
+end
+
+#helper for aminoacid validation - to skip aminoacids without backbone atoms, or with some info missing
+function validateAA(aminoacid :: Dict{String, PDBAtomInfo})
+  for backbone_key in ["CA", "C", "N", "O"]
+    if !(haskey(aminoacid, backbone_key))
+      return false
+    end
+  end
+  #TODO: add check for sidechain atoms for specific aminoacid types
+  true
+end
+
+function splitToFragments(aminoacidIds :: Array{Int, 1}, records :: Dict{Int, Dict{String, PDBAtomInfo}})
+  result = Array{Int, 1}[]
+  fragment = Int[]
+  lastAA = -1
+  for aminoacidId in aminoacidIds
+    if (lastAA + 1 != aminoacidId)
+      if (length(fragment) > 0)
+        push!(result, fragment)
+        fragment = Int[]
+      end
+    end
+    if validateAA(records[aminoacidId])
+      push!(fragment, aminoacidId)
+      lastAA = aminoacidId
+    end
+  end
+
+  if (length(fragment) > 0)
+    push!(result, fragment)
+  end
+  result
+end
+
+function processPDB(records :: Dict{Char, Dict{Int, Dict{String, PDBAtomInfo}}},
+                recordsAA ::  Dict{Char, Array{Int, 1}})
+  recordFragments = Dict{Char, Array{Array{Int, 1}, 1}}()
+  for chain in keys(records)
+    recordFragments[chain] = Array{Int, 1}[]
+    fragments = splitToFragments(recordsAA[chain], records[chain])
+    for fragment in fragments
+      if (length(fragment) >= 4)
+        push!(recordFragments[chain], fragment)
+      end
+    end
+  end
+  recordFragments
 end
 
 
@@ -444,30 +507,32 @@ function getVectorForSeq(sequence, ks, k, text_file_name, latticeSize = 1.22)
           round2((getVector(sequence[ks[k + 2]]["CA"]) - getVector(sequence[ks[k + 1]]["CA"]))/latticeSize))
 end
 
-function load_atom_info(text_file_name)
+function load_atom_info(text_file_name :: String, mesh_size :: Float64 = 1.7)
   basechainInfo = Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}}()
   sidechainInfo = Dict{String, Dict{(Int, Int, Int), Array{Rotamer, 1}}}()
   pdb_file_names = getPDBFileNames(text_file_name)
   for pdb_file_name in pdb_file_names
     (atom_infos, atom_info_keys) = readPDB(pdb_file_name)
-    for chain in keys(atom_infos)
-      ks = atom_info_keys[chain]
-      if (length(ks) <= 4)
-        continue
-      end
-      for k in 1 : length(ks)
-        (v1, v2, v3) = getVectorForSeq(atom_infos[chain], ks, k, pdb_file_name)
-        (d, aa, b, s) = processChainPortionVec(v1, v2, v3, atom_infos[chain][ks[k]]) #[atom_infos[chain][i] for i in ks[k - width + 1 : k]])
-        if !haskey(basechainInfo, aa)
-          basechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
-          sidechainInfo[aa] = Dict{(Int, Int, Int), Array{Rotamer, 1}}()
+    chainFragments = processPDB(atom_infos, atom_info_keys)
+    for chain in keys(chainFragments)
+      for ks in chainFragments[chain]
+        if (length(ks) <= 4)
+          continue
         end
-        if !haskey(basechainInfo[aa], d)
-          basechainInfo[aa][d] = AminoacidInfo[]
-          sidechainInfo[aa][d] = Rotamer[]
+        for k in 1 : length(ks)
+          (v1, v2, v3) = getVectorForSeq(atom_infos[chain], ks, k, pdb_file_name)
+          (d, aa, b, s) = processChainPortionVec(v1, v2, v3, atom_infos[chain][ks[k]]) #[atom_infos[chain][i] for i in ks[k - width + 1 : k]])
+          if !haskey(basechainInfo, aa)
+            basechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
+            sidechainInfo[aa] = Dict{(Int, Int, Int), Array{Rotamer, 1}}()
+          end
+          if !haskey(basechainInfo[aa], d)
+            basechainInfo[aa][d] = AminoacidInfo[]
+            sidechainInfo[aa][d] = Rotamer[]
+          end
+          push!(basechainInfo[aa][d], b)
+          push!(sidechainInfo[aa][d], s)
         end
-        push!(basechainInfo[aa][d], b)
-        push!(sidechainInfo[aa][d], s)
       end
     end
   end
@@ -479,12 +544,12 @@ end
 
 
 function main()
-    (r1, r2) = load_atom_info("list.txt")
-    #parsed_args = parse_commandline()
-    output_file = open("backbone.json", "w")
+    parsed_args = parse_commandline()
+    (r1, r2) = load_atom_info(parsed_args["input-file"], parsed_args["mesh-size"])
+    output_file = open(parsed_args["output-backbone"], "w")
     println(output_file, JSON.json(r1, 1))
     close(output_file)
-    output_file = open("sidechains.json", "w")
+    output_file = open(parsed_args["output-sidechain"], "w")
     println(output_file, JSON.json(r2, 1))
     close(output_file)
 end
