@@ -44,6 +44,29 @@ function parse_commandline()
     return parse_args(s)
 end
 
+#every aminoacid should have specific number of heavy atoms (there should be more specific check but this would be fine by now)
+atomsCounter = {
+  "ALA" => 5,
+  "ARG" => 11,
+  "ASN" => 8,
+  "ASP" => 8,
+  "CYS" => 6,
+  "GLN" => 9,
+  "GLU" => 9,
+  "GLY" => 4,
+  "HIS" => 10,
+  "ILE" => 8,
+  "LEU" => 8,
+  "LYS" => 9,
+  "MET" => 8,
+  "PHE" => 11,
+  "PRO" => 7,
+  "SER" => 6,
+  "THR" => 7,
+  "TRP" => 14,
+  "TYR" => 12,
+  "VAL" => 7
+}
 
 function loadFromRCSB(code :: String, destination_path :: String)
   if length(code) < 4
@@ -234,6 +257,20 @@ end
 
 #helper for aminoacid validation - to skip aminoacids without backbone atoms, or with some info missing
 function validateAA(aminoacid :: Dict{String, PDBAtomInfo})
+  if (!haskey(aminoacid, "CA"))
+    return false
+  end
+  name = aminoacid["CA"].resName
+  if (length(values(aminoacid)) != atomsCounter[name])
+    return false
+  end
+  for v in values(aminoacid)
+    if v.resName != name
+      #println(string("got invalid aa record named ", name))
+      #println(aminoacid)
+      return false
+    end
+  end
   for backbone_key in ["CA", "C", "N", "O"]
     if !(haskey(aminoacid, backbone_key))
       return false
