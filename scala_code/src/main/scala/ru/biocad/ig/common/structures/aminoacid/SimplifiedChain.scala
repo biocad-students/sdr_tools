@@ -3,7 +3,8 @@ package ru.biocad.ig.common.structures.aminoacid
 import scala.collection._
 
 import ru.biocad.ig.common.io.pdb.PDBAtomInfo
-import ru.biocad.ig.common.structures.geometry.{Lattice, Vector3d, GeometryVector, RotamerMove}
+import ru.biocad.ig.common.structures.geometry.{Lattice, Vector3d, GeometryVector}
+import ru.biocad.ig.alascan.moves.RotamerMove
 import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 
 /** hides sequence of simplified aminoacids and constructs them from various sources

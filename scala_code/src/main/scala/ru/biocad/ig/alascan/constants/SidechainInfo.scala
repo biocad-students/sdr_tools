@@ -18,9 +18,6 @@ case class SidechainInfo (
     private def findNearestRepresentativeByDistanceTo(rotamer : GeometryVector) : RotamerInfo =
       representatives.minBy(a => (rotamer - a.rotamer).lengthSquared )
 
-    def apply() : SidechainInfo = {
-      new SidechainInfo(Seq(), Seq(), 0)
-    }
     /** Updates current aminoacid's atom coordinates (for sidechain) with new ones and returns them
       * @param aminoacid object containing original PDBAtomInfo structures
       * Following parameters (x, y, z) -- describe local coordinate system's axes directions.

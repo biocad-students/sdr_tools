@@ -7,6 +7,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import ru.biocad.ig.common.io.pdb.{PDBStructure, PDBAtomInfo, PDBAminoAcidCollection}
 
 import ru.biocad.ig.common.structures.geometry._
+import ru.biocad.ig.alascan.moves._
 
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedChain
 
@@ -70,7 +71,7 @@ object MonteCarloRunner extends LazyLogging {
         ),
         x => Lattice.getEnergy(x), numberOfMoves)
     logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
-    val result = Lattice.toFullAtomRepresentation(simplifiedChain.structure)
+    val result = Lattice.toFullAtomRepresentation(ch1.structure)
     val w = new PDBWriter(outputFile)
     w.writeAtomInfo(result)
     w.close()
