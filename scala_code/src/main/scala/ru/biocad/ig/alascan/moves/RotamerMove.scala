@@ -1,4 +1,4 @@
-package ru.biocad.ig.common.structures.geometry
+package ru.biocad.ig.alascan.moves
 
 import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoacid, SimplifiedChain}
 import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
@@ -6,12 +6,8 @@ import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 import util.Random.nextInt
 import com.typesafe.scalalogging.slf4j.LazyLogging
 
-trait LatticeBasicMove {
-  def makeMove(structure : SimplifiedChain, position : Int) : SimplifiedChain = ???
-  def size : Int = ???
-  val typeName = "BasicMove"
+import ru.biocad.ig.common.structures.geometry.{Vector3d, GeometryVector}
 
-}
 /***/
 class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
         extends LatticeBasicMove with LazyLogging {
@@ -50,41 +46,4 @@ class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
     val newRotamer = moveRotamer(chain.structure, position)
     chain.replaceRotamer(newRotamer, position)
   }
-}
-
-/**there should be several kinds of bond makeMoves,
-this class takes number of bonds to makeMove, starting from zero*/
-class BondMove(val basicVectors :  Array[GeometryVector],
-        val numberOfBonds : Int) extends LatticeBasicMove with LazyLogging {
-  override val size = numberOfBonds - 1
-  override val typeName = "BondMove"
-
-  def prepareMove(moveVector : GeometryVector,
-      structure : SimplifiedChain,
-      position : Int) : SimplifiedChain = {
-    logger.debug("in " + numberOfBonds.toString + "-BondMove starting at position: " + position.toString)
-    structure.moveFragment(moveVector, position, numberOfBonds)
-  }
-
-  def getRandomVector() : GeometryVector = basicVectors(nextInt(basicVectors.size))
-
-  override def makeMove(structure : SimplifiedChain,
-    position : Int) : SimplifiedChain = prepareMove(getRandomVector(), structure, position)
-}
-
-//direction == 1.0 means towards N-terminus, direction = -1 means towards C
-class DisplacementMove(val basicVectors :  Array[GeometryVector]) extends LatticeBasicMove {
-  def getRandomVector() : GeometryVector = basicVectors(nextInt(basicVectors.size))
-  override val typeName = "DisplacementMove"
-
-  override val size = 1
-
-  def prepareMove(moveVector : GeometryVector,
-      structure : SimplifiedChain,
-      position : Int) : SimplifiedChain = {
-    structure.moveFragment(moveVector, position, structure.size)
-  }
-
-  override def makeMove(structure : SimplifiedChain, position : Int)
-      : SimplifiedChain = prepareMove(getRandomVector(), structure, position)
 }

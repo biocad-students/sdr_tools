@@ -1,10 +1,10 @@
 package ru.biocad.ig.common.algorithms
 
-import ru.biocad.ig.common.structures.geometry.LatticeBasicMove
 import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoacid, SimplifiedChain}
 import ru.biocad.ig.common.structures.geometry.Lattice
 import scala.util.Random
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import ru.biocad.ig.alascan.moves._
 
 object MonteCarlo extends LazyLogging {
   /** helper method to hide move attempt*/
