@@ -178,14 +178,27 @@ object Lattice {
     })
     if (!r1)
         return false
-    val r2 = (0 to structure.size - 4).forall({
+    val r2 = (0 to structure.size - 3).forall({
+      i => {
+        (i + 2 to structure.size - 1).forall({
+          j => {
+            val a1 = structure(i).ca
+            val a2 = structure(j).ca
+            a1.distanceTo(a2) >= 3.45
+          }
+        })
+      }
+    })
+    if (!r2)
+      return false
+    val r3 = (0 to structure.size - 4).forall({
       i => {
         val a1 = structure(i).ca
         val a2 = structure(i + 3).ca
         a1.distanceTo(a2) >= 4.05
       }
     })
-    r2
+    r3
   }
 
   def prepareValidVectors(n : Int) : Seq[GeometryVector] = {
