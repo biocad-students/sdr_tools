@@ -10,6 +10,8 @@ import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 /** hides sequence of simplified aminoacids and constructs them from various sources
   */
 case class SimplifiedChain(val structure : Array[SimplifiedAminoacid]) extends Traversable[SimplifiedAminoacid] {
+  val vectors : Seq[GeometryVector] = (structure zip structure.tail).map({case (x, y) => y.ca - x.ca})
+
   override val size = structure.size
 
   def apply(index : Int) : SimplifiedAminoacid = structure(index)

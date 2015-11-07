@@ -40,7 +40,7 @@ object MonteCarloRunner extends LazyLogging {
         new RotamerMove(Lattice.sidechainsInfo)),
         x => Lattice.getEnergy(x), numberOfMoves)
     logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
-    val result = Lattice.toFullAtomRepresentation(ch1.structure, fullAtomChain)
+    val result = Lattice.toFullAtomRepresentation(ch1, fullAtomChain)
     //val sidechainInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
     val w = new PDBWriter(outputFile)
     w.writeAtomInfo(result)
@@ -71,7 +71,7 @@ object MonteCarloRunner extends LazyLogging {
         ),
         x => Lattice.getEnergy(x), numberOfMoves)
     logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
-    val result = Lattice.toFullAtomRepresentation(ch1.structure)
+    val result = Lattice.toFullAtomRepresentation(ch1)
     val w = new PDBWriter(outputFile)
     w.writeAtomInfo(result)
     w.close()
@@ -90,7 +90,7 @@ object MonteCarloRunner extends LazyLogging {
         new RotamerMove(Lattice.sidechainsInfo)),
         x => Lattice.getEnergy(x), numberOfMoves)
     logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
-    val result = Lattice.toFullAtomRepresentation(ch1.structure, fullAtomChain)
+    val result = Lattice.toFullAtomRepresentation(ch1, fullAtomChain)
     //val sidechainInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
     val w = new PDBWriter(outputFile)
     w.writeAtomInfo(result)

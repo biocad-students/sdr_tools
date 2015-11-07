@@ -94,10 +94,10 @@ object Lattice {
 
   /**Returns full-atom representation for given simplified aminoacid
     */
-  def toFullAtomRepresentation(aminoacids : Seq[SimplifiedAminoacid], originalFullAtomChain : Seq[Seq[PDBAtomInfo]]) : Seq[PDBAtomInfo] = {
-    val vectors = (aminoacids.tail, aminoacids).zipped.map(_.ca - _.ca)
-    val vectorsWithEdgeOnes = (vectors.head +: vectors) ++ Seq(vectors.init.last, vectors.last)
-    val pdbData = (aminoacids, vectorsWithEdgeOnes.sliding(3, 1).toSeq, originalFullAtomChain).zipped.flatMap({
+  def toFullAtomRepresentation(chain : SimplifiedChain, originalFullAtomChain : Seq[Seq[PDBAtomInfo]]) : Seq[PDBAtomInfo] = {
+
+    val vectorsWithEdgeOnes = (chain.vectors.head +: chain.vectors) ++ Seq(chain.vectors.init.last, chain.vectors.last)
+    val pdbData = (chain.structure, vectorsWithEdgeOnes.sliding(3, 1).toSeq, originalFullAtomChain).zipped.flatMap({
       case (aa, Seq(v1, v2, v3), atoms) => {
         val updatedMap = Map("CA" -> aa.ca * LatticeConstants.MESH_SIZE) ++
             restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) ++
@@ -115,10 +115,9 @@ object Lattice {
   }
 
 
-  def toFullAtomRepresentation(aminoacids : Seq[SimplifiedAminoacid]) = {
-    val vectors = (aminoacids.tail, aminoacids).zipped.map(_.ca - _.ca)
-    val vectorsWithEdgeOnes = (vectors.head +: vectors) ++ Seq(vectors.init.last, vectors.last)
-    val pdbData = (aminoacids, vectorsWithEdgeOnes.sliding(3, 1).toSeq, Stream from 1).zipped.flatMap({
+  def toFullAtomRepresentation(chain : SimplifiedChain) = {
+    val vectorsWithEdgeOnes = (chain.vectors.head +: chain.vectors) ++ Seq(chain.vectors.init.last, chain.vectors.last)
+    val pdbData = (chain.structure, vectorsWithEdgeOnes.sliding(3, 1).toSeq, Stream from 1).zipped.flatMap({
       case (aa, Seq(v1, v2, v3), aaIndex) => {
         val updatedMap = Map("CA" -> aa.ca * LatticeConstants.MESH_SIZE) ++
             restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) ++
@@ -160,9 +159,7 @@ object Lattice {
   }
 
   def validateStructure(structure : SimplifiedChain) : Boolean = {
-    val r0 = (0 to structure.size - 2).forall({
-      i => backboneVectors.contains(structure(i + 1).ca - structure(i).ca)
-    })
+    val r0 = structure.vectors.forall({v => backboneVectors.contains(v) })
     if (!r0)
       return false
     val r1 = (0 to structure.size - 3).forall({

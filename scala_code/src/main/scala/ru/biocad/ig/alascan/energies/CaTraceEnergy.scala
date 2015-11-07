@@ -13,17 +13,14 @@ class CaTraceEnergy() extends BasicEnergy {
   val e14 : E14 = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/r14aa12.json")).getLines().mkString("")).convertTo[E14]
   val e14avg : E14avg = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/r14avg12.json")).getLines().mkString("")).convertTo[E14avg]
 
-  override def get(aminoacids : SimplifiedChain) : Double = {
-    val r14Seq : Seq[Double] = (1 to aminoacids.size - 3).map({
-      case i : Int =>
-      {
-        val b = (Seq(i, i + 1, i + 2), Seq(i - 1, i, i + 1)).zipped.map({
-          case (x : Int, y : Int) => aminoacids(x).ca - aminoacids(y).ca
-        })
-        b.reduceLeft(_ + _).lengthSquared * math.signum(ManifoldUtils.getDeterminant(b.map(_.coordinates)))
-      }})
-    (r14Seq, 0.0 +: r14Seq, (1 to aminoacids.size - 3)).zipped.map({
-      case (r14, r14_prev, i)  => 3*e14.get(r14, aminoacids(i).name, aminoacids(i + 1).name) + e14avg.get(r14, r14_prev)
-    }).sum
+  override def get(chain : SimplifiedChain) : Double = {
+    val r14Seq = chain.vectors.sliding(3, 1).map({
+      case x => x.reduceLeft(_ + _).lengthSquared * math.signum(ManifoldUtils.getDeterminant(x.map(_.coordinates)))
+    }).toList
+    3*e14.get(r14Seq.head, chain(0).name, chain(1).name) +
+      (r14Seq.tail, r14Seq, Stream from 1).zipped.map({
+        case (r14, r14_prev, i)  =>
+          3*e14.get(r14, chain(i).name, chain(i + 1).name) + e14avg.get(r14, r14_prev)
+      }).sum
   }
 }
