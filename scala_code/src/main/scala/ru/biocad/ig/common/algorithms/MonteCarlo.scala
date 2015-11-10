@@ -28,16 +28,28 @@ object MonteCarlo extends LazyLogging {
   }
 
   def run(structure : SimplifiedChain,
-          moves : Seq[LatticeBasicMove],
+          moves : Seq[(LatticeBasicMove, Int)],
           getEnergy : SimplifiedChain => Double,
           //ck_rule : Int => Double,
           numberOfMoves : Int = 1000) = {
+    val movesInTimeUnit : Int = moves.map(_._2).sum
+    val accumulatedMoveNumbers = moves.map(_._2).scanLeft(0)(_+_).tail
+    val movesAccumulated = (moves.map(_._1), accumulatedMoveNumbers).zipped
+    Stream.continually({
+      Seq.fill(movesInTimeUnit)(Random.nextInt(movesInTimeUnit)).flatMap({
+        r => {
+          movesAccumulated.find({ m => r < m._2}) match {
+            case Some(v) => Some(v._1)
+            case _ => None
+          }
+        }
+      })
 
-    Stream.continually(
-      (
+    }
+    //  (
         //Random.nextInt(structure.length),
-        Random.shuffle(moves)
-      )
+      //  Random.shuffle(moves)
+      //)
     ).zipWithIndex.take(numberOfMoves).foldLeft(structure) {
       case (currentStructure, (shuffledMoves, time)) => {
         shuffledMoves.foldLeft(currentStructure) {
