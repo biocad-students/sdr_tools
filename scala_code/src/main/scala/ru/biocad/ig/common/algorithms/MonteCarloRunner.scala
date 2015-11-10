@@ -36,8 +36,7 @@ object MonteCarloRunner extends LazyLogging {
 
     //println(Lattice.getEnergy(simplifiedChain))
     val ch1 = MonteCarlo.run(simplifiedChain,
-      Seq(new BondMove(Lattice.backboneVectors, 3),
-        new RotamerMove(Lattice.sidechainsInfo)),
+        getMovesForSequence(simplifiedChain.size),
         x => Lattice.getEnergy(x), numberOfMoves)
     logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
     val result = Lattice.toFullAtomRepresentation(ch1, fullAtomChain)
@@ -47,28 +46,25 @@ object MonteCarloRunner extends LazyLogging {
     w.close()
   }
 
+  def getMovesForSequence(n : Int) = {
+     Seq(
+      (new BondMove(Lattice.backboneVectors, 2), n - 2),
+      (new BondMove(Lattice.backboneVectors, 4), n - 4),
+      (new BondMove(Lattice.backboneVectors, 6), n - 6),
+      (new BondMove(Lattice.backboneVectors, 8), n - 8),
+      (new BondMove(Lattice.backboneVectors, 10), n - 10),
+      (new DisplacementMove(Lattice.backboneVectors), 2),
+      (new RotamerMove(Lattice.sidechainsInfo), n)
+    ).filter(_._2 > 0)
+  }
+
   def fold(sequence : String, numberOfMoves : Int, outputFile : File) = {
     println("testing backbone reconstruction...")
     val simplifiedChain = SimplifiedChain.fromSequence(sequence, Lattice.sidechainsInfo)
     logger.info("Energy before structure refinement: " + Lattice.getEnergy(simplifiedChain).toString)
 
     //println(Lattice.getEnergy(simplifiedChain))
-    val ch1 = MonteCarlo.run(simplifiedChain,
-      Seq(
-        new BondMove(Lattice.backboneVectors, 2),
-        new BondMove(Lattice.backboneVectors, 4),
-        new BondMove(Lattice.backboneVectors, 6),
-        new BondMove(Lattice.backboneVectors, 8),
-        new BondMove(Lattice.backboneVectors, 10),
-        new DisplacementMove(Lattice.backboneVectors),
-        new DisplacementMove(Lattice.backboneVectors),
-        new RotamerMove(Lattice.sidechainsInfo),
-        new RotamerMove(Lattice.sidechainsInfo),
-        new RotamerMove(Lattice.sidechainsInfo),
-        new RotamerMove(Lattice.sidechainsInfo),
-        new RotamerMove(Lattice.sidechainsInfo),
-        new RotamerMove(Lattice.sidechainsInfo)
-        ),
+    val ch1 = MonteCarlo.run(simplifiedChain, getMovesForSequence(simplifiedChain.size),
         x => Lattice.getEnergy(x), numberOfMoves)
     logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
     val result = Lattice.toFullAtomRepresentation(ch1)
@@ -85,9 +81,7 @@ object MonteCarloRunner extends LazyLogging {
     logger.info("Energy before structure refinement: " + Lattice.getEnergy(simplifiedChain).toString)
 
     //println(Lattice.getEnergy(simplifiedChain))
-    val ch1 = MonteCarlo.run(simplifiedChain,
-      Seq(new BondMove(Lattice.backboneVectors, 3),
-        new RotamerMove(Lattice.sidechainsInfo)),
+    val ch1 = MonteCarlo.run(simplifiedChain, getMovesForSequence(simplifiedChain.size),
         x => Lattice.getEnergy(x), numberOfMoves)
     logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
     val result = Lattice.toFullAtomRepresentation(ch1, fullAtomChain)
