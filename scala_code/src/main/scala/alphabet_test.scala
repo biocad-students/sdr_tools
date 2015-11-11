@@ -18,15 +18,15 @@ object MCTest extends LazyLogging {
 
   private case class Config(inputFile : File = new File("2OSL.pdb"),
       outputFile : File = new File("result.pdb"),
-      numberOfMoves : Int = 200,
+      mcTimeUnits : Int = 200,
       mode : String = "fold",
       sequence : String = "GARFIELD",//"RMAQLEAKVEELLSKNWNLENEVARLKKLVGER",//
       //TODO: add option - refine/fold/alascan - default refine
       debug : Boolean = false)
 
   private def getParser = new OptionParser[Config]("sdr_tools") {
-      opt[Int]('n', "numberOfMoves") action {(s, c) =>
-        c.copy(numberOfMoves = s)} text "number of iterations (moves) to call MC"
+      opt[Int]('n', "mcTimeUnits") action {(s, c) =>
+        c.copy(mcTimeUnits = s)} text "number of iterations (time units -  each time unit contains several move attempts) to call MC"
       opt[File]('o', "outputFile") valueName("<file>") action {(s, c) =>
         c.copy(outputFile = s)} text "output file in PDB format"
       cmd("refine") action {(_, c) =>
@@ -57,13 +57,13 @@ object MCTest extends LazyLogging {
         try {
           config.mode match {
             case "fold" => {
-              MonteCarloRunner.fold(config.sequence, config.numberOfMoves, config.outputFile)
+              MonteCarloRunner.fold(config.sequence, config.mcTimeUnits, config.outputFile)
             }
             case "refine" => {
-              MonteCarloRunner.refine(config.inputFile, config.numberOfMoves, config.outputFile)
+              MonteCarloRunner.refine(config.inputFile, config.mcTimeUnits, config.outputFile)
             }
             case "scan" => {
-              MonteCarloRunner.scan(config.inputFile, config.numberOfMoves, config.outputFile)
+              MonteCarloRunner.scan(config.inputFile, config.mcTimeUnits, config.outputFile)
             }
           }
 

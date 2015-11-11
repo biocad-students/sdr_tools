@@ -2,8 +2,12 @@ package ru.biocad.ig.common.io.pdb
 
 import ru.biocad.ig.common.structures.geometry._
 
-// All fields are named as stated in specification:
-// ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf
+
+/** Represents Protein Data Bank's 1 'ATOM' section's line.
+  *
+  * All fields are named as stated in specification:
+  * ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf
+  */
 case class PDBAtomInfo(
     serial : Int,
     atom : String,
@@ -22,7 +26,15 @@ case class PDBAtomInfo(
     charge : String
   ) {
 
-  override def toString = {
+  /** this method can be redefined if needed.
+    * If you need PDB 'ATOM' string as stated in Protein Data Bank Format specification v.4, use serialize() method.
+    * @return some PDB atom info string representation
+    */
+  override def toString = serialize()
+
+  /** @return corresponding PDB 'ATOM' string, as stated in Protein Data Bank Format specification.
+    */
+  def serialize() = {
     "ATOM  %5d %4s%c%3s %c%4d%c   %8.3f%8.3f%8.3f%6.2f%6.2f      %-4s%2s%2s".format(productIterator.toSeq : _*)
   }
 }

@@ -7,7 +7,7 @@ import util.Random.nextInt
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import ru.biocad.ig.common.structures.geometry.{GeometryVector}
 
-
+//TODO: add optional preprocessing and memorizing for allowed moves, if allowed, then optionally do it
 /**there should be several kinds of bond makeMoves,
 this class takes number of bonds to makeMove, starting from zero*/
 class BondMove(val basicVectors :  Array[GeometryVector],

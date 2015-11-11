@@ -68,11 +68,7 @@ object SimplifiedChain {
     */
   def fromSequence(sequence : String, rotamerLibrary : AminoacidLibrary[SidechainInfo]) : SimplifiedChain = {
     val d : Seq[String] = sequence.flatMap(aa3letter.get(_))
-    val vectors = Lattice.prepareValidVectors(d.size - 1).foldLeft(Seq(Vector3d(0, 0, 0)) : Seq[GeometryVector])({
-      case (result, v) => {
-        (result.head + v) +: result
-      }
-    }).toSeq.reverse
+    val vectors = Lattice.prepareValidVectors(d.size - 1).scanLeft(Vector3d(0, 0, 0) : GeometryVector) (_ + _)
     val m = new RotamerMove(rotamerLibrary)
     val s1 = (d, vectors).zipped.map({case (aaName, ca) => new SimplifiedAminoacid(aaName, ca, Vector3d(0, 0, 0))})
     val s2 = (0 to s1.size - 1).map({i=> {

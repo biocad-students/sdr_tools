@@ -3,7 +3,16 @@ package ru.biocad.ig.common.io.pdb
 import scala.io.Source
 import ru.biocad.ig.common.io.common.SourceReader
 
-
+/** Reads file in Protein Data Bank format v.4.
+  * Currently only 'ATOM' section is process, anything else is ignored.
+  * I mean, ANYTHING. It's importaint!
+  * Because PDB file can contain:
+  * - several structures with several chains,
+  * - waters (in atom section they are often marked as 'HOH' in resName field), PTMs
+  * - missing atoms
+  * - wrong data (i.e., atom from next aminoacid can be marked with the same resSeq number as atoms in previous aminoacid)
+  * - etc. (I mentioned here only things I've actually seen in PDB files, there can be other things in it)
+  */
 class PDBReader(source : Source) {
   private val reader = new SourceReader(source)
   private var nextAtomString : String = skipToNext()
