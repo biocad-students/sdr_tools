@@ -2,6 +2,9 @@ package ru.biocad.ig.common.io.pdb
 
 import java.io.{FileOutputStream, File}
 
+/** Saves PDB 'ATOM' records to PDB file.
+  *
+  */
 class PDBWriter(outputFile : File) {
   private val stream = new FileOutputStream(outputFile)
 
@@ -18,6 +21,6 @@ class PDBWriter(outputFile : File) {
   def close() : Unit = stream.close()
 
   private def writeToStream(record : PDBAtomInfo) : Unit = {
-    stream.write((record.toString + "\n").getBytes)
+    stream.write((record.serialize() + "\n").getBytes)
   }
 }

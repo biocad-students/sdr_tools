@@ -10,17 +10,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 case class SimplifiedAminoacid(val name : String,
   val ca : GeometryVector,
   val rotamer : GeometryVector) {
-  //val atoms : Seq[PDBAtomInfo]) {
-  //val name : String = if (atoms.size > 0) atoms.head.resName else ""
-  //val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
-  /*
-  var ca : GeometryVector = Vector3d(
-      math.round(atomsMap("CA").x / LatticeConstants.MESH_SIZE),
-      math.round(atomsMap("CA").y / LatticeConstants.MESH_SIZE),
-      math.round(atomsMap("CA").z / LatticeConstants.MESH_SIZE)
-      )
-  */
-  //val atomsVectorMap = atomsMap.map(x => (x._1, Vector3d(x._2.x, x._2.y, x._2.z) - ca))
+
   //TODO : check if it is useful
   def getUpdatedAtomInfo(atom : String, updatedCoordinates : GeometryVector,
           atomsMap : Map[String, PDBAtomInfo]) : PDBAtomInfo = updatedCoordinates match {
@@ -31,8 +21,6 @@ case class SimplifiedAminoacid(val name : String,
       }
   }
 
-
-  //var rotamer : Rotamer = new Rotamer(computeCenterCoordinates(atoms)) //
   //TODO: should add relative coords, filter atoms to include only rotamer atoms
 
   def isInContactWith(aa : SimplifiedAminoacid, distance_cutoff : Double = 4.2) : Boolean = {

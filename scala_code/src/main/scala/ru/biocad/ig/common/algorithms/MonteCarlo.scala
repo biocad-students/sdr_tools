@@ -7,7 +7,10 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import ru.biocad.ig.alascan.moves._
 
 object MonteCarlo extends LazyLogging {
-  /** helper method to hide move attempt*/
+  /** helper method, hides one move attempt in MC run
+    *
+    * currently structure validation is done elsewhere
+    */
   def attemptMove(currentStructure : SimplifiedChain,
     move : LatticeBasicMove,
     position : Int,
@@ -27,11 +30,19 @@ object MonteCarlo extends LazyLogging {
       }
   }
 
+  /** Starts MC algorithm and returns improved structure
+    *
+    * @param structure immutable object to process, represent current protein state.
+    * @param moves sequence of different types of moves with approximate number of times each of them should appear in one MC time unit.
+    * one MC time unit is defined as a sum of that numbers.
+    * @param getEnergy function to compute energies in MC steps
+    * @param mcTimeUnits number of MC time units
+    */
   def run(structure : SimplifiedChain,
           moves : Seq[(LatticeBasicMove, Int)],
           getEnergy : SimplifiedChain => Double,
           //ck_rule : Int => Double,
-          numberOfMoves : Int = 1000) = {
+          mcTimeUnits : Int = 1000) = {
     val movesInTimeUnit : Int = moves.map(_._2).sum
     val accumulatedMoveNumbers = moves.map(_._2).scanLeft(0)(_+_).tail
     val movesAccumulated = (moves.map(_._1), accumulatedMoveNumbers).zipped
@@ -50,7 +61,7 @@ object MonteCarlo extends LazyLogging {
         //Random.nextInt(structure.length),
       //  Random.shuffle(moves)
       //)
-    ).zipWithIndex.take(numberOfMoves).foldLeft(structure) {
+    ).zipWithIndex.take(mcTimeUnits).foldLeft(structure) {
       case (currentStructure, (shuffledMoves, time)) => {
         shuffledMoves.foldLeft(currentStructure) {
           case (current, move) => {
