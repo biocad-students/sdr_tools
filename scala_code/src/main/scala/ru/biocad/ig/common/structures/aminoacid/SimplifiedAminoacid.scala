@@ -7,9 +7,16 @@ import ru.biocad.ig.alascan.constants.{SidechainInfo}
 import ru.biocad.ig.common.structures.geometry._
 import com.typesafe.scalalogging.slf4j.LazyLogging
 
+/** Represents simplified model of aminoacid.
+  * It consists of C_\alpha atom (with coordinates placed on lattice) and united atom (with off-lattice coordinates)
+  *
+  * @param name aminoacid 3-letter IUPAC identity name (like ALA, GLU, etc.)
+  * @param ca coordinates of C_\alpha center, defined in lattice units
+  * @param rotamer vector from C_\alpha to center of united atom (which appears to be center of mass for sidechain) in off-lattice coordinates
+  */
 case class SimplifiedAminoacid(val name : String,
-  val ca : GeometryVector,
-  val rotamer : GeometryVector) {
+                               val ca : GeometryVector,
+                               val rotamer : GeometryVector) {
 
   //TODO : check if it is useful
   def getUpdatedAtomInfo(atom : String, updatedCoordinates : GeometryVector,
