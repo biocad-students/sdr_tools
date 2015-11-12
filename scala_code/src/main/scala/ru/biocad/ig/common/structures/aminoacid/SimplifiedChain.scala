@@ -65,6 +65,9 @@ object SimplifiedChain {
 
   /** should build original simplified chain from given string with aminoacid 1-letter names.
     * Original chain is formed as coiled coil.
+    * @param sequence string with sequence of aminoacid names in 1-letter IUPAC codes
+    * @param rotamerLibrary reference rotamerLibrary to find rotamers for given aminoacid types
+    * @return simplified, unfolded, valid structure with alpha-carbons and rotamers information
     */
   def fromSequence(sequence : String, rotamerLibrary : AminoacidLibrary[SidechainInfo]) : SimplifiedChain = {
     val d : Seq[String] = sequence.flatMap(aa3letter.get(_))
