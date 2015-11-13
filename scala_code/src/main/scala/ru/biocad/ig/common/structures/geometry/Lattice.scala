@@ -117,14 +117,16 @@ object Lattice {
 
   def toFullAtomRepresentation(chain : SimplifiedChain) = {
     val vectorsWithEdgeOnes = (chain.vectors.head +: chain.vectors) ++ Seq(chain.vectors.init.last, chain.vectors.last)
+    val backboneAtomsOrder = Seq("N", "CA", "C", "O")
     val pdbData = (chain.structure, vectorsWithEdgeOnes.sliding(3, 1).toSeq, Stream from 1).zipped.flatMap({
       case (aa, Seq(v1, v2, v3), aaIndex) => {
-        val updatedMap = Map("CA" -> aa.ca * LatticeConstants.MESH_SIZE) ++
+        val updatedMap : Map[String, GeometryVector] = Map("CA" -> aa.ca * LatticeConstants.MESH_SIZE) ++
             restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) ++
             restoreInfoCoordinates(aa, v1, v2, v3, sidechainsInfo)
-        updatedMap.map({
-          case (k, v) => {
-            (aaIndex, aa.name, k, v)
+
+        (backboneAtomsOrder ++ updatedMap.keys.filterNot(backboneAtomsOrder.contains(_)).toSeq.sorted).map({
+          case k => {
+            (aaIndex, aa.name, k, updatedMap(k))
           }
         })
       }
