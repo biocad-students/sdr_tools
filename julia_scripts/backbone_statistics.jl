@@ -145,35 +145,23 @@ immutable GeometryVector
 end
 GeometryVector() = GeometryVector([0, 0, 0]) #by default is 3-dimensional
 
-function GeometryVectorOp2(a :: GeometryVector, b :: GeometryVector, op)
-  GeometryVector(map(op, zip(a.coordinates, b.coordinates)))
-end
+GeometryVectorOp2(a :: GeometryVector, b :: GeometryVector, op) = GeometryVector(map(op, zip(a.coordinates, b.coordinates)))
 
 +(a :: GeometryVector, b :: GeometryVector) = GeometryVectorOp2(a, b, x-> x[1] + x[2])
 -(a :: GeometryVector, b :: GeometryVector) = GeometryVectorOp2(a, b, x-> x[1] - x[2])
-function /(a :: GeometryVector, b :: Number)
-  GeometryVector(map(x -> x/b, a.coordinates))
-end
+/(a :: GeometryVector, b :: Number) = GeometryVector(map(x -> x/b, a.coordinates))
 
-function round2(a::GeometryVector)
-  GeometryVector(map(x::Float64->round(x), a.coordinates))
-end
-function *(a :: GeometryVector, b :: Number)
-  GeometryVector(map(x -> x*b, a.coordinates))
-end
+round2(a::GeometryVector) = GeometryVector(map(x::Float64->round(x), a.coordinates))
 
-function *(a :: GeometryVector, b :: GeometryVector)
-  sum(map(x -> x[1] * x[2], zip(a.coordinates, b.coordinates)))
-end
+*(a :: GeometryVector, b :: Number) = GeometryVector(map(x -> x*b, a.coordinates))
+*(a :: GeometryVector, b :: GeometryVector) = sum(map(x -> x[1] * x[2], zip(a.coordinates, b.coordinates)))
 
 len(a :: GeometryVector) = sqrt(a*a)
 #println(len(GeometryVector([1,2,3])))
 
-normalize(a :: GeometryVector) = a/len(a)
+normalize(a :: GeometryVector) = a / len(a)
 
-function projection(projected :: GeometryVector, whereToProject :: GeometryVector)
-  whereToProject*(projected*whereToProject)
-end
+projection(projected :: GeometryVector, whereToProject :: GeometryVector) = whereToProject*(projected*whereToProject)
 
 function projectToAxes(v :: GeometryVector, x :: GeometryVector, y :: GeometryVector, z :: GeometryVector)
   v_x = v*x
@@ -342,7 +330,31 @@ end
 typealias AtomPosition GeometryVector
 typealias AminoacidInfo Dict{String, AtomPosition}
 
-function getLocalVectors(v1, v2, v3, aminoacid)
+function vectorForKey(aminoacid, e, x, y, z)
+  if haskey(aminoacid, e)
+    projectToAxes(getVector(aminoacid[e]) - getVector(aminoacid["CA"]), x, y, z)
+  else
+    GeometryVector([0, 0, 0])
+  end
+end
+
+function getLocalVectorsBackbone(v1, v2, v3, aminoacid1, aminoacid2)
+  #get local coordinate system
+  #i=2
+  vp = v2 + v3
+  x = normalize(cross3d(v2, vp))
+  y = normalize(cross3d(vp, x))
+  z = normalize(cross3d(x, y))
+  vectors = {
+    "C" => vectorForKey(aminoacid1, "C", x, y, z),
+    "O" => vectorForKey(aminoacid1, "O", x, y, z),
+    "N" => vectorForKey(aminoacid2, "N", x, y, z)
+  }
+
+  (x, y, z, aminoacid2["CA"].resName, vectors)
+end
+
+function getLocalVectorsSidechains(v1, v2, v3, aminoacid)
   #get local coordinate system
   #i=2
 
@@ -350,16 +362,6 @@ function getLocalVectors(v1, v2, v3, aminoacid)
   x = normalize(cross3d(v2, vp))
   y = normalize(cross3d(vp, x))
   z = normalize(cross3d(x, y))
-  vectors = AminoacidInfo()
-  for (s, e) in [("CA", "C"), ("CA", "N"), ("CA", "O")]
-    if haskey(aminoacid, e)
-      vectors[e] = projectToAxes(
-        getVector(aminoacid[e]) - getVector(aminoacid[s]),
-        x, y, z)
-    else
-      vectors[e] = GeometryVector([0, 0, 0])
-    end
-  end
   sidechain = Rotamer()
   for e in keys(aminoacid)
     if !(e in ["CA", "C", "N", "O"])
@@ -373,7 +375,7 @@ function getLocalVectors(v1, v2, v3, aminoacid)
   if (sidechainLength > 0)
     sidechain.center = sum(values(sidechain.atoms)) / sidechainLength
   end
-  (x, y, z, aminoacid["CA"].resName, vectors, sidechain)
+  (x, y, z, aminoacid["CA"].resName, sidechain)
 end
 
 function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}})
@@ -498,13 +500,14 @@ function processChainPortion(aminoacids, meshSize = 0.3)
   v1 = getVector(aminoacids[2]["CA"]) - getVector(aminoacids[1]["CA"])
   v2 = getVector(aminoacids[3]["CA"]) - getVector(aminoacids[2]["CA"])
   v3 = getVector(aminoacids[4]["CA"]) - getVector(aminoacids[3]["CA"])
-  processChainPortionVec(v1, v2, v3, aminoacid[2], meshSize)
+  processChainPortionVec(v1, v2, v3, aminoacid[2], aminoacid[3], meshSize)
 end
 
-function processChainPortionVec(v1, v2, v3, aminoacid, meshSize = 0.3)
+function processChainPortionVec(v1, v2, v3, aminoacid1, aminoacid2, meshSize = 0.3)
   distances = map(x-> convert(Int, round(x/meshSize)), calculateDistancesVect(v1, v2, v3))
-  (x, y, z, aa_name, vectors, sidechains) = getLocalVectors(v1, v2, v3, aminoacid)
-  (distances, aa_name, vectors, sidechains)
+  (x, y, z, aa2_name, backbone) = getLocalVectorsBackbone(v1, v2, v3, aminoacid1, aminoacid2)
+  (x, y, z, aa_name, sidechain) = getLocalVectorsSidechains(v1, v2, v3, aminoacid1)
+  (distances, aa_name, aa2_name, backbone, sidechain)
 end
 
 function getVectorForSeq(sequence, ks, k, text_file_name, latticeSize = 1.22)
@@ -556,18 +559,22 @@ function load_atom_info(text_file_name :: String, mesh_size :: Float64 = 1.7)
         if (length(ks) <= 4)
           continue
         end
-        for k in 1 : length(ks)
+        for k in 1 : length(ks) - 1
           (v1, v2, v3) = getVectorForSeq(atom_infos[chain], ks, k, pdb_file_name)
-          (d, aa, b, s) = processChainPortionVec(v1, v2, v3, atom_infos[chain][ks[k]]) #[atom_infos[chain][i] for i in ks[k - width + 1 : k]])
-          if !haskey(basechainInfo, aa)
-            basechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
+          (d, aa, aa2, b, s) = processChainPortionVec(v1, v2, v3, atom_infos[chain][ks[k]], atom_infos[chain][ks[k + 1]]) #[atom_infos[chain][i] for i in ks[k - width + 1 : k]])
+          if !haskey(basechainInfo, aa2)
+            basechainInfo[aa2] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
+          end
+          if !haskey(basechainInfo[aa2], d)
+            basechainInfo[aa2][d] = AminoacidInfo[]
+          end
+          if !haskey(sidechainInfo, aa)
             sidechainInfo[aa] = Dict{(Int, Int, Int), Array{Rotamer, 1}}()
           end
-          if !haskey(basechainInfo[aa], d)
-            basechainInfo[aa][d] = AminoacidInfo[]
+          if !haskey(sidechainInfo[aa], d)
             sidechainInfo[aa][d] = Rotamer[]
           end
-          push!(basechainInfo[aa][d], b)
+          push!(basechainInfo[aa2][d], b)
           push!(sidechainInfo[aa][d], s)
         end
       end
