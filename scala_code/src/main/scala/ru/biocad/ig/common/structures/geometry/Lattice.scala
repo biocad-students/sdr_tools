@@ -96,12 +96,16 @@ object Lattice {
     */
   def toFullAtomRepresentation(chain : SimplifiedChain, originalFullAtomChain : Seq[Seq[PDBAtomInfo]]) : Seq[PDBAtomInfo] = {
 
-    val vectorsWithEdgeOnes = (chain.vectors.head +: chain.vectors) ++ Seq(chain.vectors.init.last, chain.vectors.last)
-    val pdbData = (chain.structure, vectorsWithEdgeOnes.sliding(3, 1).toSeq, originalFullAtomChain).zipped.flatMap({
-      case (aa, Seq(v1, v2, v3), atoms) => {
-        val updatedMap = Map("CA" -> aa.ca * LatticeConstants.MESH_SIZE) ++
-            restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) ++
-            restoreInfoCoordinates(aa, v1, v2, v3, sidechainsInfo)
+    val vectorsWithEdgeOnes = Seq(chain.vectors.head, chain.vectors.tail.head)  ++ chain.vectors ++ Seq(chain.vectors.init.last, chain.vectors.last)
+    val pdbData = (chain.structure, vectorsWithEdgeOnes.sliding(4, 1).toSeq, originalFullAtomChain).zipped.flatMap({
+      case (aa, Seq(v1, v2, v3, v4), atoms) => {
+        val updatedMap : Map[String, GeometryVector] = Map(
+                "CA" -> aa.ca * LatticeConstants.MESH_SIZE,
+                "N" -> (restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo)("N") //+ v2 * LatticeConstants.MESH_SIZE
+                )
+            ) ++
+            (restoreInfoCoordinates(aa, v2, v3, v4, backboneInfo) - "N") ++
+            restoreInfoCoordinates(aa, v2, v3, v4, sidechainsInfo)
         atoms.map({atom =>
           if (updatedMap.contains(atom.atom))
               SimplifiedAminoacid.getUpdatedAtomInfo(updatedMap(atom.atom), atom)
@@ -116,13 +120,17 @@ object Lattice {
 
 
   def toFullAtomRepresentation(chain : SimplifiedChain) = {
-    val vectorsWithEdgeOnes = (chain.vectors.head +: chain.vectors) ++ Seq(chain.vectors.init.last, chain.vectors.last)
+    val vectorsWithEdgeOnes = Seq(chain.vectors.head, chain.vectors.tail.head) ++ chain.vectors ++ Seq(chain.vectors.init.last, chain.vectors.last)
     val backboneAtomsOrder = Seq("N", "CA", "C", "O")
-    val pdbData = (chain.structure, vectorsWithEdgeOnes.sliding(3, 1).toSeq, Stream from 1).zipped.flatMap({
-      case (aa, Seq(v1, v2, v3), aaIndex) => {
-        val updatedMap : Map[String, GeometryVector] = Map("CA" -> aa.ca * LatticeConstants.MESH_SIZE) ++
-            restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) ++
-            restoreInfoCoordinates(aa, v1, v2, v3, sidechainsInfo)
+    val pdbData = (chain.structure, vectorsWithEdgeOnes.sliding(4, 1).toSeq, Stream from 1).zipped.flatMap({
+      case (aa, Seq(v1, v2, v3, v4), aaIndex) => {
+        val updatedMap : Map[String, GeometryVector] = Map(
+                "CA" -> aa.ca * LatticeConstants.MESH_SIZE,
+                "N" -> (restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo)("N") //+ v2 * LatticeConstants.MESH_SIZE
+                )
+            ) ++
+            (restoreInfoCoordinates(aa, v2, v3, v4, backboneInfo) - "N") ++
+            restoreInfoCoordinates(aa, v2, v3, v4, sidechainsInfo)
 
         (backboneAtomsOrder ++ updatedMap.keys.filterNot(backboneAtomsOrder.contains(_)).toSeq.sorted).map({
           case k => {

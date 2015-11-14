@@ -338,20 +338,25 @@ function vectorForKey(aminoacid, e, x, y, z)
   end
 end
 
-function getLocalVectorsBackbone(v1, v2, v3, aminoacid1, aminoacid2)
-  #get local coordinate system
-  #i=2
+function getLocalCoordinateSystem(v1, v2, v3)
   vp = v2 + v3
   x = normalize(cross3d(v2, vp))
   y = normalize(cross3d(vp, x))
   z = normalize(cross3d(x, y))
+  (x, y, z)
+end
+
+function getLocalVectorsBackbone(v1, v2, v3, aminoacid1, aminoacid2)
+  #get local coordinate system
+  #i=2
+  (x, y, z) = getLocalCoordinateSystem(v1, v2, v3)
   vectors = {
     "C" => vectorForKey(aminoacid1, "C", x, y, z),
     "O" => vectorForKey(aminoacid1, "O", x, y, z),
     "N" => vectorForKey(aminoacid2, "N", x, y, z)
   }
 
-  (x, y, z, aminoacid2["CA"].resName, vectors)
+  (x, y, z, aminoacid1["CA"].resName, aminoacid2["CA"].resName, vectors)
 end
 
 function getLocalVectorsSidechains(v1, v2, v3, aminoacid)
@@ -378,24 +383,21 @@ function getLocalVectorsSidechains(v1, v2, v3, aminoacid)
   (x, y, z, aminoacid["CA"].resName, sidechain)
 end
 
-function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}})
+function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Dict{String, Array{AtomPosition, 1}}}})
     result = Dict{String, Dict{(Int, Int, Int), Dict{String, GeometryVector}}}()
     for (aa, aaInfo) in chainInfo
         result[aa] = Dict{(Int, Int, Int), Dict{String, GeometryVector}}()
         for (distances, positions) in aaInfo
-            size = length(positions)
+            #size = length(positions)
             result[aa][distances] = Dict{String, GeometryVector}()
-            for x in positions
-                for (k, v) in x
-                    if !haskey(result[aa][distances], k)
-                        result[aa][distances][k] = GeometryVector([0, 0, 0])
-                    end
-                    result[aa][distances][k] += v
-                end
+            for i in ["N", "C", "O"]
+              if (haskey(positions, i) && length(positions) > 0)
+                result[aa][distances][i] = foldl((x,y)->x+y, GeometryVector([0, 0, 0]),  positions[i])/length(positions[i])
+              else
+                result[aa][distances][i] = GeometryVector([0, 0, 0])
+              end
             end
-            for k in keys(result[aa][distances])
-                result[aa][distances][k] = result[aa][distances][k] / size
-            end
+
         end
     end
     #result2 = Dict{String, Dict{(Int, Int, Int), Dict{String, Array{Number, 1}}}}()
@@ -505,7 +507,7 @@ end
 
 function processChainPortionVec(v1, v2, v3, aminoacid1, aminoacid2, meshSize = 0.3)
   distances = map(x-> convert(Int, round(x/meshSize)), calculateDistancesVect(v1, v2, v3))
-  (x, y, z, aa2_name, backbone) = getLocalVectorsBackbone(v1, v2, v3, aminoacid1, aminoacid2)
+  (x, y, z, aa1_name, aa2_name, backbone) = getLocalVectorsBackbone(v1, v2, v3, aminoacid1, aminoacid2)
   (x, y, z, aa_name, sidechain) = getLocalVectorsSidechains(v1, v2, v3, aminoacid1)
   (distances, aa_name, aa2_name, backbone, sidechain)
 end
@@ -547,8 +549,8 @@ function getVectorForSeq(sequence, ks, k, text_file_name, latticeSize = 1.22)
           round2((getVector(sequence[ks[k + 2]]["CA"]) - getVector(sequence[ks[k + 1]]["CA"]))/latticeSize))
 end
 
-function load_atom_info(text_file_name :: String, mesh_size :: Float64 = 1.7)
-  basechainInfo = Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}}()
+function load_atom_info(text_file_name :: String, mesh_size :: Float64 = 1.22)
+  basechainInfo = Dict{String, Dict{(Int, Int, Int), Dict{String, Array{AtomPosition, 1}}}}()
   sidechainInfo = Dict{String, Dict{(Int, Int, Int), Array{Rotamer, 1}}}()
   pdb_file_names = getPDBFileNames(text_file_name)
   for pdb_file_name in pdb_file_names
@@ -562,19 +564,30 @@ function load_atom_info(text_file_name :: String, mesh_size :: Float64 = 1.7)
         for k in 1 : length(ks) - 1
           (v1, v2, v3) = getVectorForSeq(atom_infos[chain], ks, k, pdb_file_name)
           (d, aa, aa2, b, s) = processChainPortionVec(v1, v2, v3, atom_infos[chain][ks[k]], atom_infos[chain][ks[k + 1]]) #[atom_infos[chain][i] for i in ks[k - width + 1 : k]])
+          #println(b)
           if !haskey(basechainInfo, aa2)
-            basechainInfo[aa2] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
+            basechainInfo[aa2] = Dict{(Int, Int, Int), Dict{String, Array{AtomPosition, 1}}}()
           end
           if !haskey(basechainInfo[aa2], d)
-            basechainInfo[aa2][d] = AminoacidInfo[]
+            basechainInfo[aa2][d] = Dict{String, Array{AtomPosition, 1}}()
+            for key in ["N", "O", "C"]
+              basechainInfo[aa2][d][key] = AtomPosition[]
+            end
           end
           if !haskey(sidechainInfo, aa)
             sidechainInfo[aa] = Dict{(Int, Int, Int), Array{Rotamer, 1}}()
+            basechainInfo[aa] = Dict{(Int, Int, Int), Dict{String, Array{AtomPosition, 1}}}()
           end
           if !haskey(sidechainInfo[aa], d)
             sidechainInfo[aa][d] = Rotamer[]
+            basechainInfo[aa][d] = Dict{String, Array{AtomPosition, 1}}()
+            for key in ["N", "O", "C"]
+              basechainInfo[aa][d][key] = AtomPosition[]
+            end
           end
-          push!(basechainInfo[aa2][d], b)
+          push!(basechainInfo[aa2][d]["N"], b["N"])
+          push!(basechainInfo[aa][d]["O"], b["O"])
+          push!(basechainInfo[aa][d]["C"], b["C"])
           push!(sidechainInfo[aa][d], s)
         end
       end

@@ -16,11 +16,11 @@ import ru.biocad.ig.common.algorithms.MonteCarloRunner
   */
 object MCTest extends LazyLogging {
 
-  private case class Config(inputFile : File = new File("2OSL.pdb"),
+  private case class Config(inputFile : File = new File("result_old.pdb"),
       outputFile : File = new File("result.pdb"),
-      mcTimeUnits : Int = 200,
+      mcTimeUnits : Int = 20,
       mode : String = "fold",
-      sequence : String = "GARFIELD",//"RMAQLEAKVEELLSKNWNLENEVARLKKLVGER",//
+      sequence : String = "RMAQLEAKVEELLSKNWNLENEVARLKKLVGER",//"GARFIELD",//
       //TODO: add option - refine/fold/alascan - default refine
       debug : Boolean = false)
 
@@ -44,6 +44,11 @@ object MCTest extends LazyLogging {
           opt[File]('i', "inputFile") valueName("<file>") action {(s, c) =>
             c.copy(inputFile = s)} text "input file in PDB format"
         )
+      cmd("recreate") action {(_, c) =>
+          c.copy(mode = "recreate") } text("performs structure fitting to chain and restores full-atom structure (with no MC runs)") children(
+            opt[File]('i', "inputFile") valueName("<file>") action {(s, c) =>
+              c.copy(inputFile = s)} text "input file in PDB format"
+          )
 
       opt[Unit]("debug") action {(_, c) =>
         c.copy(debug = true)} text "enable debug output"
@@ -64,6 +69,9 @@ object MCTest extends LazyLogging {
             }
             case "scan" => {
               MonteCarloRunner.scan(config.inputFile, config.mcTimeUnits, config.outputFile)
+            }
+            case "recreate" => {
+              MonteCarloRunner.recreate(config.inputFile, config.outputFile)
             }
           }
 

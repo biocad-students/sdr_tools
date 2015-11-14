@@ -5,7 +5,7 @@ package ru.biocad.ig.common.io.pdb
   * @param input_sequence 'ATOM' recors from given PDB
   * @param chain chain to iterate
   */
-class PDBChainIterator(input_sequence : Seq[PDBAtomInfo], chain : Char = 'L') extends Iterator[Seq[PDBAtomInfo]] {
+class PDBChainIterator(input_sequence : Seq[PDBAtomInfo], chain : Char = 'A') extends Iterator[Seq[PDBAtomInfo]] {
   var tailSequence : Seq[PDBAtomInfo] = skipToChainStart(input_sequence, chain)
 
   /** @return sequence starting from record with chainID equal to chain parameter

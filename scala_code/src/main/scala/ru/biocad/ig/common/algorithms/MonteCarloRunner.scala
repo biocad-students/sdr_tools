@@ -4,7 +4,7 @@ package ru.biocad.ig.common.algorithms
 import java.io.File
 import com.typesafe.scalalogging.slf4j.LazyLogging
 
-import ru.biocad.ig.common.io.pdb.{PDBStructure, PDBAtomInfo, PDBAminoAcidCollection}
+import ru.biocad.ig.common.io.pdb.{PDBStructure, PDBAtomInfo, PDBAminoacidCollection}
 
 import ru.biocad.ig.common.structures.geometry._
 import ru.biocad.ig.alascan.moves._
@@ -27,12 +27,12 @@ object MonteCarloRunner extends LazyLogging {
     * @param chain chain letter from corresponding ATOM portion from PDB data (chain names can also be found in structure description somewhere at the beginning)
     * @return pair of 2 objects - MC-ready simplified structure and sequence of pdb 'ATOM' lines, corresponding to chain params, grouped for each chain's aminoacid
     */
-  def loadStructure(filename : String, chain : Char = 'L')  : (SimplifiedChain, Seq[Seq[PDBAtomInfo]]) = {
+  def loadStructure(filename : String, chain : Char = 'A')  : (SimplifiedChain, Seq[Seq[PDBAtomInfo]]) = {
     println("loading structure from sample pdb...")
     val structure : PDBStructure = new PDBStructure()
     structure.readFile(getClass.getResource(filename).getFile())
     println("local file read - done")
-    val aaByChain = new PDBAminoAcidCollection(structure)
+    val aaByChain = PDBAminoacidCollection(structure)
     val aas = aaByChain.aminoacidsByChain.toSeq
     val filteredMap = SimplifiedChain(aas)
     (filteredMap, aas)
@@ -60,6 +60,18 @@ object MonteCarloRunner extends LazyLogging {
     w.close()
   }
 
+  def recreate(inputFile : File, outputFile : File) = {
+    println("load simplifiedChain")
+    val (simplifiedChain, fullAtomChain) = loadStructure("/result_old.pdb")
+    logger.info("Input file energy: " + Lattice.getEnergy(simplifiedChain).toString)
+    val result = Lattice.toFullAtomRepresentation(simplifiedChain, fullAtomChain)
+    val s2 = SimplifiedChain((new PDBAminoacidCollection(result)).aminoacidsByChain.toSeq)
+    logger.info("Energy after recreate: " + Lattice.getEnergy(s2).toString)
+    val w = new PDBWriter(outputFile)
+    w.writeAtomInfo(result)
+    w.close()
+  }
+
   def getMovesForSequence(n : Int) = {
      Seq(
       (new BondMove(Lattice.backboneVectors, 2), n - 2),
@@ -81,12 +93,12 @@ object MonteCarloRunner extends LazyLogging {
   def fold(sequence : String, mcTimeUnits : Int, outputFile : File) = {
     println("testing backbone reconstruction...")
     val simplifiedChain = SimplifiedChain.fromSequence(sequence, Lattice.sidechainsInfo)
-    logger.info("Energy before structure refinement: " + Lattice.getEnergy(simplifiedChain).toString)
+    logger.info("Energy before structure fold: " + Lattice.getEnergy(simplifiedChain).toString)
 
     //println(Lattice.getEnergy(simplifiedChain))
     val ch1 = MonteCarlo.run(simplifiedChain, getMovesForSequence(simplifiedChain.size),
         x => Lattice.getEnergy(x), mcTimeUnits)
-    logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
+    logger.info("Energy after structure fold: "+ Lattice.getEnergy(ch1))
     val result = Lattice.toFullAtomRepresentation(ch1)
     val w = new PDBWriter(outputFile)
     w.writeAtomInfo(result)
@@ -100,14 +112,15 @@ object MonteCarloRunner extends LazyLogging {
     * The main problem is to made genuine, informative report file.
     */
   def scan(inputFile : File, mcTimeUnits : Int, outputFile : File) = {
+    ???
     println("testing backbone reconstruction...")
     val (simplifiedChain, fullAtomChain) = loadStructure("/2OSL.pdb")
-    logger.info("Energy before structure refinement: " + Lattice.getEnergy(simplifiedChain).toString)
+    logger.info("Energy before structure scan: " + Lattice.getEnergy(simplifiedChain).toString)
 
     //println(Lattice.getEnergy(simplifiedChain))
     val ch1 = MonteCarlo.run(simplifiedChain, getMovesForSequence(simplifiedChain.size),
         x => Lattice.getEnergy(x), mcTimeUnits)
-    logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
+    logger.info("Energy after structure scan: "+ Lattice.getEnergy(ch1))
     val result = Lattice.toFullAtomRepresentation(ch1, fullAtomChain)
     //val sidechainInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
     val w = new PDBWriter(outputFile)

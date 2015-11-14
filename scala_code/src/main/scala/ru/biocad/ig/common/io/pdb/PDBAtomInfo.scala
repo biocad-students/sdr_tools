@@ -41,21 +41,21 @@ case class PDBAtomInfo(
 
 object PDBAtomInfo {
   def apply(line: String) : PDBAtomInfo = PDBAtomInfo(
-    serial = line.substring(6, 11).trim.toInt,
-    atom = line.substring(12, 16).trim,
-    altLoc = line.charAt(16),
-    resName = line.substring(17, 20),
-    chainID = line.charAt(21),
-    resSeq = line.substring(22, 26).trim.toInt,
-    iCode = line.charAt(26),
-    x = line.substring(30, 38).toDouble,
-    y = line.substring(38, 46).toDouble,
-    z = line.substring(46, 54).toDouble,
-    occupancy = line.substring(54, 60).toDouble,
-    tempFactor = line.substring(60, 66).toDouble,
-    segmentID = line.substring(72, 76).trim,
-    element = line.substring(76, 78).trim,
-    charge = line.substring(78, 80).trim
+    /*serial =*/ line.substring(6, 11).trim.toInt,
+    /*atom =*/ line.substring(12, 16).trim,
+    /*altLoc =*/ line.charAt(16),
+    /*resName =*/ line.substring(17, 20),
+    /*chainID =*/ line.charAt(21),
+    /*resSeq =*/ line.substring(22, 26).trim.toInt,
+    /*iCode =*/ line.charAt(26),
+    /*x =*/ line.substring(30, 38).toDouble,
+    /*y =*/ line.substring(38, 46).toDouble,
+    /*z =*/ line.substring(46, 54).toDouble,
+    /*occupancy =*/ line.substring(54, 60).toDouble,
+    /*tempFactor =*/ line.substring(60, 66).toDouble,
+    /*segmentID =*/ line.substring(72, 76).trim,
+    /*element =*/ line.substring(76, 78).trim,
+    /*charge =*/ line.substring(78, 80).trim
   )
 
   def apply(index : Int, atomName : String, aaName : String, chainName : Char, resID: Int,

@@ -62,7 +62,7 @@ object SimplifiedAminoacid extends LazyLogging {
   //TODO: fix this (ca, should be center of masses)
   def computeCenterCoordinates(atoms : Seq[PDBAtomInfo]) : GeometryVector = {
     val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
-    logger.info("in computeCenterCoordinates")
+    logger.debug("in computeCenterCoordinates")
     val ca : GeometryVector = Vector3d(
         math.round(atomsMap("CA").x / LatticeConstants.MESH_SIZE),
         math.round(atomsMap("CA").y / LatticeConstants.MESH_SIZE),
