@@ -4,7 +4,7 @@ package ru.biocad.ig.common.algorithms
 import java.io.File
 import com.typesafe.scalalogging.slf4j.LazyLogging
 
-import ru.biocad.ig.common.io.pdb.{PDBStructure, PDBAtomInfo, PDBAminoAcidCollection}
+import ru.biocad.ig.common.io.pdb.{PDBStructure, PDBAtomInfo, PDBAminoacidCollection}
 
 import ru.biocad.ig.common.structures.geometry._
 import ru.biocad.ig.alascan.moves._
@@ -32,7 +32,7 @@ object MonteCarloRunner extends LazyLogging {
     val structure : PDBStructure = new PDBStructure()
     structure.readFile(getClass.getResource(filename).getFile())
     println("local file read - done")
-    val aaByChain = new PDBAminoAcidCollection(structure)
+    val aaByChain = PDBAminoacidCollection(structure)
     val aas = aaByChain.aminoacidsByChain.toSeq
     val filteredMap = SimplifiedChain(aas)
     (filteredMap, aas)
