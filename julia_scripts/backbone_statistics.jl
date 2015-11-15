@@ -117,6 +117,8 @@ type PDBAtomInfo
   charge :: String
 end
 
+
+
 function parseAtomInfoFromString(line :: String)
   #TODO: check correctness
   #println(line)
@@ -221,13 +223,25 @@ end
 # leaves only heavy atoms, and only aminoacids with full representation
 #
 function readPDB(input_file_name :: String)
-  records = Dict{Char, Dict{Int, Dict{String, PDBAtomInfo}}}()
+  records = Dict{Int, Dict{Int, Dict{String, PDBAtomInfo}}}()
   recordsAA = Dict{Char, Array{Int, 1}}()
   input_file = open(input_file_name, "r")
+  lastTimeChainHasEnded = false
+  chainNumber = 0
+  lastChainId = 0
   while !eof(input_file)
     s = rstrip(readline(input_file), ['\r','\n'])
-    if (length(s) < 4)
+    if (length(s) < 3)
       continue
+    end
+    if s[1:3] == "TER"
+      lastTimeChainHasEnded = true
+    end
+    if (length(s) < 5)
+      continue
+    end
+    if s[1:5] == "MODEL"
+      lastTimeChainHasEnded = true
     end
     if s[1:4] == "ATOM"
       atom = parseAtomInfoFromString(s)
@@ -239,16 +253,22 @@ function readPDB(input_file_name :: String)
       if (atom.element in ["H"])
         continue #ignore hydrogens
       end
-      if !(atom.chainID in keys(records))
-        records[atom.chainID] = Dict{Int, Dict{String, PDBAtomInfo}}()
-        recordsAA[atom.chainID] = Int[]
+      if (atom.chainID != lastChainId)
+        lastTimeChainHasEnded = true
       end
-      if !(atom.resSeq in keys(records[atom.chainID]))
-        records[atom.chainID][atom.resSeq] = Dict{String, PDBAtomInfo}()
-        push!(recordsAA[atom.chainID], atom.resSeq)
+      if lastTimeChainHasEnded
+        chainNumber = chainNumber + 1
+        lastChainId = atom.chainID
+        records[chainNumber] = Dict{Int, Dict{String, PDBAtomInfo}}()
+        recordsAA[chainNumber] = Int[]
       end
-      records[atom.chainID][atom.resSeq][atom.atom] = atom
+      if !(atom.resSeq in keys(records[chainNumber]))
+        records[chainNumber][atom.resSeq] = Dict{String, PDBAtomInfo}()
+        push!(recordsAA[chainNumber], atom.resSeq)
+      end
+      records[chainNumber][atom.resSeq][atom.atom] = atom
       #push!(records, parseAtomInfoFromString(s))
+      lastTimeChainHasEnded = false
     end
   end
   close(input_file)
@@ -303,9 +323,9 @@ function splitToFragments(aminoacidIds :: Array{Int, 1}, records :: Dict{Int, Di
   result
 end
 
-function processPDB(records :: Dict{Char, Dict{Int, Dict{String, PDBAtomInfo}}},
+function processPDB(records :: Dict{Int, Dict{Int, Dict{String, PDBAtomInfo}}},
                 recordsAA ::  Dict{Char, Array{Int, 1}})
-  recordFragments = Dict{Char, Array{Array{Int, 1}, 1}}()
+  recordFragments = Dict{Int, Array{Array{Int, 1}, 1}}()
   for chain in keys(records)
     recordFragments[chain] = Array{Int, 1}[]
     fragments = splitToFragments(recordsAA[chain], records[chain])
