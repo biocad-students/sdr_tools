@@ -15,4 +15,8 @@ libraryDependencies ++= Seq("org.slf4j" % "slf4j-api" % "1.7.5",
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.3.0"
 
+resolvers += "bintray-alexander_myltsev" at "http://dl.bintray.com/content/alexander-myltsev/maven"
+
+libraryDependencies += "com.vspy" %% "mustache" % "1.2"
+
 resolvers += Resolver.sonatypeRepo("public")
