@@ -8,10 +8,8 @@ class PDBStructure {
 
   def readFile(filename : String) : Unit = {
     var pdbReader: PDBReader = new PDBReader(filename)
-
-    while (pdbReader.hasNext) {
-      parse_array += pdbReader.next().get
-    }
+    parse_array ++= Stream.continually(pdbReader.next()).takeWhile(_ => pdbReader.hasNext).flatten
+    pdbReader.close()
   }
 
   override def toString : String = parse_array.mkString(", ")
