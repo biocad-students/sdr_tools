@@ -13,6 +13,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
   * @param name aminoacid 3-letter IUPAC identity name (like ALA, GLU, etc.)
   * @param ca coordinates of C_\alpha center, defined in lattice units
   * @param rotamer vector from C_\alpha to center of united atom (which appears to be center of mass for sidechain) in off-lattice coordinates
+  * @param meshSize lattice mesh size if aminoacid is projected to some, otherwise 1.0
   */
 case class SimplifiedAminoacid(val name : String,
                                val ca : GeometryVector,
@@ -57,13 +58,13 @@ object SimplifiedAminoacid extends LazyLogging {
   */
   //rotamer has off-lattice coordinates vs. Ca's are projected onto lattice
   //TODO: fix this (ca, should be center of masses)
-  private def computeCenterCoordinates(atoms : Seq[PDBAtomInfo], meshSize : Double) : GeometryVector = {
+  private def computeRotamerCenterCoordinates(atoms : Seq[PDBAtomInfo]) : GeometryVector = {
     val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
     logger.info("in computeCenterCoordinates")
     val ca : GeometryVector = Vector3d(
-        math.round(atomsMap("CA").x / meshSize),
-        math.round(atomsMap("CA").y / meshSize),
-        math.round(atomsMap("CA").z / meshSize)
+        math.round(atomsMap("CA").x ),
+        math.round(atomsMap("CA").y ),
+        math.round(atomsMap("CA").z )
         )
     val rotamerAtoms  = atoms.filterNot({
         s => Seq("N", "H", "CA", "C", "O").contains(s.atom)
@@ -90,7 +91,7 @@ object SimplifiedAminoacid extends LazyLogging {
 
     //val atomsVectorMap = atomsMap.map(x => (x._1, Vector3d(x._2.x, x._2.y, x._2.z) - ca))
 
-    new SimplifiedAminoacid(name, ca, computeCenterCoordinates(atoms, meshSize))
+    new SimplifiedAminoacid(name, ca, computeRotamerCenterCoordinates(atoms))
   }
 
   def getUpdatedAtomInfo(updatedCoordinates : GeometryVector,

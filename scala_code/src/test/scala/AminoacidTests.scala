@@ -13,7 +13,7 @@ import ru.biocad.ig.common.io.pdb.PDBAtomInfo
 import ru.biocad.ig.common.algorithms.MonteCarloRunner
 import java.util.NoSuchElementException
 import ru.biocad.ig.alascan.constants.LatticeConstants
-import ru.biocad.ig.common.structures.geometry.{GeometryVector, Vector3d}
+import ru.biocad.ig.common.structures.geometry.{GeometryVector, Vector3d, Lattice}
 
 
 class AminoacidsTests extends FlatSpec with Matchers {
@@ -33,20 +33,22 @@ class AminoacidsTests extends FlatSpec with Matchers {
   }
 
   it should "restore backbone atoms from alpha-carbons" in {
+    val lattice = new Lattice()
+    val latticeMeshSize : Double = lattice.latticeConstants.meshSize
     val meshSize = 0.4
     val info = PDBAtomInfo(1, "CA", ' ',"ARG", 'L', 2, ' ',
-        2*LatticeConstants.MESH_SIZE,
-        -10*LatticeConstants.MESH_SIZE,
-        0*LatticeConstants.MESH_SIZE, 0, 0, "", "C", "")
+        2 * latticeMeshSize,
+        -10 * latticeMeshSize,
+        0 * latticeMeshSize, 0, 0, "", "C", "")
     val info2 = PDBAtomInfo(2, "C", ' ',"ARG", 'L', 2, ' ',
             info.x + 0.5, info.y + 0.5, info.z + 0.5, 0, 0, "", "C", "")
-    val aa = SimplifiedAminoacid(Seq(info, info2))
-    val updatedAA = aa.getUpdatedAtomInfo("CA", aa.ca * LatticeConstants.MESH_SIZE, Map(
+    val aa = SimplifiedAminoacid(Seq(info, info2), latticeMeshSize)
+    val updatedAA = aa.getUpdatedAtomInfo("CA", aa.ca * latticeMeshSize, Map(
       "CA" ->  PDBAtomInfo(1, "CA", ' ', "ARG", 'L', 2, ' ', 0, 0, 0, 0, 0, "", "C", "")
     ))
-    (updatedAA.x) should equal (aa.ca.coordinates(0)*LatticeConstants.MESH_SIZE +- 0.1)
-    (updatedAA.y) should equal (aa.ca.coordinates(1)*LatticeConstants.MESH_SIZE +- 0.1)
-    (updatedAA.z) should equal (aa.ca.coordinates(2)*LatticeConstants.MESH_SIZE +- 0.1)
+    (updatedAA.x) should equal (aa.ca.coordinates(0) * latticeMeshSize +- 0.1)
+    (updatedAA.y) should equal (aa.ca.coordinates(1) * latticeMeshSize +- 0.1)
+    (updatedAA.z) should equal (aa.ca.coordinates(2) * latticeMeshSize +- 0.1)
 
     (updatedAA.x) should equal (info.x +- 0.1)
     (updatedAA.y) should equal (info.y +- 0.1)
@@ -63,7 +65,7 @@ class AminoacidsTests extends FlatSpec with Matchers {
     val (x, y, z) = (Vector3d(1, 0, 0), Vector3d(0, 1, 0), Vector3d(0, 0, 1))
     val cBackboneInfo : PDBAtomInfo = fragmentInfo.restorePDBInfo(aa, 1, 2, 3, x, y, z, Map(
       "CA" -> info, "C" -> info2
-    )).map(x => x.atom -> x).toMap.getOrElse("C", info)
+    ), lattice).map(x => x.atom -> x).toMap.getOrElse("C", info)
     (cBackboneInfo.x) should equal (info2.x +- 0.1)
     (cBackboneInfo.y) should equal (info2.y +- 0.1)
     (cBackboneInfo.z) should equal (info2.z +- 0.1)
