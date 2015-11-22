@@ -2,23 +2,25 @@ package ru.biocad.ig.alascan.energies
 
 import ru.biocad.ig.common.structures.aminoacid.{SimplifiedChain, SimplifiedAminoacid}
 import ru.biocad.ig.alascan.constants.energy_terms._
+import ru.biocad.ig.common.structures.geometry.Lattice
+
 import scala.io.Source
 import spray.json._
 
 import EPairJsonProtocol._
 
 
-class PairEnergy(val rotamerRadiusInfo : RotamerRadiusInfo) extends BasicEnergy {
+class PairEnergy(val lattice : Lattice) extends BasicEnergy {
 
   val epair : EPair = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/PMFHIX_SCALE.json")).getLines().mkString("")).convertTo[EPair]
 
   //TODO: rewrite later
   def get_E_two(i : Int, j : Int, ai : SimplifiedAminoacid, aj : SimplifiedAminoacid, f : Double) : Double = {
-    val rRepulsive = rotamerRadiusInfo.getRrep(ai.name, aj.name)
-    val rInteraction = rotamerRadiusInfo.getR(ai.name, aj.name)
+    val rRepulsive = lattice.rotamerRadiusInfo.getRrep(ai.name, aj.name)
+    val rInteraction = lattice.rotamerRadiusInfo.getR(ai.name, aj.name)
     val pairEnergy = epair.get(ai.name, aj.name)
     (ai.rotamer - aj.rotamer).length match {
-      case x if x < rRepulsive => rotamerRadiusInfo.eRepulsive
+      case x if x < rRepulsive => lattice.rotamerRadiusInfo.eRepulsive
       case x if x < rInteraction && pairEnergy >= 0.0 && (j - i == 5 || j - i == 6) => pairEnergy * 0.6
       case x if x < rInteraction && pairEnergy >= 0.0 => pairEnergy
       case _ if j - i == 5 || j - i == 6 => pairEnergy * f * 0.6

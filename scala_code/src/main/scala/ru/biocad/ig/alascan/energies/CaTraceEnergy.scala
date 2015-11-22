@@ -3,13 +3,15 @@ package ru.biocad.ig.alascan.energies
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedChain
 import ru.biocad.ig.alascan.constants.energy_terms._
 import ru.biocad.ig.common.algorithms.geometry.ManifoldUtils
+import ru.biocad.ig.common.structures.geometry.Lattice
+
 import scala.io.Source
 import spray.json._
 
 import E14JsonProtocol._
 import E14avgJsonProtocol._
 
-class CaTraceEnergy() extends BasicEnergy {
+class CaTraceEnergy(val lattice : Lattice) extends BasicEnergy {
   val e14 : E14 = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/r14aa12.json")).getLines().mkString("")).convertTo[E14]
   val e14avg : E14avg = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/r14avg12.json")).getLines().mkString("")).convertTo[E14avg]
 

@@ -3,12 +3,14 @@ package ru.biocad.ig.alascan.energies
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedChain
 import ru.biocad.ig.alascan.constants.energy_terms._
 import ru.biocad.ig.common.algorithms.geometry.ManifoldUtils
+import ru.biocad.ig.common.structures.geometry.Lattice
+
 import scala.io.Source
 import spray.json._
 
 import ERotamerJsonProtocol._
 
-class RotamerEnergy() extends BasicEnergy {
+class RotamerEnergy(val lattice : Lattice) extends BasicEnergy {
   val eRotamer : ERotamer = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/rotamer_energies.json")).getLines().mkString("")).convertTo[ERotamer]
 
   override def get(aminoacids : SimplifiedChain) : Double = {
