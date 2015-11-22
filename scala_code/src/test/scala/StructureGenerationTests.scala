@@ -8,13 +8,14 @@ import ru.biocad.ig.alascan.constants.json.SidechainLibraryJsonProtocol._
 
 import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedChain
-
+import ru.biocad.ig.common.structures.geometry._
 
 class StructureGenerationTests extends FlatSpec with Matchers {
   it should "generate simplified structure from sequence" in {
-    val rotamerInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
+    //val rotamerInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
+    val lattice = new Lattice()
     noException should be thrownBy{
-      SimplifiedChain.fromSequence("GBARFIELD", rotamerInfo)
+      SimplifiedChain.fromSequence("GBARFIELD", lattice)
     }
   }
 }

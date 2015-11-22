@@ -25,8 +25,9 @@ case class LatticeConstants(val name : String,
   val hBondR : Restrictions,
   val hBondAmax : Double,
   val contactCutoff : Double) {
-    def distanceConditionForHBonds(r: Double): Boolean = r >= hBondR.min && r <= hBondR.max
+    def distanceConditionForHBonds(r: Double) : Boolean = hBondR.check(r)
     def checkAngleRestrictions(angle : Double) : Boolean = angleRestrictions.check(angle)
+
   /*
   val MESH_SIZE = 1.22
 
