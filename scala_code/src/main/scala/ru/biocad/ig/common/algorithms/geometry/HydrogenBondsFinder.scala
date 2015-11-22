@@ -8,12 +8,10 @@ case class HydrogenBondsFinder(HBondCondition : (SimplifiedChain, Int, Int) => B
     structure : SimplifiedChain) {
   def findBondsForStructure(structure : SimplifiedChain) = {
     val hBonds = (0 to structure.size - 1).map({ i =>
-      (0 to structure.size - 1).map({j =>
-        HBondCondition(structure, i, j)
-      })
+      (0 to structure.size - 1).map(HBondCondition(structure, i, _))
     })
     val b = (0 to structure.size - 1).map({i =>
-      (i + 1 to structure.size - 1).count({j=> hBonds(i)(j) })
+      (i + 1 to structure.size - 1).count(hBonds(i)(_))
     }).foldLeft(0)(_ + _)
     val c = (0 to structure.size - 1).map({i =>
       (i + 1 to structure.size - 1).count({j=>

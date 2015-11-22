@@ -17,9 +17,9 @@ object ManifoldUtils {
     case Seq() => Seq(0)
     case Seq(Seq(x, y)) => Seq(y * multiplier, - x * multiplier)
     case _ => {
-      val indicesAndSignatures = lines.head.foldLeft((0, 1, Seq[(Int, Int)]())) {
-        case ((index, permutationSignature, indicesAndSignaturesSeq), _) => (index + 1, -permutationSignature, indicesAndSignaturesSeq ++ Seq((index, permutationSignature)))
-      }._3
+      val indicesAndSignatures = lines.head.scanLeft((0, 1)) {
+        case ((index, permutationSignature), _) => (index + 1, - permutationSignature)
+      }.init
       indicesAndSignatures.map({
         case (index, sign) => {
           val determinant = lines.map(
@@ -33,48 +33,41 @@ object ManifoldUtils {
       })
     }
   }
-  // Input matrix describes first (n-1) lines of n*n matrix,
-  // result is a sequence of cofactors for determinant of n*n matrix, computed along last (now unknown) row
-  // so, to find n*n matrix determinant, simply call:
-  // val cofactorsFunc = getCofactors(...)
-  // val determinant = cofactorsFunc(lastLine)
-  // - this gives a determinant value for matrix with last line described in lastLine sequence of values
-  // P.S. - if someone could change this implementation to tail-recursion or trampoline call, i'm gonna buy him a beer or coffee (or icecream).
+
+  /**Input matrix describes first (n-1) lines of n*n matrix,
+  * result is a sequence of cofactors for determinant of n*n matrix, computed along last (now unknown) row
+  * so, to find n*n matrix determinant, simply call:
+  * {{{
+  *  val cofactorsFunc = getCofactors(...)
+  *  val determinant = cofactorsFunc(lastLine)
+  * }}}
+  * - this gives a determinant value for matrix with last line described in lastLine sequence of values
+  * P.S. - if someone could change this implementation to tail-recursion or trampoline call, i'm gonna buy him a beer or coffee (or icecream).
+  */
   def getCofactors(matrix : Seq[Seq[Double]]) : Seq[Double] => Double = {
     val cofactors = getCofactorsVector(matrix, 1)
-    (cofactors, _ : Seq[Double]).zipped.map(_ * _ ).reduceLeft( _ + _ )
+    (cofactors, _ : Seq[Double]).zipped.map( _ * _ ).reduceLeft( _ + _ )
   }
 
-  def getDeterminant(matrix: Seq[Seq[Double]]): Double = getCofactors(matrix.tail)(matrix.head)
+  def getDeterminant(matrix : Seq[Seq[Double]]): Double = getCofactors(matrix.tail)(matrix.head)
 
-  /**returns result of multiplication between martix and matrix^{T}
+  /**returns result of multiplication between matrix and matrix^{T}
   */
   def quadMatrix(matrix : Seq[Seq[Double]]) : Seq[Seq[Double]] = {
-    matrix.map({case line: Seq[Double] =>
-    {
-      matrix.map({case line2: Seq[Double]=>{
-        (line, line2).zipped.map(_ * _).reduceLeft(_ + _)
-      }})
-    }})
+    matrix.map({
+      case line : Seq[Double] => matrix.map((line, _).zipped.map(_ * _).reduceLeft(_ + _))
+    })
   }
 
-  def normalVectors(points: Seq[Seq[Double]]) : Seq[Seq[Seq[Double]]] = {
-    0 to points.head.size-1 map { i => {
-      points.map{
-        line : Seq[Double] => {
-          line.zipWithIndex.map({case (a,index) =>{
-            if (index == i){ 1 }else {a}
-          }})
-      }}
-    }}
-  }
-  def normalize(point:Seq[Double]) : Double = {
-    sqrt((point, point).zipped.map(_ * _).reduceLeft(_ + _))
+  def normalVectors(points : Seq[Seq[Double]]) : Seq[Seq[Seq[Double]]] = {
+    (0 to points.head.size - 1).map({ i =>
+      points.map(_.zipWithIndex.map({ case (a, index) => if (index == i) 1 else a }))
+    })
   }
 
-  def getNormals(points : Seq[Seq[Double]]) : Seq[Double] = {
-    normalVectors(points).map({case normalMatrix =>  getDeterminant(normalMatrix) })
-  }
+  def normalize(point : Seq[Double]) : Double = sqrt((point, point).zipped.map(_ * _).reduceLeft(_ + _))
+
+  def getNormals(points : Seq[Seq[Double]]) : Seq[Double] = normalVectors(points).map(getDeterminant(_))
 
   def getSimplexNormalEquation(points : Seq[GeometryVector]) : Seq[Double] => Double = {
     /**
@@ -94,8 +87,7 @@ object ManifoldUtils {
   def getSimplexNormalEquationParameters(points : Seq[GeometryVector]) : (Seq[Double], Double, GeometryVector => Double) = {
     val n = getNormals(points.map(_.lifted.coordinates))
     val nLength = normalize(n)
-    if (nLength.abs < 0.001)
-    {
+    if (nLength.abs < 0.001) {
       val d = getDeterminant(points.map(_.lifted.coordinates))
       return (n, d, (v : GeometryVector) => ((n, v.lifted.coordinates).zipped.map(_ * _).reduceLeft(_ + _) - d))
     }
@@ -128,26 +120,24 @@ object ManifoldUtils {
     } ).map(x => new Simplex(x._2 ++ Seq(v)) ).toSet.toSeq*/
   }
 
-  def updateSimplices(ss : Seq[Simplex], v : GeometryVector) : Seq[Simplex] = {
-    for (s<-ss)
-      if (s.isFlat) {
-      println("in updateSimplices with flat simplex")
-      }
+  def updateSimplices(simplices : Seq[Simplex], v : GeometryVector) : Seq[Simplex] = {
+    simplices.find(_.isFlat) match {
+      case Some(_) => println("in updateSimplices with flat simplex")
+      case None => ()
+    } //TODO: this is for debugging purposes, to remove later
+
     //println("updateSimplices: "+ss.size)
-    val all_vertices  = ss.flatMap(_.vertices).toSet.toSeq
-    val all_triangles = ss.flatMap(_.getTriangles())
+    val all_vertices  = simplices.flatMap(_.vertices).toSet.toSeq
+    val all_triangles = simplices.flatMap(_.getTriangles())
     val unique_triangles = all_triangles.toSet.toSeq.diff(all_triangles.diff(all_triangles.toSet.toSeq).toSet.toSeq)
     //println( "unprocessed: "+ss.size+" all " + all_triangles.size + " , unique: " + unique_triangles.size)
     unique_triangles.filter(triangle => {
       val testFunc = ManifoldUtils.getCofactors((triangle.toSeq ++ Seq(InfiniteVector(3))).map(_.toSeq))
       val testFunc2 : Seq[Double] => Double = testFunc(_) * testFunc(v.toSeq)
-      all_vertices.filter(vert=>{testFunc(vert.toSeq).abs > 0.0001})
-        .foldLeft(true) {
-        case (acc, vertex) => acc && (
-          (testFunc2(vertex.toSeq)>0.0)
-          )
-        }
-    }).map(x=>new Simplex(x.toSeq++Seq(v))).toSet.toSeq
+      all_vertices.filter(vert => testFunc(vert.toSeq).abs > 0.0001).forall({
+        case vertex => testFunc2(vertex.toSeq) > 0.0
+      })
+    }).map(x => new Simplex(x.toSeq ++ Seq(v))).toSet.toSeq
   }
 
 /*
@@ -187,18 +177,16 @@ object ManifoldUtils {
 
   /**helper method - temporary - gets all Simplices and returns list of line segments from them*/
   def convertSimplicesToLines(manifold : Seq[Simplex]) : Seq[(GeometryVector, GeometryVector)] = {
-    manifold.flatMap(_.getLineSegments()).toSet.toSeq.map(
-  (x : Set[GeometryVector]) => x.toSeq
-    ).map({
+    manifold.flatMap(_.getLineSegments()).toSet.toSeq.map({
+      x : Set[GeometryVector] => x.toSeq }).map({
       case Seq(x, y) => (x, y)
     }).toSeq //there may be still equal line segments
   }
 
   /** helper method for finding preferred pairs of points with given metrics*/
-  def reduceLeftBy(sequence
-        : Seq[(Double, Seq[(GeometryVector, GeometryVector)] ) ],
-          isFirstArgPreferredFunc : (Double, Double) => Boolean)
-      : (Double, Seq[(GeometryVector, GeometryVector)] ) = sequence match {
+  def reduceLeftBy(sequence : Seq[(Double, Seq[(GeometryVector, GeometryVector)])],
+                   isFirstArgPreferredFunc : (Double, Double) => Boolean
+                   ) : (Double, Seq[(GeometryVector, GeometryVector)]) = sequence match {
     case Seq() => null
     case _ => {
       sequence.tail.foldLeft(sequence.head) {
@@ -267,8 +255,7 @@ println("after converting to lines")
   }
 
   /**method find symmetrical Hausdorff distance for given manifolds*/
-  def getHausdorffDistance(manifold1 : Seq[Simplex], manifold2: Seq[Simplex])
-        : (Double, Seq[(GeometryVector, GeometryVector)] ) = {
+  def getHausdorffDistance(manifold1 : Seq[Simplex], manifold2: Seq[Simplex]) : (Double, Seq[(GeometryVector, GeometryVector)] ) = {
     println("in Hausdorff dist")
     reduceLeftByMin(
       Seq(
@@ -277,15 +264,15 @@ println("after converting to lines")
       )
     )
   }
+
   /**for given pair of vector, compute: 1. projection of 1st to 2nd; 2. orthogonal 1st part */
   def getProjections(v1 : GeometryVector, v2 : GeometryVector) = {
     val collinear = v2*((v1*v2)/(v2*v2))
     (v1 - collinear, collinear)
   }
+
   def getDistance(triangle : Set[GeometryVector], p4: GeometryVector) : Double = triangle.toSeq match {
-    case Seq(p1, p2, p3) => {
-      getDistance((p1, p2, p3), p4) :Double
-    }
+    case Seq(p1, p2, p3) => getDistance((p1, p2, p3), p4) : Double
   }
 
   def getDistance(triangle : (GeometryVector, GeometryVector, GeometryVector), p4: GeometryVector) : Double = {
@@ -295,10 +282,10 @@ println("after converting to lines")
     val (o2, c2) = getProjections(o1, collinear)
     o1.length
   }
-  def getDistance(s : Simplex, p : GeometryVector) : Double = {
-    if (s.getPosition(p) != PointPosition.LaysOutside)
-      return -s.getTriangles().map(getDistance(_, p)).max
-    s.getTriangles().map(getDistance(_, p)).min
+
+  def getDistance(s : Simplex, p : GeometryVector) : Double = s.getPosition(p) match {
+    case PointPosition.LaysOutside => s.getTriangles().map(getDistance(_, p)).min
+    case _ => - s.getTriangles().map(getDistance(_, p)).max
   }
 
   /** finds 2 nearest points for 2 line segments, defined by pairs of points p1, p2 and p3, p4 */
@@ -308,9 +295,12 @@ println("after converting to lines")
       p3 : GeometryVector,
       p4 : GeometryVector
   ) : (GeometryVector, GeometryVector) = {
-    def getPoint(p1 : GeometryVector, p2 : GeometryVector, k : Double) : GeometryVector =
-      if (k <= 0) p1 else {if (k >= 1) p2 else p1 + (p2 - p1) * k }
-
+    def getPoint(p1 : GeometryVector, p2 : GeometryVector, k : Double) : GeometryVector = k match {
+      case k if k <= 0 => p1
+      case k if k >= 1 => p2
+      case _ => p1 + (p2 - p1) * k
+    }
+    
     val p4_3 = p4 - p3
     val p2_1 = p2 - p1
     val p1_3 = p1 - p3
