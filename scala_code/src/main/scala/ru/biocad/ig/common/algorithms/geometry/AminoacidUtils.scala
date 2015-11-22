@@ -54,12 +54,12 @@ object AminoacidUtils {
   }
 
   def getLocalCoordinates(localAxes : Seq[GeometryVector], v : GeometryVector, zeroShift : GeometryVector = Vector3d(0, 0, 0)) : GeometryVector = {
-    val coordinates = localAxes.foldLeft((v, Seq[Double]())) ({
-      case ((v, localCoordinates), axis) => {
+    val coordinates = localAxes.scanLeft((v, 0.0)) ({
+      case ((v, localCoordinate), axis) => {
         val newCoordinate : Double = axis*v
-        (v - axis*newCoordinate, newCoordinate +: localCoordinates)
+        (v - axis*newCoordinate, newCoordinate)
       }
-    })._2.reverse
+    }).tail.map(_._2)
     new Vector(coordinates)
   }
 
