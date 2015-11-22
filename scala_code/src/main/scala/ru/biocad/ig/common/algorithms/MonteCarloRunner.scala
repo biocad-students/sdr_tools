@@ -18,6 +18,7 @@ import ru.biocad.ig.common.io.pdb.PDBWriter
   * Calls actual MC algorithm, which defined at [[ru.biocad.ig.common.algorithms.MonteCarlo]] object, with different parameters
   */
 object MonteCarloRunner extends LazyLogging {
+  val lattice = new Lattice()
 
   /** helper method, loads structure from Protein Data Bank file and then returns simplified representation to it.
     * NB! - Currently it supposes that PDB file contains valid structure, where all atoms are well-positioned
@@ -34,7 +35,7 @@ object MonteCarloRunner extends LazyLogging {
     println("local file read - done")
     val aaByChain = PDBAminoacidCollection(structure)
     val aas = aaByChain.aminoacidsByChain.toSeq
-    val filteredMap = SimplifiedChain(aas)
+    val filteredMap = SimplifiedChain(aas, lattice.latticeConstants.meshSize)//TODO : init lattice somewhere near this
     (filteredMap, aas)
   }
 
@@ -46,14 +47,14 @@ object MonteCarloRunner extends LazyLogging {
   def refine(inputFile : File, mcTimeUnits : Int, outputFile : File) = {
     println("testing backbone reconstruction...")
     val (simplifiedChain, fullAtomChain) = loadStructure("/2OSL.pdb")
-    logger.info("Energy before structure refinement: " + Lattice.getEnergy(simplifiedChain).toString)
+    logger.info("Energy before structure refinement: " + lattice.getEnergy(simplifiedChain).toString)
 
     //println(Lattice.getEnergy(simplifiedChain))
-    val ch1 = MonteCarlo.run(simplifiedChain,
+    val ch1 = MonteCarlo(lattice).run(simplifiedChain,
         getMovesForSequence(simplifiedChain.size),
-        x => Lattice.getEnergy(x), mcTimeUnits)
-    logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
-    val result = Lattice.toFullAtomRepresentation(ch1, fullAtomChain)
+        x => lattice.getEnergy(x), mcTimeUnits)
+    logger.info("Energy after structure refinement: "+ lattice.getEnergy(ch1))
+    val result = lattice.toFullAtomRepresentation(ch1, fullAtomChain)
     //val sidechainInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
     val w = new PDBWriter(outputFile)
     w.writeAtomInfo(result)
@@ -62,13 +63,13 @@ object MonteCarloRunner extends LazyLogging {
 
   def getMovesForSequence(n : Int) = {
      Seq(
-      (new BondMove(Lattice.backboneVectors, 2), n - 2),
-      (new BondMove(Lattice.backboneVectors, 4), n - 4),
-      (new BondMove(Lattice.backboneVectors, 6), n - 6),
-      (new BondMove(Lattice.backboneVectors, 8), n - 8),
-      (new BondMove(Lattice.backboneVectors, 10), n - 10),
-      (new DisplacementMove(Lattice.backboneVectors), 2),
-      (new RotamerMove(Lattice.sidechainsInfo), n)
+      (new BondMove(lattice.backboneVectors, 2), n - 2),
+      (new BondMove(lattice.backboneVectors, 4), n - 4),
+      (new BondMove(lattice.backboneVectors, 6), n - 6),
+      (new BondMove(lattice.backboneVectors, 8), n - 8),
+      (new BondMove(lattice.backboneVectors, 10), n - 10),
+      (new DisplacementMove(lattice.backboneVectors), 2),
+      (new RotamerMove(lattice.sidechainsInfo), n)
     ).filter(_._2 > 0)
   }
 
@@ -80,14 +81,14 @@ object MonteCarloRunner extends LazyLogging {
     */
   def fold(sequence : String, mcTimeUnits : Int, outputFile : File) = {
     println("testing backbone reconstruction...")
-    val simplifiedChain = SimplifiedChain.fromSequence(sequence, Lattice.sidechainsInfo)
-    logger.info("Energy before structure refinement: " + Lattice.getEnergy(simplifiedChain).toString)
+    val simplifiedChain = SimplifiedChain.fromSequence(sequence, lattice)
+    logger.info("Energy before structure refinement: " + lattice.getEnergy(simplifiedChain).toString)
 
     //println(Lattice.getEnergy(simplifiedChain))
-    val ch1 = MonteCarlo.run(simplifiedChain, getMovesForSequence(simplifiedChain.size),
-        x => Lattice.getEnergy(x), mcTimeUnits)
-    logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
-    val result = Lattice.toFullAtomRepresentation(ch1)
+    val ch1 = MonteCarlo(lattice).run(simplifiedChain, getMovesForSequence(simplifiedChain.size),
+        x => lattice.getEnergy(x), mcTimeUnits)
+    logger.info("Energy after structure refinement: "+ lattice.getEnergy(ch1))
+    val result = lattice.toFullAtomRepresentation(ch1)
     val w = new PDBWriter(outputFile)
     w.writeAtomInfo(result)
     w.close()
@@ -102,13 +103,13 @@ object MonteCarloRunner extends LazyLogging {
   def scan(inputFile : File, mcTimeUnits : Int, outputFile : File) = {
     println("testing backbone reconstruction...")
     val (simplifiedChain, fullAtomChain) = loadStructure("/2OSL.pdb")
-    logger.info("Energy before structure refinement: " + Lattice.getEnergy(simplifiedChain).toString)
+    logger.info("Energy before structure refinement: " + lattice.getEnergy(simplifiedChain).toString)
 
     //println(Lattice.getEnergy(simplifiedChain))
-    val ch1 = MonteCarlo.run(simplifiedChain, getMovesForSequence(simplifiedChain.size),
-        x => Lattice.getEnergy(x), mcTimeUnits)
-    logger.info("Energy after structure refinement: "+ Lattice.getEnergy(ch1))
-    val result = Lattice.toFullAtomRepresentation(ch1, fullAtomChain)
+    val ch1 = MonteCarlo(lattice).run(simplifiedChain, getMovesForSequence(simplifiedChain.size),
+        x => lattice.getEnergy(x), mcTimeUnits)
+    logger.info("Energy after structure refinement: "+ lattice.getEnergy(ch1))
+    val result = lattice.toFullAtomRepresentation(ch1, fullAtomChain)
     //val sidechainInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
     val w = new PDBWriter(outputFile)
     w.writeAtomInfo(result)

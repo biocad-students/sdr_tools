@@ -42,13 +42,10 @@ case class SimplifiedAminoacid(val name : String,
     //TODO: should implement
   }
 
-  override def toString = Seq(name,
-    "ca: " + ca.toString,
-    "rotamer: " + rotamer.toString
-  ).mkString("SimplifiedAminoacid{", ",  ", "}")
+  override def toString = Seq(name, "ca: " + ca.toString,
+    "rotamer: " + rotamer.toString).mkString("SimplifiedAminoacid{", ",  ", "}")
 
   def move(shift : GeometryVector) : SimplifiedAminoacid = new SimplifiedAminoacid(name, ca + shift, rotamer)
-
 }
 
 object SimplifiedAminoacid extends LazyLogging {
@@ -60,13 +57,13 @@ object SimplifiedAminoacid extends LazyLogging {
   */
   //rotamer has off-lattice coordinates vs. Ca's are projected onto lattice
   //TODO: fix this (ca, should be center of masses)
-  def computeCenterCoordinates(atoms : Seq[PDBAtomInfo]) : GeometryVector = {
+  private def computeCenterCoordinates(atoms : Seq[PDBAtomInfo], meshSize : Double) : GeometryVector = {
     val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
     logger.info("in computeCenterCoordinates")
     val ca : GeometryVector = Vector3d(
-        math.round(atomsMap("CA").x / LatticeConstants.MESH_SIZE),
-        math.round(atomsMap("CA").y / LatticeConstants.MESH_SIZE),
-        math.round(atomsMap("CA").z / LatticeConstants.MESH_SIZE)
+        math.round(atomsMap("CA").x / meshSize),
+        math.round(atomsMap("CA").y / meshSize),
+        math.round(atomsMap("CA").z / meshSize)
         )
     val rotamerAtoms  = atoms.filterNot({
         s => Seq("N", "H", "CA", "C", "O").contains(s.atom)
@@ -80,20 +77,20 @@ object SimplifiedAminoacid extends LazyLogging {
     center
   }
 
-  def apply(atoms : Seq[PDBAtomInfo]) = {
+  def apply(atoms : Seq[PDBAtomInfo], meshSize : Double = 1) = {
 
     val name : String = if (atoms.size > 0) atoms.head.resName else ""
     val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
 
     val ca : GeometryVector = Vector3d(
-        math.round(atomsMap("CA").x / LatticeConstants.MESH_SIZE),
-        math.round(atomsMap("CA").y / LatticeConstants.MESH_SIZE),
-        math.round(atomsMap("CA").z / LatticeConstants.MESH_SIZE)
+        math.round(atomsMap("CA").x / meshSize),
+        math.round(atomsMap("CA").y / meshSize),
+        math.round(atomsMap("CA").z / meshSize)
         )
 
     //val atomsVectorMap = atomsMap.map(x => (x._1, Vector3d(x._2.x, x._2.y, x._2.z) - ca))
 
-    new SimplifiedAminoacid(name, ca, computeCenterCoordinates(atoms))
+    new SimplifiedAminoacid(name, ca, computeCenterCoordinates(atoms, meshSize))
   }
 
   def getUpdatedAtomInfo(updatedCoordinates : GeometryVector,

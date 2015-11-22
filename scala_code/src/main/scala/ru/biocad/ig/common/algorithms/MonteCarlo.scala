@@ -6,7 +6,7 @@ import scala.util.Random
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import ru.biocad.ig.alascan.moves._
 
-object MonteCarlo extends LazyLogging {
+case class MonteCarlo(val lattice: Lattice) extends LazyLogging {
   /** helper method, hides one move attempt in MC run
     *
     * currently structure validation is done elsewhere
@@ -71,7 +71,7 @@ object MonteCarlo extends LazyLogging {
             else{
               val position = Random.nextInt(currentStructure.size - move.size)
               val newStructure = attemptMove(currentStructure, move, position, getEnergy)
-              if (Lattice.validateStructure(newStructure))
+              if (lattice.validateStructure(newStructure))
                 newStructure
               else currentStructure
             }

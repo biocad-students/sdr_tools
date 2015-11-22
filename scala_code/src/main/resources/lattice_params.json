@@ -1,0 +1,18 @@
+{
+  "name": "Finer Lattice",
+  "meshSize": 1.22,
+  "basicVectorsFileName": "basic_vectors.json",
+  "angleRestrictions": {
+    "min": 72.5,
+    "max": 154
+  },
+  "caMinDistance": 4.05,
+  "eH": 0.5,
+  "eHH": 0.75,
+  "hBondR" : {
+    "min": 4.8,
+    "max": 7
+  },
+  "hBondAmax" : 17.3,
+  "contactCutoff": 4.2
+}
