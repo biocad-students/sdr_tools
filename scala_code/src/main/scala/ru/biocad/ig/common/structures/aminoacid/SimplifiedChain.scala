@@ -9,7 +9,7 @@ import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 
 /** hides sequence of simplified aminoacids and constructs them from various sources
   */
-case class SimplifiedChain(val structure : Array[SimplifiedAminoacid]) extends Traversable[SimplifiedAminoacid] {
+case class SimplifiedChain(val structure : Array[SimplifiedAminoacid], val lattice : Lattice) extends Traversable[SimplifiedAminoacid] {
   val vectors : Seq[GeometryVector] = (structure zip structure.tail).map({case (x, y) => y.ca - x.ca})
 
   override val size = structure.size
@@ -23,7 +23,7 @@ case class SimplifiedChain(val structure : Array[SimplifiedAminoacid]) extends T
                       ) : SimplifiedChain = {
     new SimplifiedChain(structure.zipWithIndex.map({
       case (el, i) => if (positionFunc(i)) replaceFunction(el) else el
-    }))
+    }), lattice)
   }
 
   def replaceRotamer(newRotamer : GeometryVector, position : Int) : SimplifiedChain = {
@@ -47,11 +47,23 @@ case class SimplifiedChain(val structure : Array[SimplifiedAminoacid]) extends T
       { case aa => SimplifiedAminoacid(newAminoacidName, aa.ca, newRotamer) })
   }
 
+  /*
+  return value indicates that aminoacids i and j are in contact
+  array can be aminoacid-pair specific.
+  now there is no KDTree, just simple and slow code - should replace it
+  */
+  private def buildContactMap() : Array[Array[Boolean]] = {
+    this.map({case aa1 => this.map({
+      aa2 => aa2.isInContactWith(aa1, lattice.rotamerRadiusInfo.getR(aa1.name, aa2.name))
+    }).toArray}).toArray
+  }
+
+  val contactMap = buildContactMap()
 }
 
 object SimplifiedChain {
-  def apply(originalSequence : Seq[Seq[PDBAtomInfo]], meshSize : Double = 1.0) = {
-    new SimplifiedChain(originalSequence.map(SimplifiedAminoacid(_, meshSize)).toArray)
+  def apply(originalSequence : Seq[Seq[PDBAtomInfo]], lattice : Lattice) = {
+    new SimplifiedChain(originalSequence.map(SimplifiedAminoacid(_, lattice.latticeConstants.meshSize)).toArray, lattice)
   }
 
   val aa3letter = Map('A' -> "ALA", 'R' -> "ARG",
@@ -77,7 +89,7 @@ object SimplifiedChain {
     val s2 = (0 to s1.size - 1).map({i=> {
       new SimplifiedAminoacid(s1(i).name, s1(i).ca, m.moveRotamer(s1, i))
     }}).toArray
-    new SimplifiedChain(s2)
+    new SimplifiedChain(s2, lattice)
     //1. generate
   }
 

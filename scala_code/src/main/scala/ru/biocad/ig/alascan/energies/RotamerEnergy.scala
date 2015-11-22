@@ -11,7 +11,7 @@ import spray.json._
 import ERotamerJsonProtocol._
 
 class RotamerEnergy(val lattice : Lattice) extends BasicEnergy {
-  val eRotamer : ERotamer = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/rotamer_energies.json")).getLines().mkString("")).convertTo[ERotamer]
+  val eRotamer : ERotamer = lattice.loadFromFile[ERotamer]("/MCDP_json/rotamer_energies.json")
 
   override def get(aminoacids : SimplifiedChain) : Double = {
     (2 to aminoacids.size - 2).map({
