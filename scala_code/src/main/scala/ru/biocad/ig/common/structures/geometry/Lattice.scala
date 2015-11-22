@@ -61,26 +61,8 @@ class Lattice {
   }
 
 
-  /** energy methods*/
-  val caTraceEnergyTerm  = new CaTraceEnergy(this)
-  val hBondEnergyTerm = new HydrogenBondEnergy(this)
-  val rotamerEnergyTerm = new RotamerEnergy(this)
-  val sgLocalEnergyTerm = new SGLocalEnergy(this)
-  val pairEnergyTerm = new PairEnergy(this)
-  val burialEnergyTerm = new BurialEnergy(this)
-  val templateEnergyTerm = new TemplateEnergy(this)
-
   //TODO: we have pair of chains, that means we somehow should utilize that when we compute total energy
-  def getEnergy(aminoacids : SimplifiedChain) : Double = {
-    0.25 * caTraceEnergyTerm.get(aminoacids) +
-     hBondEnergyTerm.get(aminoacids) +
-    0.5 * rotamerEnergyTerm.get(aminoacids) +
-    1.0 * sgLocalEnergyTerm.get(aminoacids) +
-    0.5 * burialEnergyTerm.get(aminoacids)  +
-    5 * pairEnergyTerm.get(aminoacids) +
-    4.25 * templateEnergyTerm.get(aminoacids)
-  }
-
+  val getEnergy = latticeConstants.buildEnergyFunction(this)
   //val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
 
   /**Returns full-atom representation for given simplified aminoacid

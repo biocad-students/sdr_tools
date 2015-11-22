@@ -16,12 +16,12 @@
   "hBondAmax" : 17.3,
   "contactCutoff": 4.2,
   "energyTerms": {
-    "CaTraceEnergy" : 0.25,
-    "HydrogenBondEnergy" : 1,
-    "RotamerEnergy": 0.5,
-    "SGLocalEnergy": 1.0,
-    "PairEnergy": 5,
-    "BurialEnergy": 0.5,
-    "TemplateEnergy": 4.25
+    "ru.biocad.ig.alascan.energies.CaTraceEnergy" : 0.25,
+    "ru.biocad.ig.alascan.energies.HydrogenBondEnergy" : 1,
+    "ru.biocad.ig.alascan.energies.RotamerEnergy": 0.5,
+    "ru.biocad.ig.alascan.energies.SGLocalEnergy": 1.0,
+    "ru.biocad.ig.alascan.energies.PairEnergy": 5,
+    "ru.biocad.ig.alascan.energies.BurialEnergy": 0.5,
+    "ru.biocad.ig.alascan.energies.TemplateEnergy": 4.25
   }
 }
