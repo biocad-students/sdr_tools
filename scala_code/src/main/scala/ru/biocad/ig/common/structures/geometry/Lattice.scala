@@ -49,17 +49,6 @@ class Lattice {
 
   val rotamerRadiusInfo = loadFromFile[RotamerRadiusInfo]("/MCDP_json/RADIJC.json")
 
-  /*
-  return value indicates that aminoacids i and j are in contact
-  array can be aminoacid-pair specific.
-  now there is no KDTree, just simple and slow code - should replace it
-  */
-  def buildContactMap(chain : SimplifiedChain) : Array[Array[Boolean]] = {
-    chain.map({case aa1 => chain.map({
-      aa2 => aa2.isInContactWith(aa1, rotamerRadiusInfo.getR(aa1.name, aa2.name))
-    }).toArray}).toArray
-  }
-
 
   //TODO: we have pair of chains, that means we somehow should utilize that when we compute total energy
   val getEnergy = latticeConstants.buildEnergyFunction(this)

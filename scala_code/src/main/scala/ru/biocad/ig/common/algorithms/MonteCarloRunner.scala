@@ -35,7 +35,7 @@ object MonteCarloRunner extends LazyLogging {
     println("local file read - done")
     val aaByChain = PDBAminoacidCollection(structure)
     val aas = aaByChain.aminoacidsByChain.toSeq
-    val filteredMap = SimplifiedChain(aas, lattice.latticeConstants.meshSize)//TODO : init lattice somewhere near this
+    val filteredMap = SimplifiedChain(aas, lattice)//TODO : init lattice somewhere near this
     (filteredMap, aas)
   }
 

@@ -9,11 +9,11 @@ import spray.json._
 import EOneJsonProtocol._
 
 class BurialEnergy(val lattice : Lattice) extends BasicEnergy {
-  val eone : EOne = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/EONE.json")).getLines().mkString("")).convertTo[EOne]
+  val eone : EOne = lattice.loadFromFile[EOne]("/MCDP_json/EONE.json")
 
   //this is very-very SLOW implementation, should refactor
   override def get(chain : SimplifiedChain) : Double = {
-    val contactMap = lattice.buildContactMap(chain)
+    val contactMap = chain.contactMap
     (0 to chain.size - 1).map({
       i => {
         val numberOfContacts = (i + 1 to chain.size - 1).count({ case j => contactMap(i)(j) })
