@@ -2,16 +2,18 @@ package ru.biocad.ig.alascan.energies
 
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedChain
 import ru.biocad.ig.alascan.constants.energy_terms._
+import ru.biocad.ig.common.structures.geometry.Lattice
+
 import scala.io.Source
 import spray.json._
 
 import EPairJsonProtocol._
 
-class TemplateEnergy(val buildContactMap : (SimplifiedChain) => Array[Array[Boolean]]) extends BasicEnergy {
+class TemplateEnergy(val lattice : Lattice) extends BasicEnergy {
   val epair : EPair = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/PMFHIX_SCALE.json")).getLines().mkString("")).convertTo[EPair]
 
   override def get(chain : SimplifiedChain) : Double = {
-    val contactMap = buildContactMap(chain)
+    val contactMap = lattice.buildContactMap(chain)
     //TODO: check borders
     (4 to chain.size - 5).flatMap({
       i => (i + 4 to chain.size - 5).map({

@@ -32,21 +32,22 @@ import ru.biocad.ig.alascan.energies._
 
 
 class Lattice {
+  def loadFromFile[T : JsonReader](fileName : String) : T = {
+    val source = Source.fromURL(getClass.getResource(fileName))
+    val result = JsonParser(source.getLines().mkString("")).convertTo[T]
+    source.close()
+    result
+  }
   //
-  val latticeConstants = JsonParser(
-    Source.fromURL(getClass.getResource("/lattice_params.json")).getLines().mkString("")).convertTo[LatticeConstants]
+  val latticeConstants : LatticeConstants = loadFromFile[LatticeConstants]("/lattice_params.json")
 
-  val backboneVectors : Array[GeometryVector] = JsonParser(
-      Source.fromURL(getClass.getResource("/basic_vectors.json")
-    ).getLines().mkString("")).convertTo[BasicVectorLibrary].vectors.map(new Vector(_)).toArray
+  val backboneVectors : Array[GeometryVector] = loadFromFile[BasicVectorLibrary]("/basic_vectors.json").vectors.map(new Vector(_)).toArray
 
 
-  val backboneInfo = JsonParser(Source.fromURL(getClass.getResource("/backbone.json")).getLines().mkString("")).convertTo[AminoacidLibrary[BackboneInfo]]
-  val sidechainsInfo = JsonParser(
-    Source.fromURL(
-      getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
+  val backboneInfo = loadFromFile[AminoacidLibrary[BackboneInfo]]("/backbone.json")
+  val sidechainsInfo = loadFromFile[AminoacidLibrary[SidechainInfo]]("/sidechains.json")
 
-  val rotamerRadiusInfo : RotamerRadiusInfo = JsonParser(Source.fromURL(getClass.getResource("/MCDP_json/RADIJC.json")).getLines().mkString("")).convertTo[RotamerRadiusInfo]
+  val rotamerRadiusInfo = loadFromFile[RotamerRadiusInfo]("/MCDP_json/RADIJC.json")
 
   /*
   return value indicates that aminoacids i and j are in contact
@@ -58,27 +59,16 @@ class Lattice {
       aa2 => aa2.isInContactWith(aa1, rotamerRadiusInfo.getR(aa1.name, aa2.name))
     }).toArray}).toArray
   }
-  /** helper methods*/
-  //this returns true if they can, false otherwise - quite simple
-  def canFormHBond(aminoacids : SimplifiedChain, i : Int, j : Int) : Boolean = {
-    val r_ij = aminoacids(j).ca - aminoacids(i).ca
-    if (i == 0 || j == 0)
-      return false
-    val b_i_b_i_1 = aminoacids(i - 1).ca - aminoacids(i).ca //TODO: check if i == 0
-    val b_j_b_j_1 = aminoacids(j - 1).ca - aminoacids(j).ca
-    (i - j).abs >= 3 && latticeConstants.distanceConditionForHBonds(r_ij.length) &&
-      (b_i_b_i_1*r_ij).abs <= latticeConstants.hBondAmax &&
-      (b_j_b_j_1*r_ij).abs <= latticeConstants.hBondAmax
-  }
+
 
   /** energy methods*/
-  val caTraceEnergyTerm  = new CaTraceEnergy()
-  val hBondEnergyTerm = new HydrogenBondEnergy(latticeConstants, canFormHBond)
-  val rotamerEnergyTerm = new RotamerEnergy()
-  val sgLocalEnergyTerm = new SGLocalEnergy()
-  val pairEnergyTerm = new PairEnergy(rotamerRadiusInfo)
-  val burialEnergyTerm = new BurialEnergy(buildContactMap)
-  val templateEnergyTerm = new TemplateEnergy(buildContactMap)
+  val caTraceEnergyTerm  = new CaTraceEnergy(this)
+  val hBondEnergyTerm = new HydrogenBondEnergy(this)
+  val rotamerEnergyTerm = new RotamerEnergy(this)
+  val sgLocalEnergyTerm = new SGLocalEnergy(this)
+  val pairEnergyTerm = new PairEnergy(this)
+  val burialEnergyTerm = new BurialEnergy(this)
+  val templateEnergyTerm = new TemplateEnergy(this)
 
   //TODO: we have pair of chains, that means we somehow should utilize that when we compute total energy
   def getEnergy(aminoacids : SimplifiedChain) : Double = {
