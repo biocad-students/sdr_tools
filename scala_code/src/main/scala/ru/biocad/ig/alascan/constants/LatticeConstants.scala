@@ -2,6 +2,10 @@ package ru.biocad.ig.alascan.constants
 
 import spray.json._
 import DefaultJsonProtocol._
+import ru.biocad.ig.common.structures.aminoacid.SimplifiedChain
+import ru.biocad.ig.common.structures.geometry.Lattice
+import com.typesafe.scalalogging.slf4j.LazyLogging
+import ru.biocad.ig.alascan.energies._
 
 case class Restrictions(min : Double, max : Double) {
   def check(value : Double) : Boolean = value >= min && value <= max
@@ -16,44 +20,45 @@ import RestrictionsJsonProtocol._
 Later should refactor to class with file parameters loading, thus making creation of different lattice objects possible
 */
 case class LatticeConstants(val name : String,
-  val meshSize : Double,
-  val angleRestrictions : Restrictions,
-  val basicVectorsFileName : String,
-  val caMinDistance : Double,
-  val eH : Double,
-  val eHH : Double,
-  val hBondR : Restrictions,
-  val hBondAmax : Double,
-  val contactCutoff : Double,
-  val energyTerms : Map[String, Double]) {
+        val meshSize : Double,
+        val angleRestrictions : Restrictions,
+        val basicVectorsFileName : String,
+        val caMinDistance : Double,
+        val eH : Double,
+        val eHH : Double,
+        val hBondR : Restrictions,
+        val hBondAmax : Double,
+        val contactCutoff : Double,
+        val energyTerms : Map[String, Double]) {
+
     def distanceConditionForHBonds(r: Double) : Boolean = hBondR.check(r)
     def checkAngleRestrictions(angle : Double) : Boolean = angleRestrictions.check(angle)
 
-  /*
-  val MESH_SIZE = 1.22
-
-  object Borders extends Enumeration() {
-    val Min, Max = Value
-  }
-  import Borders._
-
-  val CA_ANGLE_CONSTRAINTS = Map(Min -> 78.5, Max -> 143.1)
-  val CA_MIN_DISTANCE = 0.0 // unspecified
-
-  //val basicVectors = ???
-  //H-bond energies
-  val E_H = 0.5
-  val E_HH = 0.75
-  val H_bond_R_min = 4.8
-  val H_bond_R_max = 7.0
-  val H_bond_a_max = 17.3
-  def H_bond_distance_condition(r: Double): Boolean = r >= H_bond_R_min&& r <= H_bond_R_max
-  //rotamers
-  //val ROTAMERS = Map()
-  //TODO: implement as a map number of rotamers, maybe with ProteinAlphabet class from ig-toolkit
-  //contact
-  val CONTACT_CUTOFF = 4.2
-  */
+    /** Builds energy function from `energyTerms` constructor parameter.
+      *
+      * @param lattice Lattice object, which gets sent to energy terms constructors
+      * @return energy function with weighted parameters, which can be used to value current amino acid chain properties
+      *
+      * This method's logic is similar to getCofactors method in [[ru.biocad.ig.common.algorithms.geometry.ManifoldUtils]]
+      * it finds energy classes given in json hash with settings,  for each of them calls constructor with 1 argument of type Lattice,
+      * and then for resulting objects constructs function with weighted arguments, each argument is a result of call to get method of corresponding energy term
+      * This method is a way to build flexible energy function, with flexible weights and components, with no need to recompile the whole project when some term or weight has changed.
+      *
+      * call sample:
+      * {{{
+      *  val getEnergy = buildEnergyFunction(lattice)
+      *  //then call many times (and notice, that we saved result to `val`, not `def`):
+      *  val result = getEnergy(chain)
+      * }}}
+      *
+      */
+    def buildEnergyFunction(lattice : Lattice) : (SimplifiedChain) => Double = {
+      val energyPartials = energyTerms.map({case (energyTermClassName, weight) =>
+        (Class.forName(energyTermClassName).getConstructor(classOf[Lattice]).newInstance(lattice).asInstanceOf[BasicEnergy], weight)
+      })
+      println("constructing energy function")
+      (chain : SimplifiedChain) => energyPartials.map({case (k, w) => k.get(chain) * w}).sum
+    }
 }
 
 
