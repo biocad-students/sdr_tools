@@ -2,7 +2,7 @@ package ru.biocad.ig.alascan.constants
 
 import ru.biocad.ig.common.io.pdb.PDBAtomInfo
 import ru.biocad.ig.common.structures.aminoacid.{SimplifiedAminoacid, RotamerInfo}
-import ru.biocad.ig.common.structures.geometry.GeometryVector
+import ru.biocad.ig.common.structures.geometry.{GeometryVector, Lattice}
 import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
 import scala.util.Random
 
@@ -26,7 +26,7 @@ case class SidechainInfo (
       */
     override def getPDBAtomInfo(aminoacid : SimplifiedAminoacid,
             x : GeometryVector, y : GeometryVector, z : GeometryVector,
-            atomsMap : Map[String, PDBAtomInfo]) : Seq[PDBAtomInfo] = {
+            atomsMap : Map[String, PDBAtomInfo], meshSize : Double) : Seq[PDBAtomInfo] = {
         val localV = AminoacidUtils.getLocalCoordinates(Seq(x, y, z), aminoacid.rotamer)
         val a = findNearestRepresentativeByDistanceTo(localV)
         a.atoms.map({case (k, v) =>
@@ -39,11 +39,13 @@ case class SidechainInfo (
     override def getCoordinatesMap(aminoacid : SimplifiedAminoacid,
             x : GeometryVector,
             y : GeometryVector,
-            z : GeometryVector) : Map[String, GeometryVector] = {
+            z : GeometryVector,
+            meshSize : Double) : Map[String, GeometryVector] = {
         val localV = AminoacidUtils.getLocalCoordinates(Seq(x, y, z), aminoacid.rotamer)
         val a = findNearestRepresentativeByDistanceTo(localV)
         a.atoms.map({
-          case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.ca * LatticeConstants.MESH_SIZE) )
+          case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.ca * meshSize) )
+          //TODO: fix this
         })
     }
 

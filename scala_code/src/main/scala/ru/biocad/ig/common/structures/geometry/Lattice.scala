@@ -6,7 +6,7 @@ import ru.biocad.ig.common.algorithms.geometry.ManifoldUtils
 import ru.biocad.ig.common.io.pdb.{PDBAtomInfo}
 
 
-import ru.biocad.ig.alascan.constants.{AminoacidLibrary, BackboneInfo, SidechainInfo}
+import ru.biocad.ig.alascan.constants._
 import spray.json._
 //import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol
 import ru.biocad.ig.alascan.constants.json.BackboneLibraryJsonProtocol._
@@ -20,7 +20,7 @@ import EOneJsonProtocol._
 
 import ERotamerJsonProtocol._
 import RotamerRadiusInfoJsonProtocol._
-
+import LatticeConstantsJsonProtocol._
 
 import ru.biocad.ig.alascan.constants.json.{BasicVectorLibrary,
   BasicVectorLibraryJsonProtocol}
@@ -30,9 +30,11 @@ import ru.biocad.ig.common.structures.aminoacid.SimplifiedChain
 import ru.biocad.ig.alascan.energies._
 
 
-object Lattice {
+
+class Lattice {
   //
-  //val rotamerLibrary = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
+  val latticeConstants = JsonParser(
+    Source.fromURL(getClass.getResource("/lattice_params.json")).getLines().mkString("")).convertTo[LatticeConstants]
 
   val backboneVectors : Array[GeometryVector] = JsonParser(
       Source.fromURL(getClass.getResource("/basic_vectors.json")
@@ -64,15 +66,14 @@ object Lattice {
       return false
     val b_i_b_i_1 = aminoacids(i - 1).ca - aminoacids(i).ca //TODO: check if i == 0
     val b_j_b_j_1 = aminoacids(j - 1).ca - aminoacids(j).ca
-    (i - j).abs >= 3 && LatticeConstants.H_bond_distance_condition(r_ij.length) &&
-      (b_i_b_i_1*r_ij).abs <= LatticeConstants.H_bond_a_max &&
-      (b_j_b_j_1*r_ij).abs <= LatticeConstants.H_bond_a_max
-    //LatticeConstants
+    (i - j).abs >= 3 && latticeConstants.distanceConditionForHBonds(r_ij.length) &&
+      (b_i_b_i_1*r_ij).abs <= latticeConstants.hBondAmax &&
+      (b_j_b_j_1*r_ij).abs <= latticeConstants.hBondAmax
   }
 
   /** energy methods*/
   val caTraceEnergyTerm  = new CaTraceEnergy()
-  val hBondEnergyTerm = new HydrogenBondEnergy(canFormHBond)
+  val hBondEnergyTerm = new HydrogenBondEnergy(latticeConstants, canFormHBond)
   val rotamerEnergyTerm = new RotamerEnergy()
   val sgLocalEnergyTerm = new SGLocalEnergy()
   val pairEnergyTerm = new PairEnergy(rotamerRadiusInfo)
@@ -99,7 +100,7 @@ object Lattice {
     val vectorsWithEdgeOnes = (chain.vectors.head +: chain.vectors) ++ Seq(chain.vectors.init.last, chain.vectors.last)
     val pdbData = (chain.structure, vectorsWithEdgeOnes.sliding(3, 1).toSeq, originalFullAtomChain).zipped.flatMap({
       case (aa, Seq(v1, v2, v3), atoms) => {
-        val updatedMap = Map("CA" -> aa.ca * LatticeConstants.MESH_SIZE) ++
+        val updatedMap = Map("CA" -> aa.ca * latticeConstants.meshSize) ++
             restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) ++
             restoreInfoCoordinates(aa, v1, v2, v3, sidechainsInfo)
         atoms.map({atom =>
@@ -120,7 +121,7 @@ object Lattice {
     val backboneAtomsOrder = Seq("N", "CA", "C", "O")
     val pdbData = (chain.structure, vectorsWithEdgeOnes.sliding(3, 1).toSeq, Stream from 1).zipped.flatMap({
       case (aa, Seq(v1, v2, v3), aaIndex) => {
-        val updatedMap : Map[String, GeometryVector] = Map("CA" -> aa.ca * LatticeConstants.MESH_SIZE) ++
+        val updatedMap : Map[String, GeometryVector] = Map("CA" -> aa.ca * latticeConstants.meshSize) ++
             restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) ++
             restoreInfoCoordinates(aa, v1, v2, v3, sidechainsInfo)
 
@@ -147,7 +148,7 @@ object Lattice {
       atomsMap : Map[String, PDBAtomInfo]) : Seq[PDBAtomInfo] = {
     val (d1, d2, d3) = AminoacidUtils.getDistances(v1, v2, v3)
     val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(v1, v2, v3)
-    fragmentInfo.restorePDBInfo(aa, d1, d2, d3, x, y, z, atomsMap)
+    fragmentInfo.restorePDBInfo(aa, d1, d2, d3, x, y, z, atomsMap, this)
   }
   def restoreInfoCoordinates[T <: AminoacidFragment](
       aa : SimplifiedAminoacid,
@@ -157,7 +158,7 @@ object Lattice {
       fragmentInfo : AminoacidLibrary[T]) : Map[String, GeometryVector] = {
     val (d1, d2, d3) = AminoacidUtils.getDistances(v1, v2, v3)
     val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(v1, v2, v3)
-    fragmentInfo.restoreCoordinates(aa, d1, d2, d3, x, y, z)
+    fragmentInfo.restoreCoordinates(aa, d1, d2, d3, x, y, z, this)
   }
 
   def validateStructure(structure : SimplifiedChain) : Boolean = {
@@ -171,8 +172,7 @@ object Lattice {
         val a3 = structure(i + 2).ca
         val v1 = a1 - a2
         val v2 = a3 - a2
-        val angle = v1.angleTo(v2)
-        angle >= 72.5 && angle <= 154
+        latticeConstants.checkAngleRestrictions(v1.angleTo(v2))
       }
     })
     if (!r1)
@@ -183,7 +183,7 @@ object Lattice {
           j => {
             val a1 = structure(i).ca
             val a2 = structure(j).ca
-            a1.distanceTo(a2) >= 3.45
+            a1.distanceTo(a2) >= latticeConstants.caMinDistance //TODO: check if here should be different value, vas 3.45 instead of 4.05
           }
         })
       }
@@ -194,7 +194,7 @@ object Lattice {
       i => {
         val a1 = structure(i).ca
         val a2 = structure(i + 3).ca
-        a1.distanceTo(a2) >= 4.05
+        a1.distanceTo(a2) >= latticeConstants.caMinDistance
       }
     })
     r3
@@ -209,6 +209,6 @@ object Lattice {
   }
 
   def validateVectors(v1 : GeometryVector, v2 : GeometryVector, v3 : GeometryVector) = {
-    v2.angleTo(v1) >= 72.5 && v2.angleTo(v1) <= 154 && (v1 + v2 + v3).length >= 4.05
+    latticeConstants.checkAngleRestrictions(v2.angleTo(v1)) && (v1 + v2 + v3).length >= latticeConstants.caMinDistance
   }
 }

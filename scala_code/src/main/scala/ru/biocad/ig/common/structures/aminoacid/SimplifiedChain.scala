@@ -50,8 +50,8 @@ case class SimplifiedChain(val structure : Array[SimplifiedAminoacid]) extends T
 }
 
 object SimplifiedChain {
-  def apply(originalSequence : Seq[Seq[PDBAtomInfo]]) = {
-    new SimplifiedChain(originalSequence.map(SimplifiedAminoacid(_)).toArray)
+  def apply(originalSequence : Seq[Seq[PDBAtomInfo]], meshSize : Double = 1.0) = {
+    new SimplifiedChain(originalSequence.map(SimplifiedAminoacid(_, meshSize)).toArray)
   }
 
   val aa3letter = Map('A' -> "ALA", 'R' -> "ARG",
@@ -69,10 +69,10 @@ object SimplifiedChain {
     * @param rotamerLibrary reference rotamerLibrary to find rotamers for given aminoacid types
     * @return simplified, unfolded, valid structure with alpha-carbons and rotamers information
     */
-  def fromSequence(sequence : String, rotamerLibrary : AminoacidLibrary[SidechainInfo]) : SimplifiedChain = {
+  def fromSequence(sequence : String, lattice : Lattice) : SimplifiedChain = {
     val d : Seq[String] = sequence.flatMap(aa3letter.get(_))
-    val vectors = Lattice.prepareValidVectors(d.size - 1).scanLeft(Vector3d(0, 0, 0) : GeometryVector) (_ + _)
-    val m = new RotamerMove(rotamerLibrary)
+    val vectors = lattice.prepareValidVectors(d.size - 1).scanLeft(Vector3d(0, 0, 0) : GeometryVector) (_ + _)
+    val m = new RotamerMove(lattice.sidechainsInfo)
     val s1 = (d, vectors).zipped.map({case (aaName, ca) => new SimplifiedAminoacid(aaName, ca, Vector3d(0, 0, 0))})
     val s2 = (0 to s1.size - 1).map({i=> {
       new SimplifiedAminoacid(s1(i).name, s1(i).ca, m.moveRotamer(s1, i))
