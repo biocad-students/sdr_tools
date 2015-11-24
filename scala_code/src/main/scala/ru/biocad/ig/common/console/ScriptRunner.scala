@@ -25,12 +25,11 @@ class ScriptRunner(val tasksSource : Source) {
     * @param values contains values to merge it to tasks in list
     */
   def run(values : Map[String, String]) = {
-    var normalLines = 0
-    var errorLines = 0
-    val scriptLogger = ProcessLogger(line => normalLines += 1, line => errorLines += 1)
-    templateCommands.foreach({templateCmd =>
-      templateCmd.render(values) ! scriptLogger
-    })
+    //val _stdout = StringBuilder.newBuilder
+    //val _stderr = StringBuilder.newBuilder
+
+    val scriptLogger = ProcessLogger(println(_), println(_))
+    templateCommands.foreach({templateCmd => templateCmd.render(values) ! scriptLogger })
   }
 
 }
