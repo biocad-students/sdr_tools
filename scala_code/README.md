@@ -54,32 +54,29 @@ TODO \ FIX
 Литература
 ----------
 
-Michael Feig, Piotr Rotkiewicz, Andrzej Kolinski, Jeffrey Skolnick, and Charles L. Brooks III.
-Accurate Reconstruction of All-Atom Protein Representations From Side-Chain-Based Low-Resolution Models. PROTEINS: Structure, Function, and Genetics, 41:86-97, 2000.
+[feig2000] Michael Feig, Piotr Rotkiewicz, Andrzej Kolinski, Jeffrey Skolnick, and Charles L. Brooks III. Accurate Reconstruction of All-Atom Protein Representations From Side-Chain-Based Low-Resolution Models. PROTEINS: Structure, Function, and Genetics, 41:86-97, 2000.
 URL: http://www.ncbi.nlm.nih.gov/pubmed/10944396
 
-Mariusz Milik, Andrzej Kolinski, Jeffrey Skolnick. Algorithm for rapid reconstruction of protein backbone from alpha carbon coordinates. Journal of computational chemistry, 18: 80-85, 1997.
-URL: http://www.researchgate.net/publication/220417855_Algorithm_for_rapid_reconstruction_of_protein_backbone_from_alpha_carbon_coordinates
-
-Andrzej Kolinski, Jeffrey Skolnick. Monte Carlo Simulations of Protein Folding. I. Lattice
-Model and Interaction Scheme. PROTEINS: Structure, Function, and Genetics, 18:338-352, 1994.
-URL: http://cssb.biology.gatech.edu/skolnick/publications/pdffiles/116.pdf
-
-Andrzej Kolinski, Jeffrey Skolnick. Discretized model of proteins. I. Monte Carlo study of cooperativity in homopolypeptides. Journal of computational chemistry, 97(12), 1992.
+[folding100] Andrzej Kolinski, Jeffrey Skolnick. Discretized model of proteins. I. Monte Carlo study of cooperativity in homopolypeptides. Journal of computational chemistry, 97(12), 1992.
 URL: http://cssb.biology.gatech.edu/skolnick/publications/pdffiles/100.pdf
 
-Andrzej Kolinski, Adam Godzik, Jeffrey Skolnick. A general method for the prediction of the three dimensional structure and folding pathway of globular proteins: Application to designed helical proteins. Journal of computational chemistry, 98(9), 1993.
+[folding107] Andrzej Kolinski, Adam Godzik, Jeffrey Skolnick. A general method for the prediction of the three dimensional structure and folding pathway of globular proteins: Application to designed helical proteins. Journal of computational chemistry, 98(9), 1993.
 URL: http://cssb.biology.gatech.edu/skolnick/publications/pdffiles/107.pdf
 
-Michal Vieth, Andrzej Kolinski, Jeffrey Skolnick. Coiled-coils folding parameters. 1994b.
-URL: ftp://ftp.scripps.edu/pub/brooks/MCDP/},
+[folding116] Andrzej Kolinski, Jeffrey Skolnick. Monte Carlo Simulations of Protein Folding. I. Lattice Model and Interaction Scheme. PROTEINS: Structure, Function, and Genetics, 18:338-352, 1994.
+URL: http://cssb.biology.gatech.edu/skolnick/publications/pdffiles/116.pdf
 
-Michal Vieth, Andrzej Kolinski, Charles L. Brooks III, Jeffrey Skolnick.
+[folding142] Michal Vieth, Andrzej Kolinski, Charles L. Brooks III, Jeffrey Skolnick.
 Prediction of quaternary structure of coiled coils. Application to mutants of GCN4 Leucine Zipper.
 J.Mol.Biol., 251:448-467, 1995.
 URL: http://cssb.biology.gatech.edu/skolnick/publications/pdffiles/142.pdf
 
-M. Levitt, J.Greer. Automatic  identification of secondary structure in globular proteins.
-J.Mol.Biol., 114:181-293, 1977.
+[levitt1976] M.Levitt. A Simplified Representation of Protein Conformations for Rapid Simulation of Protein Folding. J.Mol.Biol., 104:59-107, 1976.
 
-M.Levitt. A Simplified Representation of Protein Conformations for Rapid Simulation of Protein Folding. J.Mol.Biol., 104:59-107, 1976.
+[levitt1977] M. Levitt, J.Greer. Automatic  identification of secondary structure in globular proteins. Journal of Molecular Biology, 114:181-293, 1977.
+
+[MCDP_dataset] Michal Vieth, Andrzej Kolinski, Jeffrey Skolnick. Coiled-coils folding parameters. 1994b.
+URL: ftp://ftp.scripps.edu/pub/brooks/MCDP/
+
+[milik1997] Mariusz Milik, Andrzej Kolinski, Jeffrey Skolnick. Algorithm for rapid reconstruction of protein backbone from alpha carbon coordinates. Journal of computational chemistry, 18: 80-85, 1997.
+URL: http://www.researchgate.net/publication/220417855_Algorithm_for_rapid_reconstruction_of_protein_backbone_from_alpha_carbon_coordinates
