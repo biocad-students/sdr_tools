@@ -2,11 +2,13 @@ package test.alphabet
 
 //import DefaultJsonProtocol._
 import scopt.OptionParser
-import java.io.File
+import java.io.{File}
+import scala.io.Source
 import com.typesafe.scalalogging.slf4j.LazyLogging
 
-import ru.biocad.ig.common.algorithms.MonteCarloRunner
 
+import ru.biocad.ig.common.algorithms.MonteCarloRunner
+import ru.biocad.ig.common.console.ScriptRunner
 
 /** Selects method of data processing from command line parameters
   * should have several ways to invoke:
@@ -77,6 +79,9 @@ object MCTest extends LazyLogging {
         }
       case None => parser.showUsage
     }
+    val postpocessingCommandsSource = Source.fromURL(getClass.getResource("/postprocessing.txt"))
+    (new ScriptRunner(postpocessingCommandsSource)).run(Map())
+    postpocessingCommandsSource.close()
 
   }
 }
