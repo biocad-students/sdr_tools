@@ -9,13 +9,13 @@ import ru.biocad.ig.common.algorithms.geometry.{
     ManifoldUtils,
     DelaunayTesselation,
     DelaunayTesselationFaster,
-    DelaunayTesselation3
+    QHull
   }
 /*, DelaunayTesselationFaster*/
 import ru.biocad.ig.common.io.pdb.{PDBStructure, PDBAtomInfo}
 
 import java.util.concurrent.TimeUnit.NANOSECONDS
-
+import scala.io.Source
 import java.io.{PrintWriter, File}
 
 object Ut {
@@ -33,7 +33,9 @@ def time[R](block: => R, writer : PrintWriter, block_name : String = ""): R = {
 
 def init() : (Seq[GeometryVector], Seq[GeometryVector]) = {
   val structure : PDBStructure = new PDBStructure()
-  structure.readFile("2OSL.pdb")
+  val source = Source.fromURL(getClass.getResource("/2OSL.pdb"))
+  structure.readFile(source)
+  source.close()
   val v1 = structure.parse_array.collect(
     {
       case xx:PDBAtomInfo if xx.chainID == 'L' => Vector3d(xx.x, xx.y, xx.z)
@@ -53,7 +55,7 @@ def compare_timing_0(points : Seq[GeometryVector]) : Set[Simplex]= {
 }
 
 def compare_timing_1(points : Seq[GeometryVector]) = {
-  var res = new DelaunayTesselation3()
+  var res = new DelaunayTesselation()
   res.makeTesselation(points)
   res.simplices
 }
@@ -75,9 +77,9 @@ def validate_data(points : Seq[GeometryVector], tetrahedras : Seq[Simplex]) : Bo
           //println(point)
           //println(tetrahedras.filterNot(_.hasVertex(point)))
         }
-        (delaunay_false._1 + 1, delaunay_false._2 + 1)
+        (delaunay_false._1 + 1, delaunay_false._2+1)
       } else{
-      (delaunay_false._1, delaunay_false._2 + 1)
+      (delaunay_false._1, delaunay_false._2+1)
       }
     }
   }
@@ -90,7 +92,7 @@ def validate_data(points : Seq[GeometryVector], tetrahedras : Seq[Simplex]) : Bo
       println("validation step: " + bordered_set.size + " " + points_set_size + " " + point)
 
       if (bordered_set.size > points_set_size) {
-        println("error! achtung! "+point.toString)
+        println("warning! ordered_set.size > points_set_size for  "+point.toString)
         val pp = bordered_set.filter(t => t.getPosition(point) != PointPosition.LaysOnNSphere)
         if (pp.size>0) {
           pp.foreach(
@@ -165,5 +167,13 @@ def call_all2(n : Int, logger_file_name : String = "triangulation_n_.txt") = {
   writer.close()
   println("finished")
 }
+
+def main(args : Array[String]) : Unit = {
+  println(args(0))
+  Ut.call_all(args(0).toInt, "output.txt")
+}
+
+
+
 
 }

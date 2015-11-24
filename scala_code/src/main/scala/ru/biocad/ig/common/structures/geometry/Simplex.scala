@@ -34,11 +34,16 @@ class GeometryVectorIterator(input_sequence : Seq[GeometryVector]) extends Itera
   }
 }
 
-class Simplex(val vertices : Seq[GeometryVector]) {
+class Simplex(val vertices : Seq[GeometryVector],
+        val innerPoint : GeometryVector,
+        val lowerPoint : GeometryVector) {
   val EPSILON = 0.001
   val dimensions : Int = vertices.head.dimensions
-  var innerPoint : GeometryVector = vertices.reduceLeft(_ + _) /vertices.size
-  var lowerPoint : GeometryVector = vertices.reduceLeft(_ + _) /vertices.size
+  //var innerPoint : GeometryVector = vertices.reduceLeft(_ + _) /vertices.size
+  //var lowerPoint : GeometryVector = vertices.reduceLeft(_ + _) /vertices.size
+
+  def this(vertices : Seq[GeometryVector], innerPoint : GeometryVector) = this(vertices, innerPoint, vertices.reduceLeft(_ + _)/vertices.size)
+  def this(vertices : Seq[GeometryVector]) = this(vertices, vertices.reduceLeft(_ + _)/vertices.size)
 
   val (normals: Seq[Double], dNorm : Double, distFunc) = ManifoldUtils.getSimplexNormalEquationParameters(vertices)
 
@@ -47,12 +52,10 @@ class Simplex(val vertices : Seq[GeometryVector]) {
   def reorient() : Simplex = {
     //return this
     if (testFunc(InfiniteVector(dimensions).toSeq) > EPSILON && vertices.size >= 2) {
-      val s = new Simplex(Seq(vertices.tail.head, vertices.head) ++ vertices.tail.tail)
-      s.innerPoint = innerPoint
-      s.lowerPoint = lowerPoint
-      s
+      new Simplex(Seq(vertices.tail.head, vertices.head) ++ vertices.tail.tail,
+          innerPoint, lowerPoint)
     }
-    else{
+    else {
     this
     }
   }

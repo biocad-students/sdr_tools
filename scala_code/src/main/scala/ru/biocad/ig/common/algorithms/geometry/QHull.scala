@@ -2,7 +2,7 @@ package ru.biocad.ig.common.algorithms.geometry
 
 import ru.biocad.ig.common.structures.geometry._
 
-class DelaunayTesselation3 {
+class QHull {
 
   val EPSILON = 0.00001
 
@@ -21,31 +21,27 @@ class DelaunayTesselation3 {
 
   def appendPoint(new_point : GeometryVector) : Unit = { }
 
-  def addSimplex(s: Simplex) = {
-    //println("adding simplex, before: " + simplices.size)
-    //simplices.foreach(println)
-    //println("new simplex:")
-    //println(s)
-    simplices.add(s)
-    //println("adding simplex, after: " +simplices.size)
-  }
+  def addSimplex(s: Simplex) = simplices.add(s)
+
   def getHypervolume(pp : Seq[GeometryVector]) : Double = {
-    ManifoldUtils.getDeterminant(pp.tail.map({line => {
-      (pp.head.lifted.coordinates, line.lifted.coordinates).zipped.map({(p0, p1) => p1 - p0})
-    }}))
+    ManifoldUtils.getDeterminant(pp.tail.map({
+      line => (pp.head.lifted.coordinates, line.lifted.coordinates).zipped.map({(p0, p1) => p1 - p0})
+    }))
   }
-  //returns set of simplices in d+1, wich are ridges of simplex in d+2
-  //shouldn't be degenerate
+
+  /**
+    * @return set of simplices in d+1, wich are ridges of simplex in d+2
+    * shouldn't be degenerate
+    */
   def prepareStartSimplex(points : Seq[GeometryVector]) : Seq[Simplex] = {
-    var pp = Seq(
-      points.maxBy(_.length),
-      points.minBy(_.length))
-    for(i <- 0 to points.head.coordinates.size-1) {
+    var pp = Seq(points.maxBy(_.length), points.minBy(_.length))
+    (0 to points.head.coordinates.size-1).foreach({ i=> {
       if (points.diff(pp).size > 0)
-      pp = pp :+ points.diff(pp).maxBy(_.coordinates(i))
-      if(points.diff(pp).size>0)
-      pp = pp :+ points.diff(pp).minBy(_.coordinates(i))
-    }
+        pp = pp :+ points.diff(pp).maxBy(_.coordinates(i))
+      if (points.diff(pp).size > 0)
+        pp = pp :+ points.diff(pp).minBy(_.coordinates(i))
+      } //FIX: i don't remember meaning of this condition
+    })
     //TODO: add start simplex checks, etc.
     pp = pp.distinct.take(points.head.dimensions + 2)
     //println("got points: " + pp.size + " " + points.head.dimensions)
@@ -57,22 +53,24 @@ class DelaunayTesselation3 {
       case s : (GeometryVector, Seq[GeometryVector]) => new Simplex(s._2, innerPoint, s._2.reduceLeft(_ + _)/s._2.size)
     }).toSeq
   }
+
   /**helper method. returns furthest point for given simplex
   */
   def selectFurthest(simplex: Simplex, points : Seq[GeometryVector]) : GeometryVector = {
-    val p = points.maxBy(- simplex.getDistance(_))
+    points.maxBy(- simplex.getDistance(_))
     //val p2 = points.minBy(- simplex.getPosition_(_))
     //println("furthest point dist: " + simplex.getPosition_(p) +" , "+ simplex.getPosition_(p2))
-    p
   }
+
   def addNeighbours(simplex : Simplex) = {
     //println("in add neighbours")
     //println(simplex)
     //println("set")
     //println(adjacentByTriangle)
-    for (ridge <- simplex.getRidges()) {
+    simplex.getRidges().foreach({
+      ridge =>
       adjacentByTriangle.getOrElseUpdate(ridge, collection.mutable.Set()) += simplex
-    }
+    })
     //println(" after add neigbours")
     //println(adjacentByTriangle)
     //println("exiting from add neighbours")
@@ -81,11 +79,11 @@ class DelaunayTesselation3 {
   def getNeighbours(simplex: Simplex) : Seq[Simplex] = {
     simplex.getRidges().flatMap(adjacentByTriangle.getOrElse(_, Seq())).toSeq.distinct.diff(Seq(simplex))
   }
+
   def removeNeighbours(simplex : Simplex) = {
-    for (triangle <- simplex.getRidges()) {
-      if (adjacentByTriangle.contains(triangle))
+    simplex.getRidges().filter(adjacentByTriangle.contains(_)).foreach({ triangle =>
         adjacentByTriangle(triangle) -= simplex
-    }
+    })
   }
 
   def getBorderLine(simplices : Seq[Simplex], point : GeometryVector) : Seq[Set[GeometryVector]] = {
@@ -93,14 +91,13 @@ class DelaunayTesselation3 {
     //val uniqueRidges = allRidges.toSet.toSeq.diff(allRidges.diff(allRidges.toSet.toSeq).toSet.toSeq)
     //uniqueRidges
     var horizonRidges = collection.mutable.Set[Set[GeometryVector]]()
-    for (simplex <- simplices){
-      for (neigbour <- getNeighbours(simplex)) {
-          if (!point.isAbove(neigbour)) {
+    simplices.foreach({ simplex =>
+      getNeighbours(simplex).filterNot(point.isAbove(_)).foreach({
+          neighbour =>
             //println(simplex.getRidges().toSet.intersect(neigbour.getRidges().toSet))
-            horizonRidges ++= simplex.getRidges().toSet.intersect(neigbour.getRidges().toSet)
-          }
-      }
-    }
+            horizonRidges ++= simplex.getRidges().toSet.intersect(neighbour.getRidges().toSet)
+      })
+    })
     //println(horizonRidges.toSeq)
     horizonRidges.toSeq
   }
