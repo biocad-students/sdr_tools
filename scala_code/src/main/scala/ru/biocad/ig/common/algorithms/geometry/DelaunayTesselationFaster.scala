@@ -21,20 +21,9 @@ class DelaunayTesselationFaster {
     println(adjacentByEdge.values.flatMap(x=>x.toSeq).toSeq.distinct.size)
     println(adjacentByTriangle.values.flatMap(x=>x.toSeq).toSeq.distinct.size)
 */
-    s.vertices.foreach(v =>
-      if (adjacentByVertex.contains(v))
-        adjacentByVertex(v) -= s
-    )
-    s.getLineSegments().foreach(
-      v =>
-      if (adjacentByEdge.contains(v))
-        adjacentByEdge(v) -= s
-    )
-    s.getTriangles().foreach(
-      v =>
-      if (adjacentByTriangle.contains(v))
-        adjacentByTriangle(v) -= s
-    )
+    s.vertices.filter(adjacentByVertex.contains(_)).foreach(adjacentByVertex(_) -= s)
+    s.getLineSegments().filter(adjacentByEdge.contains(_)).foreach(adjacentByEdge(_) -= s)
+    s.getTriangles().filter(adjacentByTriangle.contains(_)).foreach(adjacentByTriangle(_) -= s)
     //simplices = simplices.filterNot(_!=s)
     /*
     println("in removeSimplex - after removing")
@@ -51,15 +40,14 @@ class DelaunayTesselationFaster {
     println(adjacentByEdge.values.flatMap(x=>x.toSeq).toSeq.distinct.size)
     println(adjacentByTriangle.values.flatMap(x=>x.toSeq).toSeq.distinct.size)
     */
-    s.vertices.foreach(v =>
-      adjacentByVertex.getOrElseUpdate(v, collection.mutable.Set()) += s
+    s.vertices.foreach(
+      adjacentByVertex.getOrElseUpdate(_, collection.mutable.Set()) += s
     )
     s.getLineSegments().foreach(
-      v =>
-          adjacentByEdge.getOrElseUpdate(v, collection.mutable.Set()) += s
+          adjacentByEdge.getOrElseUpdate(_, collection.mutable.Set()) += s
     )
     s.getTriangles().foreach(
-      v => adjacentByTriangle.getOrElseUpdate(v, collection.mutable.Set()) += s
+      adjacentByTriangle.getOrElseUpdate(_, collection.mutable.Set()) += s
     )
     //    simplices += s
 
