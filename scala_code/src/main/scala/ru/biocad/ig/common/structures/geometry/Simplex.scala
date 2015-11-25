@@ -45,7 +45,7 @@ class Simplex(val vertices : Seq[GeometryVector],
   def this(vertices : Seq[GeometryVector], innerPoint : GeometryVector) = this(vertices, innerPoint, vertices.reduceLeft(_ + _)/vertices.size)
   def this(vertices : Seq[GeometryVector]) = this(vertices, vertices.reduceLeft(_ + _)/vertices.size)
 
-  val (normals: Seq[Double], dNorm : Double, distFunc) = ManifoldUtils.getSimplexNormalEquationParameters(vertices)
+  val (normals: Seq[Double], dNorm : Double, distFunc) = ManifoldUtils.getSimplexNormalEquationParameters(vertices, EPSILON)
 
   private lazy val testFunc : Seq[Double] => Double = ManifoldUtils.getCofactors(vertices.map(_.toSeq))
   //private lazy val distFunc : Seq[Double] => Double =
@@ -86,7 +86,7 @@ class Simplex(val vertices : Seq[GeometryVector],
 
   def isFlat : Boolean = testFunc(InfiniteVector(vertices.head.dimensions).toSeq).abs < EPSILON
 
-  def hasVertex(point : GeometryVector) : Boolean = vertices.filter(_.equals(point)) != Seq()
+  def hasVertex(point : GeometryVector) : Boolean = vertices.find(_.equals(point)) != None
 
   def iterateThroughVertices() = new GeometryVectorIterator(vertices)
 

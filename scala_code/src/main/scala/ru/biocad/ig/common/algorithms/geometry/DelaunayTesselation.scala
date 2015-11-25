@@ -4,7 +4,7 @@ import ru.biocad.ig.common.structures.geometry._
 
 /*this is slowest implementation possible*/
 class DelaunayTesselation {
-  val EPSILON = 0.1
+  val EPSILON = 0.001
 
   var simplices : Set[Simplex] = Set()
 
@@ -19,7 +19,7 @@ class DelaunayTesselation {
     val p = simplices.partition(_.getPosition(new_point) == PointPosition.LaysOutside)
     if (p._2.size >0)
       return (p._1 ++ /** don't modify */
-          ManifoldUtils.updateSimplices(p._2, new_point)).toSet.toSeq /** this gets modified */
+          ManifoldUtils.updateSimplices(p._2, new_point, EPSILON)).toSet.toSeq /** this gets modified */
     //was:
     ////val nearest = findNearestSimplex(new_point, simplices)
     //val rad = nearest.vertices.filter(_ != nearest.vertices.maxBy(new_point.distanceTo(_))).maxBy(new_point.distanceTo(_)).distanceTo(new_point)
@@ -32,12 +32,12 @@ class DelaunayTesselation {
     val all_triangles = simplices.flatMap(_.getTriangles())
     val unique_triangles = all_triangles.toSet.toSeq.diff(all_triangles.diff(all_triangles.toSet.toSeq).toSet.toSeq)
 
-    val borderLine = simplices.filter(s=>{
+    val borderLine = simplices.filter(s=>
       unique_triangles.contains(findDividingFacet(s, new_point))
-    })
+    )
 
     //(simplices.diff(all_nearest)) ++ all_nearest.flatMap(x=>ManifoldUtils.updateSimplices(x, new_point))
-    (simplices.diff(borderLine)) ++ borderLine.flatMap(ManifoldUtils.updateSimplices(_, new_point))
+    (simplices.diff(borderLine)) ++ borderLine.flatMap(ManifoldUtils.updateSimplices(_, new_point, EPSILON))
   }
 
   def findNearestSimplex(new_point : GeometryVector, start_simplices : Seq[Simplex]) : Simplex = {

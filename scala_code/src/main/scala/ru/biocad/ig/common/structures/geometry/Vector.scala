@@ -1,5 +1,9 @@
 package ru.biocad.ig.common.structures.geometry
 
+import org.scalautils._
+import Tolerance._
+import TripleEquals._
+
 import scala.math.sqrt
 import ru.biocad.ig.common.algorithms.geometry.ManifoldUtils
 
@@ -62,7 +66,7 @@ case class Vector(val coordinates : Seq[Double]) extends GeometryVector  {
 
   override def equals(other : Any) : Boolean = other match {
     case v : Vector => (
-      (dimensions == v.dimensions) && (coordinates, v.coordinates).zipped.map(_ == _).foldLeft(true)( _ && _ )
+      (dimensions == v.dimensions) && (coordinates, v.coordinates).zipped.map(_ === _ +- EPSILON).foldLeft(true)( _ && _ )
     )
     case _ => false
   }

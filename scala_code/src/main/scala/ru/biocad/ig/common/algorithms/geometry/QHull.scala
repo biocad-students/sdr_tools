@@ -2,7 +2,9 @@ package ru.biocad.ig.common.algorithms.geometry
 
 import ru.biocad.ig.common.structures.geometry._
 
-class QHull {
+import com.typesafe.scalalogging.slf4j.LazyLogging
+
+class QHull(val dimensions : Int = 3) extends LazyLogging {
 
   val EPSILON = 0.00001
 
@@ -43,7 +45,7 @@ class QHull {
       } //FIX: i don't remember meaning of this condition
     })
     //TODO: add start simplex checks, etc.
-    pp = pp.distinct.take(points.head.dimensions + 2)
+    pp = pp.distinct.take(dimensions + 2)
     //println("got points: " + pp.size + " " + points.head.dimensions)
     if (getHypervolume(pp) > EPSILON) {
       pp = (Seq(pp.tail.head, pp.head) ++ pp.tail.tail)
@@ -63,17 +65,17 @@ class QHull {
   }
 
   def addNeighbours(simplex : Simplex) = {
-    //println("in add neighbours")
-    //println(simplex)
-    //println("set")
-    //println(adjacentByTriangle)
+    logger.debug("in add neighbours")
+    logger.debug(simplex.toString)
+    logger.debug("set")
+    logger.debug(adjacentByTriangle.toString)
     simplex.getRidges().foreach({
       ridge =>
       adjacentByTriangle.getOrElseUpdate(ridge, collection.mutable.Set()) += simplex
     })
-    //println(" after add neigbours")
-    //println(adjacentByTriangle)
-    //println("exiting from add neighbours")
+    logger.debug(" after add neigbours")
+    logger.debug(adjacentByTriangle.toString)
+    logger.debug("exiting from add neighbours")
   }
 
   def getNeighbours(simplex: Simplex) : Seq[Simplex] = {
@@ -96,9 +98,11 @@ class QHull {
           neighbour =>
             //println(simplex.getRidges().toSet.intersect(neigbour.getRidges().toSet))
             horizonRidges ++= simplex.getRidges().toSet.intersect(neighbour.getRidges().toSet)
+
       })
     })
-    //println(horizonRidges.toSeq)
+    logger.debug("in getBorderLine, ridges are:")
+    logger.debug(horizonRidges.toSeq.toString)
     horizonRidges.toSeq
   }
 
@@ -106,23 +110,22 @@ class QHull {
     simplices.filter({ s => s.isInLowerConvHull() })
   }
 
+  //todo: check if simplices points are lifed, or not
   def getUpperConvexHull(simplices : collection.mutable.Set[Simplex]) : collection.mutable.Set[Simplex] = {
-    simplices.filter({ s => (new InfiniteVector(s.vertices.head.dimensions)).isAbove(s) })
+    simplices.filter((new InfiniteVector(dimensions)).isAbove(_))
   }
 
   def makeCone(horizonSimplices : Seq[Simplex], point : GeometryVector) : Seq[Simplex] = {
     var ridges = getBorderLine(horizonSimplices, point)
-    //println("in makeCone: ")
-    //ridges.foreach(println)
-    //println(point)
+    logger.debug("in makeCone: ")
+    logger.debug(point.toString)
     var newSimplices = collection.mutable.Set[Simplex]()
     var tetrahedras = ridges.map( {case ridge => {
       (new Simplex(ridge.toSeq :+ point, horizonSimplices.head.innerPoint)).reorient()
     }})
     tetrahedras.filter(addSimplex(_)).foreach(addNeighbours(_))
-    //println("tetrahedras: " + tetrahedras)
+    logger.debug("tetrahedras: " + tetrahedras)
     tetrahedras
-//    newSimplices
   }
 
   /**this implementation should be qhull-based*/
@@ -130,28 +133,29 @@ class QHull {
     val startSimplices = prepareStartSimplex(points.distinct)
     startSimplices.filter(addSimplex(_)).foreach(addNeighbours(_))
 
-    startSimplices.foreach(println)
-    println("starting simplex received")
+    logger.debug(startSimplices.toString)
+    logger.info("starting simplex received")
     var unprocessedPoints = points //.distinct.toSet
     println(unprocessedPoints.size)
 
     simplices.scanLeft(unprocessedPoints) ({
       (unprocessedPoints, simplex) => {
-        println("new simplex")
+        logger.info("new simplex")
         val (abovePoints, result) = unprocessedPoints.partition(point => {
-            println(simplex)
-            println(point)
-            println(point.isAbove(simplex) + " " + simplex.getDistance(point))
+            logger.info(simplex.toString)
+            logger.info(point.toString)
+            logger.info(point.isAbove(simplex).toString + " " + simplex.getDistance(point).toString)
             point.isAbove(simplex)
           })
-        outerSet(simplex) = outerSet.getOrElse(simplex, Seq()) ++ abovePoints
+        if (abovePoints.nonEmpty)
+            outerSet(simplex) = outerSet.getOrElse(simplex, Seq()) ++ abovePoints
         result
       }
     })
 
-    println(outerSet)
+    logger.info(outerSet.toString)
     //return
-    println("processing outer set...")
+    logger.info("processing outer set...")
     while (!outerSet.isEmpty) {
       var (simplex, outerPoints) = outerSet.head
       val point = selectFurthest(simplex, outerPoints.toSeq)
@@ -159,15 +163,14 @@ class QHull {
       var horizonSimplices = collection.mutable.Set[Simplex]()
       var visitedSimplices = collection.mutable.Set[Simplex]()
       var neighbourSet = collection.mutable.Set[Simplex](simplex)
-      //println("simplices size: " + simplices.size)
-      //println(simplices.head.innerPoint)
-      //println(simplices.head.innerPoint.isAbove(simplices.head))
-      //println(simplices.head.getDistance(simplices.head.innerPoint))
+      logger.debug("simplices size: " + simplices.size)
+      logger.debug(simplices.head.innerPoint.toString)
+      logger.debug(simplices.head.innerPoint.isAbove(simplices.head).toString)
+      logger.debug(simplices.head.getDistance(simplices.head.innerPoint).toString)
       while (!neighbourSet.isEmpty){
         val s = neighbourSet.head
         neighbourSet.remove(s)
-        //println(123)
-        //println(s.getDistance(point))
+        logger.debug(s.getDistance(point).toString)
         if (point.isAbove(s))
             visibleSet += s
         if (!visitedSimplices.contains(s)) {
@@ -175,17 +178,6 @@ class QHull {
           val (above, horizon) = getNeighbours(s).partition(point.isAbove(_))
           above.filterNot(visitedSimplices.contains(_)).foreach(neighbourSet.add(_))
           horizonSimplices ++= horizon
-          /*foreach({ neighbour => {
-            if (point.isAbove(neighbour)) {
-              if (!visitedSimplices.contains(neighbour)){
-                //visibleSet += neighbour
-                neighbourSet.add(neighbour)
-              }
-            } else {
-              horizonSimplices += s
-            }
-          }
-        })*/
         }
       }
 
@@ -205,30 +197,16 @@ class QHull {
         removeNeighbours(simplex)
         }
       })
-      for (newSimplex <- newSimplices) {
-        /**
-        unprocessedPoints = unprocessedPoints.filter({
-          p => {
-            if (point.isAbove(newSimplex)) {
-              outerSet(newSimplex) = outerSet.getOrElseUpdate(newSimplex, Seq[GeometryVector]()) :+ p
-              false
-            }
-            else {
-              true
-            }
-          }
-        })*/
-
-        for (point <- unprocessedPoints) {
-          if (point.isAbove(newSimplex)) {
-            outerSet(newSimplex) = outerSet.getOrElseUpdate(newSimplex, Seq[GeometryVector]()) :+ point
-            unprocessedPoints -= point
-          }
-        }
+      newSimplices.foreach({ newSimplex => {
+        val (abovePoints, horizon) = unprocessedPoints.partition(p => p.isAbove(newSimplex))
+        if (abovePoints.nonEmpty)
+            outerSet(newSimplex) = outerSet.getOrElseUpdate(newSimplex, Seq[GeometryVector]()) ++ abovePoints
+        unprocessedPoints = horizon
 
         addSimplex(newSimplex)
         addNeighbours(newSimplex)
       }
+      })
 
     }
     //println("all simplices after processing")
