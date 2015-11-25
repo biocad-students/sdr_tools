@@ -84,10 +84,10 @@ object ManifoldUtils {
     (v : Seq[Double]) => ((n, v).zipped.map(_ * _ ).reduceLeft( _ + _ ) - d) / nLength
   }
 
-  def getSimplexNormalEquationParameters(points : Seq[GeometryVector]) : (Seq[Double], Double, GeometryVector => Double) = {
+  def getSimplexNormalEquationParameters(points : Seq[GeometryVector], epsilon : Double) : (Seq[Double], Double, GeometryVector => Double) = {
     val n = getNormals(points.map(_.lifted.coordinates))
     val nLength = normalize(n)
-    if (nLength.abs < 0.001) {
+    if (nLength.abs < epsilon) {
       val d = getDeterminant(points.map(_.lifted.coordinates))
       return (n, d, (v : GeometryVector) => ((n, v.lifted.coordinates).zipped.map(_ * _).reduceLeft(_ + _) - d))
     }
@@ -97,7 +97,7 @@ object ManifoldUtils {
     (nNormalized, d, (v : GeometryVector) => ((nNormalized, v.lifted.coordinates).zipped.map(_ * _).reduceLeft(_ + _) - d))
   }
 
-  def updateSimplices(s : Simplex, v : GeometryVector) : Seq[Simplex] = {
+  def updateSimplices(s : Simplex, v : GeometryVector, epsilon : Double) : Seq[Simplex] = {
     if (s.isFlat) {
       println("in updateSimplices with flat simplex")
     }
@@ -105,14 +105,14 @@ object ManifoldUtils {
 
       val (p, tr) = s.iterateThroughVertices().toSeq.filter({case (p, triangle) =>
         val testFunc = ManifoldUtils.getCofactors((triangle ++ Seq(InfiniteVector(4))).map(_.toSeq))
-        testFunc(v.toSeq)*testFunc(p.toSeq) < 0.0001
+        testFunc(v.toSeq)*testFunc(p.toSeq) < epsilon
       }).head
       val temp = new Simplex(tr :+ v)
       if (temp.getPosition(p)==PointPosition.LaysOutside)
         return Seq(s, temp)
     }
 
-    updateSimplices(Seq(s), v)
+    updateSimplices(Seq(s), v, epsilon)
 
     /*s.iterateThroughVertices().filter(x => {
       val testFunc = ManifoldUtils.getCofactors((x._2 ++ Seq(InfiniteVector(3))).map(_.toSeq) )
@@ -120,7 +120,7 @@ object ManifoldUtils {
     } ).map(x => new Simplex(x._2 ++ Seq(v)) ).toSet.toSeq*/
   }
 
-  def updateSimplices(simplices : Seq[Simplex], v : GeometryVector) : Seq[Simplex] = {
+  def updateSimplices(simplices : Seq[Simplex], v : GeometryVector, epsilon : Double) : Seq[Simplex] = {
     simplices.find(_.isFlat) match {
       case Some(_) => println("in updateSimplices with flat simplex")
       case None => ()
@@ -134,7 +134,7 @@ object ManifoldUtils {
     unique_triangles.filter(triangle => {
       val testFunc = ManifoldUtils.getCofactors((triangle.toSeq ++ Seq(InfiniteVector(3))).map(_.toSeq))
       val testFunc2 : Seq[Double] => Double = testFunc(_) * testFunc(v.toSeq)
-      all_vertices.filter(vert => testFunc(vert.toSeq).abs > 0.0001).forall({
+      all_vertices.filter(vert => testFunc(vert.toSeq).abs > epsilon).forall({
         case vertex => testFunc2(vertex.toSeq) > 0.0
       })
     }).map(x => new Simplex(x.toSeq ++ Seq(v))).toSet.toSeq
@@ -300,7 +300,7 @@ println("after converting to lines")
       case k if k >= 1 => p2
       case _ => p1 + (p2 - p1) * k
     }
-    
+
     val p4_3 = p4 - p3
     val p2_1 = p2 - p1
     val p1_3 = p1 - p3

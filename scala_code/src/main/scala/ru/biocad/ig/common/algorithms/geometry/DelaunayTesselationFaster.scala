@@ -82,13 +82,13 @@ class DelaunayTesselationFaster {
       //removeSimplex(s)
       //at this point l contains all simplices that should be modified
       if (old_simplices.size > 0) {
-        val new_simplices = ManifoldUtils.updateSimplices(old_simplices, new_point)
+        val new_simplices = ManifoldUtils.updateSimplices(old_simplices, new_point, EPSILON)
         last_simplices = new_simplices
         new_simplices.foreach(addSimplex(_))
         //println("new size: " + new_simplices.size)
       }
       else {
-        val new_simplices = ManifoldUtils.updateSimplices(s, new_point)
+        val new_simplices = ManifoldUtils.updateSimplices(s, new_point, EPSILON)
         last_simplices = new_simplices
         new_simplices.foreach(addSimplex(_))
       }

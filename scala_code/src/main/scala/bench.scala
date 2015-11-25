@@ -55,7 +55,7 @@ def compare_timing_0(points : Seq[GeometryVector]) : Set[Simplex]= {
 }
 
 def compare_timing_1(points : Seq[GeometryVector]) = {
-  var res = new DelaunayTesselation()
+  var res = new QHull()
   res.makeTesselation(points)
   res.simplices
 }
