@@ -24,6 +24,7 @@ object MCTest extends LazyLogging {
       mode : String = "fold",
       sequence : String = "GARFIELD",//"RMAQLEAKVEELLSKNWNLENEVARLKKLVGER",//
       //TODO: add option - refine/fold/alascan - default refine
+      postprocess : Boolean = true,
       debug : Boolean = false)
 
   private def getParser = new OptionParser[Config]("sdr_tools") {
@@ -47,8 +48,8 @@ object MCTest extends LazyLogging {
             c.copy(inputFile = s)} text "input file in PDB format"
         )
 
-      opt[Unit]("debug") action {(_, c) =>
-        c.copy(debug = true)} text "enable debug output"
+      opt[Unit]("postprocess") action {(_, c) => c.copy(postprocess = true)} text "call postprocessing script"
+      opt[Unit]("debug") action {(_, c) => c.copy(debug = true)} text "enable debug output"
       help("help") text "this message"
   }
 
@@ -68,6 +69,14 @@ object MCTest extends LazyLogging {
               MonteCarloRunner.scan(config.inputFile, config.mcTimeUnits, config.outputFile)
             }
           }
+          if (config.postprocess) {
+            //next goes postprocessing
+            val postpocessingCommandsSource = Source.fromURL(getClass.getResource("/postprocessing.txt"))
+            (new ScriptRunner(postpocessingCommandsSource)).run(
+              Map("processed_pdb" -> config.outputFile.toString,
+                  "prepared_mae" -> "prepared.mae"))
+            postpocessingCommandsSource.close()
+          }
 
         } catch {
           case e : Exception =>
@@ -79,9 +88,5 @@ object MCTest extends LazyLogging {
         }
       case None => parser.showUsage
     }
-    val postpocessingCommandsSource = Source.fromURL(getClass.getResource("/postprocessing.txt"))
-    (new ScriptRunner(postpocessingCommandsSource)).run(Map())
-    postpocessingCommandsSource.close()
-
   }
 }

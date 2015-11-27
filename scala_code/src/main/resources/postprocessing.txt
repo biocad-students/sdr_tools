@@ -1,1 +1,2 @@
 echo "Hello, future me"
+$SCHRODINGER/utilities/prepwizard {{processed_pdb}} {{prepared_mae}}
