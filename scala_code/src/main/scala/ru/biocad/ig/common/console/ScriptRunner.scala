@@ -1,9 +1,12 @@
 package ru.biocad.ig.common.console
 
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.sys.process._
 import mustache._
 import scala.io.Source
+
 import ru.biocad.ig.common.io.common.SourceReader
+
 
 /** This class/object (i'm not completely sure what it will be) loads console commands
   * from settings file (each console command represented as single line with mustache-style argument placeholders),
@@ -15,7 +18,7 @@ import ru.biocad.ig.common.io.common.SourceReader
   *
   * @param tasksSource contains a sequence of console commands (1 per line) with mustache-styled placeholders
   */
-class ScriptRunner(val tasksSource : Source) {
+class ScriptRunner(val tasksSource : Source) extends LazyLogging {
   private val templateCommands = tasksSource.getLines().map({cmd => new Mustache(cmd) })
 
   def this(tasksFile : String) = this(Source.fromFile(tasksFile))
@@ -29,7 +32,13 @@ class ScriptRunner(val tasksSource : Source) {
     //val _stderr = StringBuilder.newBuilder
 
     val scriptLogger = ProcessLogger(println(_), println(_))
-    templateCommands.foreach({templateCmd => templateCmd.render(values) ! scriptLogger })
+    templateCommands.zipWithIndex.foreach({
+      case (templateCmd, index) => {
+        val commandWithVars = Seq("bash", "-c", "echo \"%s\"".format(templateCmd.render(values))).!!.trim
+        logger.info("processing command %d: ".format(index))
+        logger.info(commandWithVars)
+        commandWithVars ! scriptLogger
+      }})
   }
 
 }
