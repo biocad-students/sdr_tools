@@ -19,7 +19,7 @@ import ru.biocad.ig.common.io.common.SourceReader
   * @param tasksSource contains a sequence of console commands (1 per line) with mustache-styled placeholders
   */
 class ScriptRunner(val tasksSource : Source) extends LazyLogging {
-  private val templateCommands = tasksSource.getLines().map({cmd => new Mustache(cmd) })
+  private val templateCommands = tasksSource.getLines().filterNot(_.startsWith("#")).map({cmd => new Mustache(cmd) })
 
   def this(tasksFile : String) = this(Source.fromFile(tasksFile))
 
