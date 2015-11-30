@@ -18,6 +18,10 @@ function parse_commandline()
             default = "list_short.txt"
             arg_type = String
             #required = true
+        "--pdb-directory", "-d"
+            help = "directory name to collect pdb files from rcsb server"
+            default = "files/"
+            arg_type = String
         "--mesh-size", "-m"
             help = "mesh size for saving structures and group data"
             arg_type = Float64
@@ -564,10 +568,10 @@ function getVectorForSeq(sequence, ks, k, text_file_name, latticeSize = 1.22)
           round2((getVector(sequence[ks[k + 2]]["CA"]) - getVector(sequence[ks[k + 1]]["CA"]))/latticeSize))
 end
 
-function load_atom_info(text_file_name :: String, mesh_size :: Float64 = 1.7)
+function load_atom_info(text_file_name :: String, pdb_dir :: String, mesh_size :: Float64 = 1.7)
   basechainInfo = Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}}()
   sidechainInfo = Dict{String, Dict{(Int, Int, Int), Array{Rotamer, 1}}}()
-  pdb_file_names = getPDBFileNames(text_file_name)
+  pdb_file_names = getPDBFileNames(text_file_name, pdb_dir)
   for pdb_file_name in pdb_file_names
     (atom_infos, atom_info_keys) = readPDB(pdb_file_name)
     chainFragments = processPDB(atom_infos, atom_info_keys)
@@ -602,7 +606,7 @@ end
 
 function main()
     parsed_args = parse_commandline()
-    (r1, r2) = load_atom_info(parsed_args["input-file"], parsed_args["mesh-size"])
+    (r1, r2) = load_atom_info(parsed_args["input-file"], parsed_args["pdb-directory"], parsed_args["mesh-size"])
     output_file = open(parsed_args["output-backbone"], "w")
     println(output_file, JSON.json(r1, 1))
     close(output_file)
