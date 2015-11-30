@@ -2,13 +2,13 @@ package test.alphabet
 
 //import DefaultJsonProtocol._
 import scopt.OptionParser
-import java.io.{File}
+import java.io.{File, PrintWriter}
 import scala.io.Source
 import com.typesafe.scalalogging.slf4j.LazyLogging
 
 
 import ru.biocad.ig.common.algorithms.MonteCarloRunner
-import ru.biocad.ig.common.console.ScriptRunner
+import ru.biocad.ig.common.console._
 
 /** Selects method of data processing from command line parameters
   * should have several ways to invoke:
@@ -70,11 +70,13 @@ object MCTest extends LazyLogging {
             }
           }
           if (config.postprocess) {
-            //next goes postprocessing
+            val parametersMap = Map(
+                "processed_pdb" -> config.outputFile.toString,
+                "prepared_mae" -> "prepared.mae")
+          //next goes postprocessing
+            prepareCSB(parametersMap)
             val postpocessingCommandsSource = Source.fromURL(getClass.getResource("/postprocessing.txt"))
-            (new ScriptRunner(postpocessingCommandsSource)).run(
-              Map("processed_pdb" -> config.outputFile.toString,
-                  "prepared_mae" -> "prepared.mae"))
+            (new ScriptRunner(postpocessingCommandsSource)).run(parametersMap)
             postpocessingCommandsSource.close()
           }
 
@@ -88,5 +90,17 @@ object MCTest extends LazyLogging {
         }
       case None => parser.showUsage
     }
+  }
+  def prepareCSB(hash : Map[String, String]) = {
+    val preprocessorTemplateSource = Source.fromURL(getClass.getResource("/sb_config.csb.template"))
+    val preprocessorLines = new ScriptPreprocessor(preprocessorTemplateSource).substitute(hash)
+
+    val pw = new PrintWriter("sb_config.csb")
+    preprocessorLines.foreach({
+      l => pw.write(l); pw.write("\n")
+    })
+    pw.close()
+    preprocessorTemplateSource.close()
+
   }
 }
