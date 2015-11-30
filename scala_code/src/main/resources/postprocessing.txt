@@ -1,2 +1,3 @@
 echo "Hello, future me"
 $SCHRODINGER/utilities/prepwizard {{processed_pdb}} {{prepared_mae}} -NOJOBID -r 1.22
+# $SCHRODINGER/utilities/system_builder {{prepared_mae}}
