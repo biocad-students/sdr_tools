@@ -1,3 +1,4 @@
 echo "Hello, future me"
 $SCHRODINGER/utilities/prepwizard {{processed_pdb}} {{prepared_mae}} -NOJOBID -r 1.22
-# $SCHRODINGER/utilities/system_builder {{prepared_mae}}
+$SCHRODINGER/utilities/system_builder -WAIT -NOJOBID -rezero {{input_csb}}
+$SCHRODINGER/desmond -WAIT -in {{prepared_cms}} -c {{desmond_config}}

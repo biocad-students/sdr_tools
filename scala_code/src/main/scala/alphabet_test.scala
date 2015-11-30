@@ -72,9 +72,17 @@ object MCTest extends LazyLogging {
           if (config.postprocess) {
             val parametersMap = Map(
                 "processed_pdb" -> config.outputFile.toString,
-                "prepared_mae" -> "prepared.mae")
+                "prepared_mae" -> "prepared.mae",
+                "input_csb" -> "sb_config.csb",
+                "prepared_cms" -> "prepared.cms",
+                "processed_cms" -> "processed.cms",
+                "desmond_config" -> "desmond_config.cfg",
+                "desmond_total_time" -> "%8.3f".format(20.0),
+                "desmond_time_interval" -> "%8.3f".format(1.0),
+                "desmond_output_cms" -> "md_result.cms")
           //next goes postprocessing
             prepareCSB(parametersMap)
+            prepareCFG(parametersMap)
             val postpocessingCommandsSource = Source.fromURL(getClass.getResource("/postprocessing.txt"))
             (new ScriptRunner(postpocessingCommandsSource)).run(parametersMap)
             postpocessingCommandsSource.close()
@@ -91,16 +99,33 @@ object MCTest extends LazyLogging {
       case None => parser.showUsage
     }
   }
-  def prepareCSB(hash : Map[String, String]) = {
-    val preprocessorTemplateSource = Source.fromURL(getClass.getResource("/sb_config.csb.template"))
-    val preprocessorLines = new ScriptPreprocessor(preprocessorTemplateSource).substitute(hash)
+  def prepareCSB(hash : Map[String, String]) = hash.get("input_csb") match {
+    case Some(configFileName) => {
+      val preprocessorTemplateSource = Source.fromURL(getClass.getResource("/sb_config.csb.template"))
+      val preprocessorLines = new ScriptPreprocessor(preprocessorTemplateSource).substitute(hash)
 
-    val pw = new PrintWriter("sb_config.csb")
-    preprocessorLines.foreach({
-      l => pw.write(l); pw.write("\n")
-    })
-    pw.close()
-    preprocessorTemplateSource.close()
+      val pw = new PrintWriter(configFileName)
+      preprocessorLines.foreach({
+        l => pw.write(l); pw.write("\n")
+      })
+      pw.close()
+      preprocessorTemplateSource.close()
+    }
+    case None => ()
+  }
 
+  def prepareCFG(hash : Map[String, String]) = hash.get("desmond_config") match {
+    case Some(configFileName) => {
+      val preprocessorTemplateSource = Source.fromURL(getClass.getResource("/desmond.cfg.template"))
+      val preprocessorLines = new ScriptPreprocessor(preprocessorTemplateSource).substitute(hash, false)
+
+      val pw = new PrintWriter(configFileName)
+      preprocessorLines.foreach({
+        l => pw.write(l); pw.write("\n")
+      })
+      pw.close()
+      preprocessorTemplateSource.close()
+    }
+    case None => ()
   }
 }

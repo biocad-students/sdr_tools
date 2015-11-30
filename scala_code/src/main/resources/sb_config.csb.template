@@ -1,5 +1,5 @@
 {
-  read_solute_structure mysolute_setup-in.mae
+  read_solute_structure {{prepared_mae}}
   # solute file name
   solvent_desmond_oplsaa_typer {
     input_file_name spc.box.mae
@@ -15,8 +15,8 @@
   }
   membranize POPE.mae.gz 10.000000 10.000000
   create_boundary_conditions orthorhombic 0.000000 0.000000 10.000000
-  exclude_ion_from { 1 2 } 10.0
+  set_oplsaa_version 2005
   solvate
   neutralize
-  write_maeff_file chorus_setup-out.cms
+  write_maeff_file {{prepared_cms}}
 }
