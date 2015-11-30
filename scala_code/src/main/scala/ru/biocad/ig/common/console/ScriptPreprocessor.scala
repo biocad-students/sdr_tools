@@ -29,17 +29,25 @@ class ScriptPreprocessor(val templateSource : Source) extends LazyLogging {
     *
     * @param values contains values to merge it to tasks in list
     */
-  def substitute(values : Map[String, String]) = {
+  def substitute(values : Map[String, String], processEnvVars : Boolean = true) = {
 
     templateCommands.zipWithIndex.map({
       case (templateCmd, index) => {
         val commandWithMustacheVars = templateCmd.render(values)
         logger.info("processing command %d: ".format(index))
         logger.info(commandWithMustacheVars)
-        val commandWithVars = envVar.replaceAllIn(commandWithMustacheVars, m => sys.env(m.group(1)))
-        logger.info(commandWithVars)
-        commandWithVars
+        if (processEnvVars) {
+          val commandWithVars = envVar.replaceAllIn(commandWithMustacheVars, m => sys.env(m.group(1)))
+          logger.info(commandWithVars)
+          commandWithVars
+        } else {
+          commandWithMustacheVars
+        }
       }})
   }
+  def processEnvVars() = {
+
+  }
+
 
 }
