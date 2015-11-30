@@ -10,7 +10,9 @@ import ru.biocad.ig.common.io.common.SourceReader
 
 /** This class/object (i'm not completely sure what it will be) loads console commands
   * from settings file (each console command represented as single line with mustache-style argument placeholders),
-  * executes that commands.
+  * performs substitution of environment variables in commands with their values, and executes that commands.
+  *
+  * Commands preprocessing is performed in underlying object [[ru.biocad.ig.common.console.ScriptPreprocessor]]. Constructor arguments are the same as for that class.
   *
   * The only reason why it can be found here - Pavel Andreevich didn't told me what should I use to run such commands
   * (I know there is some code, but I don't have access to it).
@@ -20,19 +22,18 @@ import ru.biocad.ig.common.io.common.SourceReader
   */
 class ScriptRunner(val tasksSource : Source) extends ScriptPreprocessor(tasksSource) with LazyLogging {
 
-  /** runs task sequence from tasksFile with params given as method argument
+  /** runs task sequence with params given as method argument
     *
-    * @param values contains values to merge it to tasks in list
+    * @param values contains values to merge
+    * Simply runs commands, and then prints error\output to console
     */
   def run(values : Map[String, String]) = {
-    //val _stdout = StringBuilder.newBuilder
-    //val _stderr = StringBuilder.newBuilder
     val preparedCommands = substitute(values)
 
     val scriptLogger = ProcessLogger(println(_), println(_))
     preparedCommands.zipWithIndex.foreach({
       case (templateCmd, index) => {
-        logger.info("processing command %d: ".format(index))
+        logger.debug("processing command %d: ".format(index))
         templateCmd ! scriptLogger
       }})
   }
