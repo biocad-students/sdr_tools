@@ -375,7 +375,7 @@ function getLocalVectors(v1, v2, v3, aminoacid)
   y = normalize(cross3d(vp, x))
   z = normalize(cross3d(x, y))
   vectors = AminoacidInfo()
-  for (s, e) in [("CA", "C"), ("CA", "N"), ("CA", "O")]
+  for (s, e) in [("CA", "C"), ("CA", "N"), ("C", "O")]
     if haskey(aminoacid, e)
       vectors[e] = projectToAxes(
         getVector(aminoacid[e]) - getVector(aminoacid[s]),
@@ -385,7 +385,7 @@ function getLocalVectors(v1, v2, v3, aminoacid)
     end
   end
   sidechain = Rotamer()
-  for e in keys(aminoacid)
+  for e in keys(aminoacid) #TODO: check if in maincode "CA" position is included or not
     if !(e in ["CA", "C", "N", "O"])
       sidechain.atoms[e] = projectToAxes(
         getVector(aminoacid[e]) - getVector(aminoacid["CA"]),
@@ -400,6 +400,7 @@ function getLocalVectors(v1, v2, v3, aminoacid)
   (x, y, z, aminoacid["CA"].resName, vectors, sidechain)
 end
 
+#there is special reason not to take normal average vector, but to take vector with average position and average length for every chain fragment
 function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}})
     result = Dict{String, Dict{(Int, Int, Int), Dict{String, GeometryVector}}}()
     for (aa, aaInfo) in chainInfo
@@ -407,17 +408,22 @@ function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{Aminoa
         for (distances, positions) in aaInfo
             size = length(positions)
             result[aa][distances] = Dict{String, GeometryVector}()
+            averageLengths = Dict{String, Float64}()
             for x in positions
                 for (k, v) in x
                     if !haskey(result[aa][distances], k)
                         result[aa][distances][k] = GeometryVector([0, 0, 0])
+                        averageLengths[k] = 0
                     end
                     result[aa][distances][k] += v
+                    averageLengths[k] += len(v)
                 end
             end
             for k in keys(result[aa][distances])
-                result[aa][distances][k] = result[aa][distances][k] / size
+                averageLengths[k] = averageLengths[k] / size
+                result[aa][distances][k] = normalize(result[aa][distances][k] / size) * averageLengths[k]
             end
+            result[aa][distances]["O"] = result[aa][distances]["O"] + result[aa][distances]["C"] #this line to save mean vector from CA to O, with correct C=O average bond length 
         end
     end
     #result2 = Dict{String, Dict{(Int, Int, Int), Dict{String, Array{Number, 1}}}}()
