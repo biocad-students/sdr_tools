@@ -23,3 +23,10 @@ Accurate Reconstruction of All-Atom Protein Representations From Side-Chain-Base
 = julia_scripts
 
 It turned out that there is no information on pdb backbone vectors statistics, at least I couldn't find any. Method of obtaining such information is well-defined - that's why I added helper script for collecting such information from protein data bank files (in folder julia_scripts). I want to rewrite my own implementation in julia (to make that implementation publicly available), that's why this helper script will be written in that language.
+
+TODO
+----
+
+- [ ] переписать энергию водородных связей: вместо имеющегося критерия использовать критерий из статьи 163.pdf
+- [ ] добавить описание 163.pdf в презентацию
+- [x] считать среднее значение для основной цепи другим способом: мне нужен не просто средний вектор, а вектор, длина которого средняя из всех длин других векторов, углы - тоже что-то посередине
