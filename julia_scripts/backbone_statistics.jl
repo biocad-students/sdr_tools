@@ -102,7 +102,6 @@ function loadFromRCSB(code :: String, destination_path :: String)
 end
 
 
-
 type PDBAtomInfo
   serial :: Int
   atom :: String
@@ -151,35 +150,23 @@ immutable GeometryVector
 end
 GeometryVector() = GeometryVector([0, 0, 0]) #by default is 3-dimensional
 
-function GeometryVectorOp2(a :: GeometryVector, b :: GeometryVector, op)
-  GeometryVector(map(op, zip(a.coordinates, b.coordinates)))
-end
+GeometryVectorOp2(a :: GeometryVector, b :: GeometryVector, op) = GeometryVector(map(op, zip(a.coordinates, b.coordinates)))
 
 +(a :: GeometryVector, b :: GeometryVector) = GeometryVectorOp2(a, b, x-> x[1] + x[2])
 -(a :: GeometryVector, b :: GeometryVector) = GeometryVectorOp2(a, b, x-> x[1] - x[2])
-function /(a :: GeometryVector, b :: Number)
-  GeometryVector(map(x -> x/b, a.coordinates))
-end
+/(a :: GeometryVector, b :: Number) = GeometryVector(map(x -> x / b, a.coordinates))
 
-function round2(a::GeometryVector)
-  GeometryVector(map(x::Float64->round(x), a.coordinates))
-end
-function *(a :: GeometryVector, b :: Number)
-  GeometryVector(map(x -> x*b, a.coordinates))
-end
+round2(a::GeometryVector) = GeometryVector(map(x::Float64->round(x), a.coordinates))
 
-function *(a :: GeometryVector, b :: GeometryVector)
-  sum(map(x -> x[1] * x[2], zip(a.coordinates, b.coordinates)))
-end
+*(a :: GeometryVector, b :: Number) = GeometryVector(map(x -> x*b, a.coordinates))
+*(a :: GeometryVector, b :: GeometryVector) = sum(map(x -> x[1] * x[2], zip(a.coordinates, b.coordinates)))
 
 len(a :: GeometryVector) = sqrt(a*a)
 #println(len(GeometryVector([1,2,3])))
 
-normalize(a :: GeometryVector) = a/len(a)
+normalize(a :: GeometryVector) = a / len(a)
 
-function projection(projected :: GeometryVector, whereToProject :: GeometryVector)
-  whereToProject*(projected*whereToProject)
-end
+projection(projected :: GeometryVector, whereToProject :: GeometryVector) = whereToProject * (projected * whereToProject)
 
 function projectToAxes(v :: GeometryVector, x :: GeometryVector, y :: GeometryVector, z :: GeometryVector)
   v_x = v*x
@@ -197,11 +184,21 @@ function cross3d(a :: GeometryVector, b :: GeometryVector)
 end
 #println(normalize(GeometryVector([1,2,3])))
 
+getVector = a :: PDBAtomInfo -> GeometryVector([a.x, a.y, a.z])
+
 type Rotamer
   atoms :: Dict{String, GeometryVector}
   center :: GeometryVector
 end
 Rotamer() = Rotamer(Dict{String, GeometryVector}(), GeometryVector([0, 0, 0]))
+
+type RotamerInfo
+  representatives :: Array{Rotamer, 1}
+  total :: Int
+  amounts :: Array{Int, 1}
+end
+
+RotamerInfo() = RotamerInfo(Rotamer[], 0, Int[])
 
 
 function getPDBFileNames(input_file_name :: String, directory :: String = "files/")
@@ -343,8 +340,6 @@ function processPDB(records :: Dict{Int, Dict{Int, Dict{String, PDBAtomInfo}}},
 end
 
 
-getVector = a :: PDBAtomInfo -> GeometryVector([a.x, a.y, a.z])
-
 #this function returns d_{i-1, i+1}, d_{i, i+2}, d_{i-1, i+2}
 function calculateDistances(aminoacids)
   d1 = len(getVector(aminoacids[3]["CA"]) - getVector(aminoacids[1]["CA"]))
@@ -423,7 +418,7 @@ function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{Aminoa
                 averageLengths[k] = averageLengths[k] / size
                 result[aa][distances][k] = normalize(result[aa][distances][k] / size) * averageLengths[k]
             end
-            result[aa][distances]["O"] = result[aa][distances]["O"] + result[aa][distances]["C"] #this line to save mean vector from CA to O, with correct C=O average bond length 
+            result[aa][distances]["O"] = result[aa][distances]["O"] + result[aa][distances]["C"] #this line to save mean vector from CA to O, with correct C=O average bond length
         end
     end
     #result2 = Dict{String, Dict{(Int, Int, Int), Dict{String, Array{Number, 1}}}}()
@@ -447,15 +442,6 @@ function getAverage(chainInfo :: Dict{String, Dict{(Int, Int, Int), Array{Aminoa
     end
     result2
 end
-
-
-type RotamerInfo
-  representatives :: Array{Rotamer, 1}
-  total :: Int
-  amounts :: Array{Int, 1}
-end
-
-RotamerInfo() = RotamerInfo(Rotamer[], 0, Int[])
 
 #helper method.returns index of nearest rotamer group. or zero if no one is found
 function findRotamerGroup(representatives :: Array{Rotamer, 1}, rotamer :: Rotamer, threshold :: Number = 1.7)
