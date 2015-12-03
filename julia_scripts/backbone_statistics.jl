@@ -361,27 +361,39 @@ end
 typealias AtomPosition GeometryVector
 typealias AminoacidInfo Dict{String, AtomPosition}
 
-function getLocalVectors(v1, v2, v3, aminoacid)
-  #get local coordinate system
-  #i=2
 
+function vectorForKey(aminoacid, s, e, x, y, z)
+  if haskey(aminoacid, e)
+    projectToAxes(getVector(aminoacid[e]) - getVector(aminoacid[s]), x, y, z)
+  else
+    println("got zero vector in vectorForKey")
+    GeometryVector([0, 0, 0])
+  end
+end
+
+function getLocalCoordinateSystem(v1, v2, v3)
   vp = v2 + v3
   x = normalize(cross3d(v2, vp))
   y = normalize(cross3d(vp, x))
   z = normalize(cross3d(x, y))
-  vectors = AminoacidInfo()
-  for (s, e) in [("CA", "C"), ("CA", "N"), ("C", "O")]
-    if haskey(aminoacid, e)
-      vectors[e] = projectToAxes(
-        getVector(aminoacid[e]) - getVector(aminoacid[s]),
-        x, y, z)
-    else
-      vectors[e] = GeometryVector([0, 0, 0])
-    end
-  end
+  (x, y, z)
+end
+
+function getLocalVectorsBackbone(v1, v2, v3, aminoacid1, aminoacid2)
+  (x, y, z) = getLocalCoordinateSystem(v1, v2, v3)
+  vectors = {
+    "C" => vectorForKey(aminoacid1, "CA", "C", x, y, z),
+    "O" => vectorForKey(aminoacid1, "C", "O", x, y, z),
+    "N" => vectorForKey(aminoacid2, "CA", "N", x, y, z)
+  }
+  (x, y, z, aminoacid2["CA"].resName, vectors)
+end
+
+function getLocalVectorsSidechain(v1, v2, v3, aminoacid)
+  (x, y, z) = getLocalCoordinateSystem(v1, v2, v3)
   sidechain = Rotamer()
   for e in keys(aminoacid) #TODO: check if in maincode "CA" position is included or not
-    if !(e in ["CA", "C", "N", "O"])
+    if !(e in ["C", "N", "O"])
       sidechain.atoms[e] = projectToAxes(
         getVector(aminoacid[e]) - getVector(aminoacid["CA"]),
         x, y, z)
@@ -392,7 +404,7 @@ function getLocalVectors(v1, v2, v3, aminoacid)
   if (sidechainLength > 0)
     sidechain.center = sum(values(sidechain.atoms)) / sidechainLength
   end
-  (x, y, z, aminoacid["CA"].resName, vectors, sidechain)
+  (x, y, z, aminoacid["CA"].resName, sidechain)
 end
 
 #there is special reason not to take normal average vector, but to take vector with average position and average length for every chain fragment
@@ -514,17 +526,18 @@ function processChainPortion(aminoacids, meshSize = 0.3)
   v1 = getVector(aminoacids[2]["CA"]) - getVector(aminoacids[1]["CA"])
   v2 = getVector(aminoacids[3]["CA"]) - getVector(aminoacids[2]["CA"])
   v3 = getVector(aminoacids[4]["CA"]) - getVector(aminoacids[3]["CA"])
-  processChainPortionVec(v1, v2, v3, aminoacid[2], meshSize)
+  processChainPortionVec(v1, v2, v3, aminoacid[2], aminoacid[3], meshSize)
 end
 
-function processChainPortionVec(v1, v2, v3, aminoacid, meshSize = 0.3)
+function processChainPortionVec(v1, v2, v3, aminoacid1, aminoacid2, meshSize = 0.3)
   distances = map(x-> convert(Int, round(x/meshSize)), calculateDistancesVect(v1, v2, v3))
-  (x, y, z, aa_name, vectors, sidechains) = getLocalVectors(v1, v2, v3, aminoacid)
-  (distances, aa_name, vectors, sidechains)
+  (x, y, z, aa2_name, backbone) = getLocalVectorsBackbone(v1, v2, v3, aminoacid1, aminoacid2)
+  (x, y, z, aa_name, sidechain) = getLocalVectorsSidechain(v1, v2, v3, aminoacid1)
+  (distances, aa_name, aa2_name, backbone, sidechain)
 end
 
 function getVectorForSeq(sequence, ks, k, text_file_name, latticeSize = 1.22)
-  if (length(ks)<4)
+  if (length(ks) < 4)
     println("length of keys <=4")
     println(text_file_name)
   end
@@ -572,9 +585,9 @@ function load_atom_info(text_file_name :: String, pdb_dir :: String, mesh_size :
         if (length(ks) <= 4)
           continue
         end
-        for k in 1 : length(ks)
+        for k in 1 : length(ks) - 1
           (v1, v2, v3) = getVectorForSeq(atom_infos[chain], ks, k, pdb_file_name)
-          (d, aa, b, s) = processChainPortionVec(v1, v2, v3, atom_infos[chain][ks[k]]) #[atom_infos[chain][i] for i in ks[k - width + 1 : k]])
+          (d, aa, aa2, b, s) = processChainPortionVec(v1, v2, v3, atom_infos[chain][ks[k]], atom_infos[chain][ks[k + 1]])
           if !haskey(basechainInfo, aa)
             basechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
             sidechainInfo[aa] = Dict{(Int, Int, Int), Array{Rotamer, 1}}()
