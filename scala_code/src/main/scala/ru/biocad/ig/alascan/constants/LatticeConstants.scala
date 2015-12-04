@@ -29,7 +29,9 @@ case class LatticeConstants(val name : String,
         val hBondR : Restrictions,
         val hBondAmax : Double,
         val contactCutoff : Double,
-        val energyTerms : Map[String, Double]) {
+        val energyTerms : Map[String, Double],
+        val energyTermsParameters : Map[String, String],
+        val parameters: Map[String, String]) {
 
     def distanceConditionForHBonds(r: Double) : Boolean = hBondR.check(r)
     def checkAngleRestrictions(angle : Double) : Boolean = angleRestrictions.check(angle)
@@ -63,7 +65,7 @@ case class LatticeConstants(val name : String,
 
 
 object LatticeConstantsJsonProtocol extends DefaultJsonProtocol {
-  implicit val latticeConstantsJsonFormat = jsonFormat11(LatticeConstants)
+  implicit val latticeConstantsJsonFormat = jsonFormat13(LatticeConstants)
 }
 
 import LatticeConstantsJsonProtocol._

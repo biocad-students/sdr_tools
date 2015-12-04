@@ -23,5 +23,21 @@
     "ru.biocad.ig.alascan.energies.PairEnergy": 5,
     "ru.biocad.ig.alascan.energies.BurialEnergy": 0.5,
     "ru.biocad.ig.alascan.energies.TemplateEnergy": 4.25
+  },
+  "energyTermsParameters" : {
+    "eone":   "/MCDP_json/EONE.json",
+    "e14":    "/MCDP_json/r14aa12.json",
+    "e14avg": "/MCDP_json/r14avg12.json",
+    "eoneGlobular": "/EONE_globular.json",
+    "epair": "/MCDP_json/PMFHIX_SCALE.json",
+    "eRotamer": "/MCDP_json/rotamer_energies.json",
+    "eSglocal": "/MCDP_json/BGB2345.json",
+    "epair": "/MCDP_json/PMFHIX_SCALE.json"
+  },
+  "parameters": {
+    "basic_vectors": "/basic_vectors.json",
+    "backbone_library": "/backbone.json",
+    "sidechain_library": "/sidechains.json",
+    "rotamer_info": "/MCDP_json/RADIJC.json"
   }
 }

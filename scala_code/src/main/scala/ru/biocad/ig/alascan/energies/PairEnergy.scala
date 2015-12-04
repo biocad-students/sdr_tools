@@ -12,7 +12,7 @@ import EPairJsonProtocol._
 
 class PairEnergy(val lattice : Lattice) extends BasicEnergy {
 
-  val epair : EPair = lattice.loadFromFile[EPair]("/MCDP_json/PMFHIX_SCALE.json")
+  val epair : EPair = Lattice.loadFromFile[EPair](lattice.latticeConstants.energyTermsParameters("epair"))
 
   //TODO: rewrite later
   def get_E_two(i : Int, j : Int, ai : SimplifiedAminoacid, aj : SimplifiedAminoacid, f : Double) : Double = {
