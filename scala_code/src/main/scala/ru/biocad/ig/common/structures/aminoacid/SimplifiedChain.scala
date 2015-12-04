@@ -44,6 +44,13 @@ case class SimplifiedChain(val structure : Array[SimplifiedAminoacid], val latti
       { case (aa, index) => aa.move(deltaVector) })
   }
 
+  /** helper method - for BondMove
+    * @return distance as vector of lattice units between given aminoacids
+    */
+  def getDistance(position : Int, numberOfBonds : Int) : GeometryVector = {
+    structure(position + numberOfBonds).ca - structure(position).ca
+  }
+
   /** represents part of one alanine scanning step -
     * performs substitution at given position with new aminoacid, and returns modified chain.
     * seems to be convenience method, as most of this is made in moveRotamer.
