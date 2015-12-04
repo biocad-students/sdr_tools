@@ -12,6 +12,7 @@ import EPairJsonProtocol._
 class TemplateEnergy(val lattice : Lattice) extends BasicEnergy {
   val epair : EPair = Lattice.loadFromFile[EPair](lattice.latticeConstants.energyTermsParameters("epair"))
 
+
   override def get(chain : SimplifiedChain) : Double = {
     val contactMap = chain.contactMap
     //TODO: check borders
@@ -19,11 +20,11 @@ class TemplateEnergy(val lattice : Lattice) extends BasicEnergy {
       i => (i + 4 to chain.size - 5).map({
         j => {
           Seq(-4,-3,3,4).map({k => {
-            (if (contactMap(i)(j) && contactMap(i + k)(j + k))
+            (if (contactMap(i).contains(j) && contactMap(i + k).contains(j + k))
               epair.apab(chain(i).name)(chain(j).name) +
               epair.apab(chain(i + k).name)(chain(j + k).name)
             else 0.0)+
-            (if (contactMap(i)(j) && contactMap(i + k)(j - k))
+            (if (contactMap(i).contains(j) && contactMap(i + k).contains(j - k))
               epair.apab(chain(i).name)(chain(j).name) +
               epair.apab(chain(i + k).name)(chain(j - k).name)
             else 0.0)}}).sum

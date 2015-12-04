@@ -17,7 +17,7 @@ class BurialEnergy(val lattice : Lattice) extends BasicEnergy {
     val contactMap = chain.contactMap
     (0 to chain.size - 1).map({
       i => {
-        val numberOfContacts = (i + 1 to chain.size - 1).count({ case j => contactMap(i)(j) })
+        val numberOfContacts = contactMap(i).count(_ >= i+1)
         eone.get(chain(i).name, numberOfContacts)
       }
     }).sum

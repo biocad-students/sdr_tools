@@ -60,10 +60,18 @@ case class SimplifiedChain(val structure : Array[SimplifiedAminoacid], val latti
   array can be aminoacid-pair specific.
   now there is no KDTree, just simple and slow code - should replace it
   */
-  private def buildContactMap() : Array[Array[Boolean]] = {
-    this.map({case aa1 => this.map({
-      aa2 => aa2.isInContactWith(aa1, lattice.rotamerRadiusInfo.getR(aa1.name, aa2.name))
-    }).toArray}).toArray
+  private def buildContactMap() : Array[Seq[Int]] = {
+    structure.zipWithIndex.map({case (aa1, i1) => {
+      (0 to size - 1).filter({
+        i2 => {
+          val aa2 = structure(i2)
+          aa2.isInContactWith(aa1, lattice.rotamerRadiusInfo.getR(aa1.name, aa2.name))
+          }
+      })
+    } }).toArray
+    //this.map({case aa1 => this.map({
+    //  aa2 => aa2.isInContactWith(aa1, lattice.rotamerRadiusInfo.getR(aa1.name, aa2.name))
+    //}).toArray}).toArray
   }
 
   val contactMap = buildContactMap()
