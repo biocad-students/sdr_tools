@@ -29,23 +29,41 @@ import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedChain
 import ru.biocad.ig.alascan.energies._
 
+import java.io.File
+
+case class Lattice(val settingsFile : File) {
+  val settingsDirectory : String = settingsFile.getAbsoluteFile().getParent() match {
+    case f : String => f
+    case null => ""
+  }
+  println(settingsDirectory)
+
+  def loadFromFile[T : JsonReader](fileName : String) : T = {
+    loadFromFile[T](new File(Seq(settingsDirectory, fileName).mkString(File.separatorChar.toString)))
+  }
+
+  def loadFromFile[T : JsonReader](file : File) : T = {
+    val source = Source.fromFile(file)
+    val result = JsonParser(source.getLines().mkString("")).convertTo[T]
+    source.close()
+    result
+  }
 
 
-case class Lattice() {
   //
-  val latticeConstants : LatticeConstants = Lattice.loadFromFile[LatticeConstants]("/lattice_params.json")
+  val latticeConstants : LatticeConstants = loadFromFile[LatticeConstants](settingsFile)
 
-  val backboneVectors : Array[GeometryVector] = Lattice.loadFromFile[BasicVectorLibrary](
+  val backboneVectors : Array[GeometryVector] = loadFromFile[BasicVectorLibrary](
     latticeConstants.parameters("basic_vectors")).vectors.map(new Vector(_)).toArray
 
 
-  val backboneInfo = Lattice.loadFromFile[AminoacidLibrary[BackboneInfo]](
+  val backboneInfo = loadFromFile[AminoacidLibrary[BackboneInfo]](
     latticeConstants.parameters("backbone_library"))
 
-  val sidechainsInfo = Lattice.loadFromFile[AminoacidLibrary[SidechainInfo]](
+  val sidechainsInfo = loadFromFile[AminoacidLibrary[SidechainInfo]](
     latticeConstants.parameters("sidechain_library"))
 
-  val rotamerRadiusInfo = Lattice.loadFromFile[RotamerRadiusInfo](
+  val rotamerRadiusInfo = loadFromFile[RotamerRadiusInfo](
     latticeConstants.parameters("rotamer_info"))
 
 
@@ -171,13 +189,5 @@ case class Lattice() {
   def validateVectors(v1 : GeometryVector, v2 : GeometryVector, v3 : GeometryVector) = {
     latticeConstants.checkAngleRestrictions(v2.angleTo(v1)) && (v1 + v2 + v3).length >= latticeConstants.caMinDistance
   }
-}
 
-object Lattice {
-  def loadFromFile[T : JsonReader](fileName : String) : T = {
-    val source = Source.fromURL(getClass.getResource(fileName))
-    val result = JsonParser(source.getLines().mkString("")).convertTo[T]
-    source.close()
-    result
-  }
 }

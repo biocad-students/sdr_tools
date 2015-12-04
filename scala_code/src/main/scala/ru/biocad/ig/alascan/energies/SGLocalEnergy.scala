@@ -10,7 +10,7 @@ import spray.json._
 import ESgLocalJsonProtocol._
 
 class SGLocalEnergy(val lattice : Lattice) extends BasicEnergy {
-  val eSglocal : ESgLocal = Lattice.loadFromFile[ESgLocal](lattice.latticeConstants.energyTermsParameters("eSglocal"))
+  val eSglocal : ESgLocal = lattice.loadFromFile[ESgLocal](lattice.latticeConstants.energyTermsParameters("eSglocal"))
 
   override def get(aminoacids : SimplifiedChain) : Double = {
     (1 to aminoacids.size - 2).flatMap({

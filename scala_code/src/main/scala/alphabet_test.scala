@@ -25,6 +25,7 @@ object MCTest extends LazyLogging {
       sequence : String = "GARFIELD",//"RMAQLEAKVEELLSKNWNLENEVARLKKLVGER",//
       //TODO: add option - refine/fold/alascan - default refine
       postprocess : Boolean = false,
+      settingsFile : File = new File("config/lattice_params.json"),
       debug : Boolean = false)
 
   private def getParser = new OptionParser[Config]("sdr_tools") {
@@ -52,7 +53,8 @@ object MCTest extends LazyLogging {
           opt[File]('i', "inputFile") valueName("<file>") action {(s, c) =>
             c.copy(inputFile = s)} text "input file in PDB format"
         )
-
+      opt[File]("settingsFile") valueName("<file>") action {(s, c) =>
+          c.copy(settingsFile = s)} text "settings main file name"
       opt[Unit]("postprocess") action {(_, c) => c.copy(postprocess = true)} text "call postprocessing script"
       opt[Unit]("debug") action {(_, c) => c.copy(debug = true)} text "enable debug output"
       help("help") text "this message"
@@ -65,16 +67,16 @@ object MCTest extends LazyLogging {
         try {
           config.mode match {
             case "fold" => {
-              MonteCarloRunner.fold(config.sequence, config.mcTimeUnits, config.outputFile)
+              MonteCarloRunner(config.settingsFile).fold(config.sequence, config.mcTimeUnits, config.outputFile)
             }
             case "refine" => {
-              MonteCarloRunner.refine(config.inputFile, config.mcTimeUnits, config.outputFile)
+              MonteCarloRunner(config.settingsFile).refine(config.inputFile, config.mcTimeUnits, config.outputFile)
             }
             case "scan" => {
-              MonteCarloRunner.scan(config.inputFile, config.mcTimeUnits, config.outputFile)
+              MonteCarloRunner(config.settingsFile).scan(config.inputFile, config.mcTimeUnits, config.outputFile)
             }
             case "recreate" => {
-               MonteCarloRunner.recreate(config.inputFile, config.outputFile)
+               MonteCarloRunner(config.settingsFile).recreate(config.inputFile, config.outputFile)
             }
           }
           if (config.postprocess) {

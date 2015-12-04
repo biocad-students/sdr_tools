@@ -10,7 +10,7 @@ import spray.json._
 import EOneJsonProtocol._
 
 class BurialEnergy(val lattice : Lattice) extends BasicEnergy {
-  val eone : EOne = Lattice.loadFromFile[EOne](lattice.latticeConstants.energyTermsParameters("eone"))
+  val eone : EOne = lattice.loadFromFile[EOne](lattice.latticeConstants.energyTermsParameters("eone"))
 
   //this is very-very SLOW implementation, should refactor
   override def get(chain : SimplifiedChain) : Double = {
