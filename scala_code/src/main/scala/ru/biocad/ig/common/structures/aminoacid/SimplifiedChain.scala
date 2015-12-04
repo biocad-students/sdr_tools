@@ -19,21 +19,29 @@ case class SimplifiedChain(val structure : Array[SimplifiedAminoacid], val latti
   def foreach[U](f: SimplifiedAminoacid => U) = structure.foreach(f)
 
   def replaceAminoacid(positionFunc : (Int) => Boolean,
-                       replaceFunction : (SimplifiedAminoacid) => SimplifiedAminoacid
+                       replaceFunction : (SimplifiedAminoacid, Int) => SimplifiedAminoacid
                       ) : SimplifiedChain = {
     new SimplifiedChain(structure.zipWithIndex.map({
-      case (el, i) => if (positionFunc(i)) replaceFunction(el) else el
+      case (el, i) => if (positionFunc(i)) replaceFunction(el, i) else el
     }), lattice)
   }
 
   def replaceRotamer(newRotamer : GeometryVector, position : Int) : SimplifiedChain = {
-    replaceAminoacid({_ == position}, {case aa => new SimplifiedAminoacid(aa.name, aa.ca, newRotamer) })
+    replaceAminoacid({_ == position}, {case (aa, _) => new SimplifiedAminoacid(aa.name, aa.ca, newRotamer) })
+  }
+
+  def moveFragment(moveVectors : Seq[GeometryVector], position : Int, numberOfBonds : Int) : SimplifiedChain = {
+    val deltaVectors = (moveVectors zip vectors.drop(position - 1)).map({
+      case (a, b) => a - b
+    })
+    replaceAminoacid({i => i > position && i < position + numberOfBonds - 1},
+      { case (aa, index) => aa.move(deltaVectors(index - position)) })
   }
 
   def moveFragment(moveVector : GeometryVector, position : Int, numberOfBonds : Int) : SimplifiedChain = {
-    val deltaVector = moveVector - (structure(position + 1).ca - structure(position).ca)
+    val deltaVector = moveVector - vectors(position)
     replaceAminoacid({i => i > position && i < position + numberOfBonds - 1},
-      { case aa => aa.move(deltaVector) })
+      { case (aa, index) => aa.move(deltaVector) })
   }
 
   /** represents part of one alanine scanning step -
@@ -44,7 +52,7 @@ case class SimplifiedChain(val structure : Array[SimplifiedAminoacid], val latti
     */
   def mutateAtPoint(newAminoacidName : String, newRotamer : GeometryVector, position : Int) : SimplifiedChain = {
     replaceAminoacid({_ == position},
-      { case aa => SimplifiedAminoacid(newAminoacidName, aa.ca, newRotamer) })
+      { case (aa, _) => SimplifiedAminoacid(newAminoacidName, aa.ca, newRotamer) })
   }
 
   /*

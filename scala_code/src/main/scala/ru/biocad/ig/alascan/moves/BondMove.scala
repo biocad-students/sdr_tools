@@ -15,15 +15,15 @@ class BondMove(val basicVectors :  Array[GeometryVector],
   override val size = numberOfBonds - 1
   override val typeName = "BondMove"
 
-  def prepareMove(moveVector : GeometryVector,
+  def prepareMove(moveVectors : Seq[GeometryVector],
       structure : SimplifiedChain,
       position : Int) : SimplifiedChain = {
     logger.debug("in " + numberOfBonds.toString + "-BondMove starting at position: " + position.toString)
-    structure.moveFragment(moveVector, position, numberOfBonds)
+    structure.moveFragment(moveVectors, position, numberOfBonds)
   }
 
-  def getRandomVector() : GeometryVector = basicVectors(nextInt(basicVectors.size))
+  def getRandomVectors(n : Int) : Seq[GeometryVector] = Stream.continually(nextInt(basicVectors.size)).take(n).map(basicVectors(_))
 
   override def makeMove(structure : SimplifiedChain,
-    position : Int) : SimplifiedChain = prepareMove(getRandomVector(), structure, position)
+    position : Int) : SimplifiedChain = prepareMove(getRandomVectors(numberOfBonds - 1), structure, position)
 }
