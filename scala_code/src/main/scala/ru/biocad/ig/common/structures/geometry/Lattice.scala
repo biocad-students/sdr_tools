@@ -29,7 +29,8 @@ import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedChain
 import ru.biocad.ig.alascan.energies._
 
-import java.io.File
+import java.io._
+import java.util.zip.GZIPInputStream
 
 case class Lattice(val settingsFile : File) {
   val settingsDirectory : String = settingsFile.getAbsoluteFile().getParent() match {
@@ -39,7 +40,18 @@ case class Lattice(val settingsFile : File) {
   println(settingsDirectory)
 
   def loadFromFile[T : JsonReader](fileName : String) : T = {
-    loadFromFile[T](new File(Seq(settingsDirectory, fileName).mkString(File.separatorChar.toString)))
+    val filePath = Seq(settingsDirectory, fileName).mkString(File.separatorChar.toString)
+    fileName.split('.').last match {
+      case "gz" => loadFromFileGZ[T](filePath)
+      case _ => loadFromFile[T](new File(filePath))
+    }
+  }
+
+  def loadFromFileGZ[T : JsonReader](filePath : String) : T = {
+    val source = Source.fromInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(filePath))))
+    val result = JsonParser(source.getLines().mkString("")).convertTo[T]
+    source.close() //todo: find out if i should close GZIPInputStream and all other stuff
+    result
   }
 
   def loadFromFile[T : JsonReader](file : File) : T = {
