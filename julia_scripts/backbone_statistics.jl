@@ -42,11 +42,11 @@ function parse_commandline()
             action = :store_true
         "--output-backbone", "-b"
             help = "file in .json format for saving backbone database"
-            default = "backbone.json"
+            default = "backbone.json.gz"
             #required = true
         "--output-sidechain", "-s"
             help = "file in .json format for saving sidechain database"
-            default = "sidechains.json"
+            default = "sidechains.json.gz"
             #required = true
     end
 
@@ -608,11 +608,11 @@ function main()
     parsed_args = parse_commandline()
     (r1, r2) = load_atom_info(parsed_args["input-file"], parsed_args["pdb-directory"], parsed_args["mesh-size"],
         parsed_args["lattice-size"], parsed_args["threshold"])
-    output_file = open(parsed_args["output-backbone"], "w")
-    println(output_file, JSON.json(r1, 1))
+    output_file = GZip.open(parsed_args["output-backbone"], "w")
+    write(output_file, JSON.json(r1))
     close(output_file)
-    output_file = open(parsed_args["output-sidechain"], "w")
-    println(output_file, JSON.json(r2, 1))
+    output_file = GZip.open(parsed_args["output-sidechain"], "w")
+    write(output_file, JSON.json(r2))
     close(output_file)
 end
 
