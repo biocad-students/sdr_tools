@@ -116,4 +116,21 @@ object MonteCarloRunner extends LazyLogging {
     w.close()
   }
 
+  /** Converts structure from input file to simplified representation, when loads it to output file.
+    * This method is used to compare different implementations of full-chain reconstruction methods
+    * @param inputFile pdb file to load structure from
+    * @param outputFile pdb file to write structure to
+    */
+  def recreate(inputFile : File, outputFile : File) = {
+    println("load simplifiedChain")
+    val (simplifiedChain, fullAtomChain) = loadStructure("/result_old.pdb")//TODO: change this to parameter
+    logger.info("Input file energy: " + lattice.getEnergy(simplifiedChain).toString)
+    val result = lattice.toFullAtomRepresentation(simplifiedChain, fullAtomChain)
+    val s2 = SimplifiedChain((new PDBAminoacidCollection(result)).aminoacidsByChain.toSeq, lattice)
+    logger.info("Energy after recreate: " + lattice.getEnergy(s2).toString)
+    val w = new PDBWriter(outputFile)
+    w.writeAtomInfo(result)
+    w.close()
+  }
+
 }

@@ -47,6 +47,11 @@ object MCTest extends LazyLogging {
           opt[File]('i', "inputFile") valueName("<file>") action {(s, c) =>
             c.copy(inputFile = s)} text "input file in PDB format"
         )
+      cmd("recreate") action {(_, c) =>
+        c.copy(mode = "recreate") } text("performs structure fitting to chain and restores full-atom structure (with no MC runs)") children(
+          opt[File]('i', "inputFile") valueName("<file>") action {(s, c) =>
+            c.copy(inputFile = s)} text "input file in PDB format"
+        )
 
       opt[Unit]("postprocess") action {(_, c) => c.copy(postprocess = true)} text "call postprocessing script"
       opt[Unit]("debug") action {(_, c) => c.copy(debug = true)} text "enable debug output"
@@ -67,6 +72,9 @@ object MCTest extends LazyLogging {
             }
             case "scan" => {
               MonteCarloRunner.scan(config.inputFile, config.mcTimeUnits, config.outputFile)
+            }
+            case "recreate" => {
+               MonteCarloRunner.recreate(config.inputFile, config.outputFile)
             }
           }
           if (config.postprocess) {
