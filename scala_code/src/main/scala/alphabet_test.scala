@@ -24,7 +24,7 @@ object MCTest extends LazyLogging {
       mode : String = "fold",
       sequence : String = "GARFIELD",//"RMAQLEAKVEELLSKNWNLENEVARLKKLVGER",//
       //TODO: add option - refine/fold/alascan - default refine
-      postprocess : Boolean = true,
+      postprocess : Boolean = false,
       debug : Boolean = false)
 
   private def getParser = new OptionParser[Config]("sdr_tools") {
