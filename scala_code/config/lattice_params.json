@@ -36,8 +36,8 @@
   },
   "parameters": {
     "basic_vectors": "/basic_vectors.json",
-    "backbone_library": "/backbone.json",
-    "sidechain_library": "/sidechains.json",
+    "backbone_library": "/backbone.json.gz",
+    "sidechain_library": "/sidechains.json.gz",
     "rotamer_info": "/MCDP_json/RADIJC.json"
   }
 }
