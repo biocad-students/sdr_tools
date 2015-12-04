@@ -17,8 +17,6 @@ class PDBReader(source : Source) {
   private val reader = new SourceReader(source)
   private var nextAtomString : String = skipToNext()
 
-  def this(filename : String) = this(Source.fromFile(filename))
-
   def hasNext : Boolean = nextAtomString != null
 
   def next() : Option[PDBAtomInfo] = {
