@@ -27,6 +27,11 @@ function parse_commandline()
             arg_type = Float64
             default = 0.3
             #required = false
+        "--lattice-size", "-l"
+            help = "lattice size for saving structures and group data"
+            arg_type = Float64
+            default = 1.22
+            #required = false
         "--threshold", "-t"
             help = "threshold for rotamer's clustering in sidechains' database"
             arg_type = Float64
@@ -156,7 +161,9 @@ GeometryVectorOp2(a :: GeometryVector, b :: GeometryVector, op) = GeometryVector
 -(a :: GeometryVector, b :: GeometryVector) = GeometryVectorOp2(a, b, x-> x[1] - x[2])
 /(a :: GeometryVector, b :: Number) = GeometryVector(map(x -> x / b, a.coordinates))
 
-round2(a::GeometryVector) = GeometryVector(map(x::Float64->round(x), a.coordinates))
+round2(a :: GeometryVector) = GeometryVector(map(x::Float64->round(x), a.coordinates))
+round2(a :: GeometryVector, meshSize :: Float64) = round2(a / meshSize)
+
 
 *(a :: GeometryVector, b :: Number) = GeometryVector(map(x -> x*b, a.coordinates))
 *(a :: GeometryVector, b :: GeometryVector) = sum(map(x -> x[1] * x[2], zip(a.coordinates, b.coordinates)))
@@ -381,7 +388,7 @@ function getLocalVectors(v1, v2, v3, aminoacid)
   end
   sidechain = Rotamer()
   for e in keys(aminoacid) #TODO: check if in maincode "CA" position is included or not
-    if !(e in ["CA", "C", "N", "O"])
+    if !(e in ["C", "N", "O"])
       sidechain.atoms[e] = projectToAxes(
         getVector(aminoacid[e]) - getVector(aminoacid["CA"]),
         x, y, z)
@@ -453,7 +460,7 @@ function findRotamerGroup(representatives :: Array{Rotamer, 1}, rotamer :: Rotam
   0
 end
 
-function buildLibraryFragment(positions :: Array{Rotamer, 1})
+function buildLibraryFragment(positions :: Array{Rotamer, 1}, meshSize :: Float64, threshold :: Float64)
   destination = RotamerInfo()
   #1. group by number of representatives
   # todo: when select greatest. if 1, take unaffected
@@ -461,12 +468,12 @@ function buildLibraryFragment(positions :: Array{Rotamer, 1})
   if (length(positions)==0)
     println("got zero-length positions")
   end
-  for rotamerGroup in sort(collect(groupby(r-> r.center, positions)), by=length, rev=true)
+  for rotamerGroup in sort(collect(groupby(r-> round2(r.center, meshSize), positions)), by=length, rev=true)
     if (length(rotamerGroup[1].atoms) == 0)
       #println("no atoms in rotamer group found")
       continue
     end
-    i = findRotamerGroup(destination.representatives, rotamerGroup[1])
+    i = findRotamerGroup(destination.representatives, rotamerGroup[1], threshold)
     if (i == 0)
       # add new rotamer to library
       push!(destination.representatives, rotamerGroup[1]) #add only 1 rotamer, they are the same
@@ -480,13 +487,13 @@ function buildLibraryFragment(positions :: Array{Rotamer, 1})
   destination
 end
 
-function getRotamerDb(rotamers :: Dict{String, Dict{(Int, Int, Int), Array{Rotamer, 1}}})
+function getRotamerDb(rotamers :: Dict{String, Dict{(Int, Int, Int), Array{Rotamer, 1}}}, meshSize :: Float64, threshold :: Float64)
     result = Dict{String, Dict{(Int, Int, Int), RotamerInfo}}()
     for (aa, aaInfo) in rotamers
         result[aa] = Dict{(Int, Int, Int), RotamerInfo}()
         for (distances, positions) in aaInfo
             size = length(positions)
-            rotamerInfo = buildLibraryFragment(positions)
+            rotamerInfo = buildLibraryFragment(positions, meshSize, threshold)
             if (length(rotamerInfo.representatives) > 0)
                 result[aa][distances] = rotamerInfo
             end
@@ -560,7 +567,8 @@ function getVectorForSeq(sequence, ks, k, text_file_name, latticeSize = 1.22)
           round2((getVector(sequence[ks[k + 2]]["CA"]) - getVector(sequence[ks[k + 1]]["CA"]))/latticeSize))
 end
 
-function load_atom_info(text_file_name :: String, pdb_dir :: String, mesh_size :: Float64 = 1.7)
+function load_atom_info(text_file_name :: String, pdb_dir :: String,
+        meshSize :: Float64 = 0.3, latticeSize :: Float64 = 1.22, threshold :: Float64 = 1.7)
   basechainInfo = Dict{String, Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}}()
   sidechainInfo = Dict{String, Dict{(Int, Int, Int), Array{Rotamer, 1}}}()
   pdb_file_names = getPDBFileNames(text_file_name, pdb_dir)
@@ -573,7 +581,7 @@ function load_atom_info(text_file_name :: String, pdb_dir :: String, mesh_size :
           continue
         end
         for k in 1 : length(ks)
-          (v1, v2, v3) = getVectorForSeq(atom_infos[chain], ks, k, pdb_file_name)
+          (v1, v2, v3) = getVectorForSeq(atom_infos[chain], ks, k, pdb_file_name, latticeSize)
           (d, aa, b, s) = processChainPortionVec(v1, v2, v3, atom_infos[chain][ks[k]]) #[atom_infos[chain][i] for i in ks[k - width + 1 : k]])
           if !haskey(basechainInfo, aa)
             basechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
@@ -590,15 +598,16 @@ function load_atom_info(text_file_name :: String, pdb_dir :: String, mesh_size :
     end
   end
   r1 = getAverage(basechainInfo)
-  r2 = getRotamerDb(sidechainInfo)
-  ( {"data" => r1, "meshSize" => 0.3, "latticeSize" => 1.22},
-    {"data" => r2, "threshold" => 1.7, "meshSize"=> 0.3, "latticeSize" => 1.22})
+  r2 = getRotamerDb(sidechainInfo, meshSize, threshold)
+  ( {"data" => r1, "meshSize" => meshSize, "latticeSize" => latticeSize},
+    {"data" => r2, "threshold" => threshold, "meshSize"=> meshSize, "latticeSize" => latticeSize})
 end
 
 
 function main()
     parsed_args = parse_commandline()
-    (r1, r2) = load_atom_info(parsed_args["input-file"], parsed_args["pdb-directory"], parsed_args["mesh-size"])
+    (r1, r2) = load_atom_info(parsed_args["input-file"], parsed_args["pdb-directory"], parsed_args["mesh-size"],
+        parsed_args["lattice-size"], parsed_args["threshold"])
     output_file = open(parsed_args["output-backbone"], "w")
     println(output_file, JSON.json(r1, 1))
     close(output_file)
