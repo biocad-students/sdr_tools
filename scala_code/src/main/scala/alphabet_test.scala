@@ -94,8 +94,12 @@ object MCTest extends LazyLogging {
             prepareCSB(parametersMap)
             prepareCFG(parametersMap)
             val postpocessingCommandsSource = Source.fromURL(getClass.getResource("/postprocessing.txt"))
-            (new ScriptRunner(postpocessingCommandsSource)).run(parametersMap)
-            postpocessingCommandsSource.close()
+            try {
+              (new ScriptRunner(postpocessingCommandsSource)).run(parametersMap)
+            }
+            finally {
+              postpocessingCommandsSource.close()
+            }
           }
 
         } catch {
