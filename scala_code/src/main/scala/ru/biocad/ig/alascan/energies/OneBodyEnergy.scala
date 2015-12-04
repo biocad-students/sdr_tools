@@ -9,7 +9,7 @@ import spray.json._
 import EOneGlobularJsonProtocol._
 
 class OneBodyEnergy(val lattice : Lattice) extends BasicEnergy {
-  val eoneGlobular : EOneGlobular = Lattice.loadFromFile[EOneGlobular](lattice.latticeConstants.energyTermsParameters("eoneGlobular"))
+  val eoneGlobular : EOneGlobular = lattice.loadFromFile[EOneGlobular](lattice.latticeConstants.energyTermsParameters("eoneGlobular"))
 
   //this is very-very SLOW implementation, should refactor
   override def get(chain : SimplifiedChain) : Double = {

@@ -18,8 +18,7 @@ import ru.biocad.ig.common.io.pdb.PDBWriter
 /** Selects method of data processing from command line parameters.
   * Calls actual MC algorithm, which defined at [[ru.biocad.ig.common.algorithms.MonteCarlo]] object, with different parameters
   */
-object MonteCarloRunner extends LazyLogging {
-  val lattice = new Lattice()
+case class MonteCarloRunner(val lattice : Lattice) extends LazyLogging {
 
   /** helper method, loads structure from Protein Data Bank file and then returns simplified representation to it.
     * NB! - Currently it supposes that PDB file contains valid structure, where all atoms are well-positioned
@@ -148,4 +147,8 @@ object MonteCarloRunner extends LazyLogging {
       w.close()
   }
 
+}
+
+object MonteCarloRunner {
+  def apply(settingsFile : File) = new MonteCarloRunner(new Lattice(settingsFile))
 }
