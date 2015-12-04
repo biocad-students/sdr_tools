@@ -113,9 +113,7 @@ object MCTest extends LazyLogging {
       val preprocessorLines = new ScriptPreprocessor(preprocessorTemplateSource).substitute(hash)
 
       val pw = new PrintWriter(configFileName)
-      preprocessorLines.foreach({
-        l => pw.write(l); pw.write("\n")
-      })
+      preprocessorLines.foreach({ l => pw.write(l); pw.write("\n")  })
       pw.close()
       preprocessorTemplateSource.close()
     }

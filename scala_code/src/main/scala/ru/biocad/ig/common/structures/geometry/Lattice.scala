@@ -31,23 +31,22 @@ import ru.biocad.ig.alascan.energies._
 
 
 
-class Lattice {
-  def loadFromFile[T : JsonReader](fileName : String) : T = {
-    val source = Source.fromURL(getClass.getResource(fileName))
-    val result = JsonParser(source.getLines().mkString("")).convertTo[T]
-    source.close()
-    result
-  }
+case class Lattice() {
   //
-  val latticeConstants : LatticeConstants = loadFromFile[LatticeConstants]("/lattice_params.json")
+  val latticeConstants : LatticeConstants = Lattice.loadFromFile[LatticeConstants]("/lattice_params.json")
 
-  val backboneVectors : Array[GeometryVector] = loadFromFile[BasicVectorLibrary]("/basic_vectors.json").vectors.map(new Vector(_)).toArray
+  val backboneVectors : Array[GeometryVector] = Lattice.loadFromFile[BasicVectorLibrary](
+    latticeConstants.parameters("basic_vectors")).vectors.map(new Vector(_)).toArray
 
 
-  val backboneInfo = loadFromFile[AminoacidLibrary[BackboneInfo]]("/backbone.json")
-  val sidechainsInfo = loadFromFile[AminoacidLibrary[SidechainInfo]]("/sidechains.json")
+  val backboneInfo = Lattice.loadFromFile[AminoacidLibrary[BackboneInfo]](
+    latticeConstants.parameters("backbone_library"))
 
-  val rotamerRadiusInfo = loadFromFile[RotamerRadiusInfo]("/MCDP_json/RADIJC.json")
+  val sidechainsInfo = Lattice.loadFromFile[AminoacidLibrary[SidechainInfo]](
+    latticeConstants.parameters("sidechain_library"))
+
+  val rotamerRadiusInfo = Lattice.loadFromFile[RotamerRadiusInfo](
+    latticeConstants.parameters("rotamer_info"))
 
 
   //TODO: we have pair of chains, that means we somehow should utilize that when we compute total energy
@@ -171,5 +170,14 @@ class Lattice {
 
   def validateVectors(v1 : GeometryVector, v2 : GeometryVector, v3 : GeometryVector) = {
     latticeConstants.checkAngleRestrictions(v2.angleTo(v1)) && (v1 + v2 + v3).length >= latticeConstants.caMinDistance
+  }
+}
+
+object Lattice {
+  def loadFromFile[T : JsonReader](fileName : String) : T = {
+    val source = Source.fromURL(getClass.getResource(fileName))
+    val result = JsonParser(source.getLines().mkString("")).convertTo[T]
+    source.close()
+    result
   }
 }

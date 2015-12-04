@@ -12,8 +12,8 @@ import E14JsonProtocol._
 import E14avgJsonProtocol._
 
 class CaTraceEnergy(val lattice : Lattice) extends BasicEnergy {
-  val e14 : E14 = lattice.loadFromFile[E14]("/MCDP_json/r14aa12.json")
-  val e14avg : E14avg = lattice.loadFromFile[E14avg]("/MCDP_json/r14avg12.json")
+  val e14 : E14 = Lattice.loadFromFile[E14](lattice.latticeConstants.energyTermsParameters("e14"))
+  val e14avg : E14avg = Lattice.loadFromFile[E14avg](lattice.latticeConstants.energyTermsParameters("e14avg"))
 
   override def get(chain : SimplifiedChain) : Double = {
     val r14Seq = chain.vectors.sliding(3, 1).map({

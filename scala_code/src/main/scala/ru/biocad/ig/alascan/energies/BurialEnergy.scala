@@ -2,6 +2,7 @@ package ru.biocad.ig.alascan.energies
 
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedChain
 import ru.biocad.ig.common.structures.geometry.Lattice
+import ru.biocad.ig.alascan.constants.LatticeConstants
 import ru.biocad.ig.alascan.constants.energy_terms._
 import scala.io.Source
 import spray.json._
@@ -9,7 +10,7 @@ import spray.json._
 import EOneJsonProtocol._
 
 class BurialEnergy(val lattice : Lattice) extends BasicEnergy {
-  val eone : EOne = lattice.loadFromFile[EOne]("/MCDP_json/EONE.json")
+  val eone : EOne = Lattice.loadFromFile[EOne](lattice.latticeConstants.energyTermsParameters("eone"))
 
   //this is very-very SLOW implementation, should refactor
   override def get(chain : SimplifiedChain) : Double = {

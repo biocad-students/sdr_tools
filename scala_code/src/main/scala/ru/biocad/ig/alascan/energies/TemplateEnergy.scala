@@ -10,7 +10,7 @@ import spray.json._
 import EPairJsonProtocol._
 
 class TemplateEnergy(val lattice : Lattice) extends BasicEnergy {
-  val epair : EPair = lattice.loadFromFile[EPair]("/MCDP_json/PMFHIX_SCALE.json")
+  val epair : EPair = Lattice.loadFromFile[EPair](lattice.latticeConstants.energyTermsParameters("epair"))
 
   override def get(chain : SimplifiedChain) : Double = {
     val contactMap = chain.contactMap
