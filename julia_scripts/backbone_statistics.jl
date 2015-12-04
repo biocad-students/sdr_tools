@@ -588,15 +588,19 @@ function load_atom_info(text_file_name :: String, pdb_dir :: String, mesh_size :
         for k in 1 : length(ks) - 1
           (v1, v2, v3) = getVectorForSeq(atom_infos[chain], ks, k, pdb_file_name)
           (d, aa, aa2, b, s) = processChainPortionVec(v1, v2, v3, atom_infos[chain][ks[k]], atom_infos[chain][ks[k + 1]])
-          if !haskey(basechainInfo, aa)
-            basechainInfo[aa] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
+          if !haskey(basechainInfo, aa2)
+            basechainInfo[aa2] = Dict{(Int, Int, Int), Array{AminoacidInfo, 1}}()
+          end
+          if !haskey(sidechainInfo, aa)
             sidechainInfo[aa] = Dict{(Int, Int, Int), Array{Rotamer, 1}}()
           end
-          if !haskey(basechainInfo[aa], d)
-            basechainInfo[aa][d] = AminoacidInfo[]
+          if !haskey(basechainInfo[aa2], d)
+            basechainInfo[aa2][d] = AminoacidInfo[]
+          end
+          if !haskey(sidechainInfo[aa], d)
             sidechainInfo[aa][d] = Rotamer[]
           end
-          push!(basechainInfo[aa][d], b)
+          push!(basechainInfo[aa2][d], b)
           push!(sidechainInfo[aa][d], s)
         end
       end
