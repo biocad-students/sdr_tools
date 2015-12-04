@@ -14,6 +14,8 @@ sealed trait GeometryVector {
   def lengthSquared : Double
   def dimensions : Int
 
+  def roundedCoordinates : Seq[Int] = coordinates.map(_.toInt)
+
   def -(v : GeometryVector) : GeometryVector = v match {
     case vx : Vector => new Vector( (coordinates, v.coordinates).zipped map ( _ - _ ) )
     case _ => v
