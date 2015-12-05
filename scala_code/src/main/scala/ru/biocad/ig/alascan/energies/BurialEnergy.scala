@@ -9,6 +9,11 @@ import spray.json._
 
 import EOneJsonProtocol._
 
+/** This is optional energy term, it can be turned on/off via `config/lattice_params.json`.
+  * Should be used for non-globular proteins.
+  * Uses `parameters` key in `config/lattice_params.json` named `eone`.
+  * Implementation is based on article [folding142]
+  */
 class BurialEnergy(val lattice : Lattice) extends BasicEnergy {
   val eone : EOne = lattice.loadFromFile[EOne](lattice.latticeConstants.energyTermsParameters("eone"))
 
@@ -17,7 +22,7 @@ class BurialEnergy(val lattice : Lattice) extends BasicEnergy {
     val contactMap = chain.contactMap
     (0 to chain.size - 1).map({
       i => {
-        val numberOfContacts = contactMap(i).count(_ >= i+1)
+        val numberOfContacts = contactMap(i).count(_ >= i + 1)
         eone.get(chain(i).name, numberOfContacts)
       }
     }).sum
