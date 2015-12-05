@@ -178,16 +178,7 @@ case class Lattice(val settingsFile : File) {
         })
       }
     })
-    if (!r2)
-      return false
-    val r3 = (0 to structure.size - 4).forall({
-      i => {
-        val a1 = structure(i).ca
-        val a2 = structure(i + 3).ca
-        a1.distanceTo(a2) >= latticeConstants.caMinDistance
-      }
-    })
-    r3
+    r2
   }
 
   def prepareValidVectors(n : Int) : Seq[GeometryVector] = {
