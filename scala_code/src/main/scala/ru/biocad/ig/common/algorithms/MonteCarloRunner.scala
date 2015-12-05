@@ -73,7 +73,7 @@ case class MonteCarloRunner(val lattice : Lattice) extends LazyLogging {
   def getMovesForSequence(n : Int) = {
      Seq(
       (new BondMove(lattice.backboneVectors, 2, true, Some(lattice.latticeConstants)), n - 2),
-      (new BondMove(lattice.backboneVectors, 4), n - 4),
+      (new BondMove(lattice.backboneVectors, 4, true, Some(lattice.latticeConstants)), n - 4),
       (new BondMove(lattice.backboneVectors, 6), n - 6),
       (new BondMove(lattice.backboneVectors, 8), n - 8),
       (new BondMove(lattice.backboneVectors, 10), n - 10),
