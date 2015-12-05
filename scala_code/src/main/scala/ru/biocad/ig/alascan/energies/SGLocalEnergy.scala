@@ -9,6 +9,10 @@ import spray.json._
 
 import ESgLocalJsonProtocol._
 
+/** This is optional energy term, it can be turned on/off via `config/lattice_params.json`.
+  * Uses `parameters` key in `config/lattice_params.json` named `eSglocal`.
+  * Implementation is based on articles [folding116,folding142].
+  */
 class SGLocalEnergy(val lattice : Lattice) extends BasicEnergy {
   val eSglocal : ESgLocal = lattice.loadFromFile[ESgLocal](lattice.latticeConstants.energyTermsParameters("eSglocal"))
 

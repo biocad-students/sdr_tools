@@ -9,9 +9,13 @@ import spray.json._
 
 import EPairJsonProtocol._
 
+
+/** This is optional energy term, it can be turned on/off via `config/lattice_params.json`.
+  * Uses `parameters` key in `config/lattice_params.json` named `epair`.
+  * Implementation is based on articles [folding116,folding142].
+  */
 class TemplateEnergy(val lattice : Lattice) extends BasicEnergy {
   val epair : EPair = lattice.loadFromFile[EPair](lattice.latticeConstants.energyTermsParameters("epair"))
-
 
   override def get(chain : SimplifiedChain) : Double = {
     val contactMap = chain.contactMap

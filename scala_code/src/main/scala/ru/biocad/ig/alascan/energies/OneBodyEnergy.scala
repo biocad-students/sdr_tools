@@ -8,6 +8,11 @@ import spray.json._
 
 import EOneGlobularJsonProtocol._
 
+/** This is optional energy term, it can be turned on/off via `config/lattice_params.json`.
+  * Should be used for globular proteins with one domain and chain.
+  * Uses `parameters` key in `config/lattice_params.json` named `eoneGlobular`.
+  * Implementation is based on articles [folding107,folding116]
+  */
 class OneBodyEnergy(val lattice : Lattice) extends BasicEnergy {
   val eoneGlobular : EOneGlobular = lattice.loadFromFile[EOneGlobular](lattice.latticeConstants.energyTermsParameters("eoneGlobular"))
 

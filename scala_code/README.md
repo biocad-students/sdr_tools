@@ -71,6 +71,11 @@ Prediction of quaternary structure of coiled coils. Application to mutants of GC
 J.Mol.Biol., 251:448-467, 1995.
 URL: http://cssb.biology.gatech.edu/skolnick/publications/pdffiles/142.pdf
 
+
+[folding163] Andrzej Kolinski, Jeffrey Skolnick. Assembly of Protein Structure From Sparse Experimental Data: An Efficient Monte Carlo Model.
+PROTEINS: Structure, Function, and Genetics, 32:475-494, 1998.
+URL: http://cssb.biology.gatech.edu/skolnick/publications/pdffiles/163.pdf
+
 [levitt1976] M.Levitt. A Simplified Representation of Protein Conformations for Rapid Simulation of Protein Folding. J.Mol.Biol., 104:59-107, 1976.
 
 [levitt1977] M. Levitt, J.Greer. Automatic  identification of secondary structure in globular proteins. Journal of Molecular Biology, 114:181-293, 1977.

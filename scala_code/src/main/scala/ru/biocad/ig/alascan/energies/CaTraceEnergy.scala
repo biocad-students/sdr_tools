@@ -11,6 +11,10 @@ import spray.json._
 import E14JsonProtocol._
 import E14avgJsonProtocol._
 
+/** This is optional energy term, it can be turned on/off via `config/lattice_params.json`.
+  * Uses `parameters` key in `config/lattice_params.json` named `e14` and `e14avg`.
+  * Implementation is based on articles [folding116,folding142].
+  */
 class CaTraceEnergy(val lattice : Lattice) extends BasicEnergy {
   val e14 : E14 = lattice.loadFromFile[E14](lattice.latticeConstants.energyTermsParameters("e14"))
   val e14avg : E14avg = lattice.loadFromFile[E14avg](lattice.latticeConstants.energyTermsParameters("e14avg"))
