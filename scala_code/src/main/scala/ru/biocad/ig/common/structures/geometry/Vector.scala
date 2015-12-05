@@ -16,6 +16,11 @@ sealed trait GeometryVector {
 
   def roundedCoordinates : Seq[Int] = coordinates.map(_.toInt)
 
+  def unary_-() : GeometryVector = this match {
+    case v : Vector => new Vector(coordinates.map(- _))
+    case _ => this
+  }
+
   def -(v : GeometryVector) : GeometryVector = v match {
     case vx : Vector => new Vector( (coordinates, v.coordinates).zipped map ( _ - _ ) )
     case _ => v
@@ -74,7 +79,7 @@ case class Vector(val coordinates : Seq[Double]) extends GeometryVector  {
   }
 
   //override def toString = coordinates.mkString("Vector (", ", ", ")")
-  override def toString = coordinates.mkString("[", ", ", "]")
+  override def toString = coordinates.mkString("custom Vector[", ", ", "]")
 }
 
 
@@ -93,7 +98,6 @@ case class InfiniteVector(val dimensions : Int) extends GeometryVector {
     case v : InfiniteVector => dimensions == v.dimensions
     case _ => false
   }
-
   override def - (v : GeometryVector) : GeometryVector = this
   override def + (v : GeometryVector) : GeometryVector = this
   override def *(v : GeometryVector) : Double = 0.0

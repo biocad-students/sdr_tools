@@ -155,14 +155,9 @@ case class Lattice(val settingsFile : File) {
     val r0 = structure.vectors.forall({v => backboneVectors.contains(v) })
     if (!r0)
       return false
-    val r1 = (0 to structure.size - 3).forall({
-      i => {
-        val a1 = structure(i).ca
-        val a2 = structure(i + 1).ca
-        val a3 = structure(i + 2).ca
-        val v1 = a1 - a2
-        val v2 = a3 - a2
-        latticeConstants.checkAngleRestrictions(v1.angleTo(v2))
+    val r1 = structure.vectors.sliding(2, 1).forall({
+      case Seq(v1, v2) => {
+        latticeConstants.checkAngleRestrictions(v1.angleTo(-v2))
       }
     })
     if (!r1)
@@ -181,6 +176,7 @@ case class Lattice(val settingsFile : File) {
     r2
   }
 
+  //TODO: rewrite this method
   def prepareValidVectors(n : Int) : Seq[GeometryVector] = {
     //1. should get random pair of vector such as structure validation conditions holds.
     val l1 = Vector3d(3, 1, 0)
@@ -190,7 +186,7 @@ case class Lattice(val settingsFile : File) {
   }
 
   def validateVectors(v1 : GeometryVector, v2 : GeometryVector, v3 : GeometryVector) = {
-    latticeConstants.checkAngleRestrictions(v2.angleTo(v1)) && (v1 + v2 + v3).length >= latticeConstants.caMinDistance
+    latticeConstants.checkAngleRestrictions(v2.angleTo(-v1)) && (v1 + v2 + v3).length >= latticeConstants.caMinDistance
   }
 
 }
