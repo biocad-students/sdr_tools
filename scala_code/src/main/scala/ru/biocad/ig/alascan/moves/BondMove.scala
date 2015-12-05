@@ -5,7 +5,7 @@ import ru.biocad.ig.common.algorithms.geometry.AminoacidUtils
 import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 import util.Random.nextInt
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import ru.biocad.ig.common.structures.geometry.{GeometryVector}
+import ru.biocad.ig.common.structures.geometry.{GeometryVector, Vector3d}
 import ru.biocad.ig.alascan.constants.LatticeConstants
 
 //TODO: add optional preprocessing and memorizing for allowed moves, if allowed, then optionally do it
@@ -23,8 +23,7 @@ class BondMove(val basicVectors :  Array[GeometryVector],
       if (sequence.length >= 2) {
         val v1 = sequence.head
         val v2 = sequence.tail.head
-        constrains.checkAngleRestrictions(v2.angleTo(-v1))
-        //&& sequence.drop(4).forall(v1.distanceTo(_) >= constrains.caMinDistance )
+        constrains.checkAngleRestrictions(v2.angleTo(-v1)) && sequence.scanLeft(Vector3d(0, 0, 0) : GeometryVector)(_ + _).drop(3).forall(v1.distanceTo(_) >= constrains.caMinDistance/constrains.meshSize )
       }
       else {
         true
