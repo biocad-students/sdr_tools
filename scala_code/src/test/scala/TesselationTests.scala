@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit.NANOSECONDS
 import scala.io.Source
 
 class TesselationTests extends FlatSpec with Matchers {
-  def time[R](block: => R, block_name : String = ""): R = {
+  def time[R](block: => R, block_name : String = "") : R = {
       println("called method: " + block_name)
       val t0 = System.nanoTime()
       val result = block
@@ -20,36 +20,34 @@ class TesselationTests extends FlatSpec with Matchers {
       result
   }
 
-  def loadPDB(filename : String) : (Seq[GeometryVector], Seq[GeometryVector]) = {
+  def loadPDB(filename : String, chains : Seq[Char] = Seq('L', 'H')) : Seq[Seq[GeometryVector]] = {
     val structure : PDBStructure = new PDBStructure()
     structure.readFile(filename)
-    val v1 = structure.parse_array.collect(
-      {
-        case xx:PDBAtomInfo if xx.chainID == 'L' => Vector3d(xx.x, xx.y, xx.z)
-      }
-      ).toList
-    val v2 = structure.parse_array.collect({
-      case xx:PDBAtomInfo if xx.chainID == 'H' => Vector3d(xx.x, xx.y, xx.z)
-      }).toList
-    (v1, v2)
+    chains.map({chainName =>  {
+      structure.parse_array.collect({
+          case xx : PDBAtomInfo if xx.chainID == chainName => Vector3d(xx.x, xx.y, xx.z)
+        }).toList
+    }})
   }
 
   def testTriangulation(pointsL : Seq[GeometryVector],
       pointsH : Seq[GeometryVector], n : Int, m : Int) = {
     println("start to process 1st set of n points")
-    val simplices1 = time(compare_timing_1(pointsL.take(n)), "delaunay triangulation")
+    val simplices1 = time(compare_timing_0(pointsL.take(n)), "delaunay triangulation")
     println("start to process 2nd set of m points")
-    val simplices2 = time(compare_timing_1(pointsL.take(m)), "delaunay triangulation")
-    println("simplices obtained, getting distance")
-    println(
-      time(ManifoldUtils.getHausdorffDistance(simplices1, simplices2), "getHausdorffDistance")
-    )
+    val simplices2 = time(compare_timing_1(pointsL.take(n)), "delaunay triangulation")
     println("finished")
   }
 
-  def compare_timing_1(points : Seq[GeometryVector]) : Seq[Simplex] = {
+  def compare_timing_0(points : Seq[GeometryVector]) : Seq[Simplex] = {
     var res = new DelaunayTesselation()
     res.makeTesselation(points)
+    res.simplices.toSeq
+  }
+  def compare_timing_1(points : Seq[GeometryVector]) : Seq[Simplex] = {
+    var res = new QHull()
+    res.makeTesselation(points)
+    res.simplices.toSeq
   }
 
   it should "create initial bounding simplex correctly"
@@ -75,7 +73,7 @@ class TesselationTests extends FlatSpec with Matchers {
   it should "do some benchmarking" in {
     assert(getClass().getResource("/2OSL.pdb") != null);
 
-    val (pointsL, pointsH) = time(loadPDB(
+    val Seq(pointsL, pointsH) = time(loadPDB(
       getClass().getResource("/2OSL.pdb").getFile()
       ))
     println("got: ", pointsL.size, pointsH.size)

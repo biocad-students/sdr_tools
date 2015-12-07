@@ -51,8 +51,8 @@ sealed trait GeometryVector {
   /** the following method returns true if point is above hyperplane defined by given simplex
   (points below hyperplane are detected with given simplex's lowerPoint)
   */
-  def isAbove(hyperplane: Simplex) : Boolean = {
-    hyperplane.getDistance(this) < -EPSILON //FIX: change to comparision with small value
+  def isAbove(hyperplane : Simplex) : Boolean = {
+    !hyperplane.hasVertex(this) && (hyperplane.getDistance(this) < -EPSILON) //FIX: change to comparision with small value
   }
 
   override def equals(other : Any) : Boolean = false
@@ -72,9 +72,9 @@ case class Vector(val coordinates : Seq[Double]) extends GeometryVector  {
   override def unlifted : GeometryVector = new Vector(coordinates.init) // TODO: add empty list check
 
   override def equals(other : Any) : Boolean = other match {
-    case v : Vector => (
-      (dimensions == v.dimensions) && (coordinates, v.coordinates).zipped.map(_ === _ +- EPSILON).foldLeft(true)( _ && _ )
-    )
+    case v : Vector => {
+      (dimensions == v.dimensions) && (coordinates, v.coordinates).zipped.forall(_ === _ +- EPSILON)
+    }
     case _ => false
   }
 

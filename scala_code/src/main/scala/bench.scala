@@ -120,9 +120,6 @@ def validate_data(points : Seq[GeometryVector], tetrahedras : Seq[Simplex]) : Bo
   //true
 }
 
-def compare_timing_2(points : Seq[GeometryVector], points2 : Seq[GeometryVector]) = {
-  ManifoldUtils.getDiscreteHausdorffDistance(points, points2)
-}
 
 def call_all(n : Int, logger_file_name : String = "triangulation_n_.txt") = {
   println(logger_file_name)
@@ -158,12 +155,7 @@ def call_all2(n : Int, logger_file_name : String = "triangulation_n_.txt") = {
 
   val simplices2 = time(compare_timing_1(pointsH), writer, "delaunay triangulation")
   println("simplices obtained, getting distance " + simplices2.size)
-  writer.write("getting Hausdorff distance\n")
 
-  val distance = time(ManifoldUtils.getHausdorffDistance(simplices1.toSeq, simplices2.toSeq), writer, "getHausdorffDistance")
-  println("having distance")
-  println(distance)
-  writer.write(distance.toString)
   writer.close()
   println("finished")
 }

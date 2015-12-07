@@ -46,6 +46,7 @@ object ManifoldUtils {
   */
   def getCofactors(matrix : Seq[Seq[Double]]) : Seq[Double] => Double = {
     val cofactors = getCofactorsVector(matrix, 1)
+    assert(matrix.length == matrix.head.length - 1)
     (cofactors, _ : Seq[Double]).zipped.map( _ * _ ).reduceLeft( _ + _ )
   }
 
@@ -81,7 +82,10 @@ object ManifoldUtils {
     //println(nLength)
     //println("getting Det")
     val d = getDeterminant(points.map(_.lifted.coordinates))
-    (v : Seq[Double]) => ((n, v).zipped.map(_ * _ ).reduceLeft( _ + _ ) - d) / nLength
+    (v : Seq[Double]) => {
+      assert(v.size == points.head.lifted.dimensions)
+      ((n, v).zipped.map(_ * _ ).reduceLeft( _ + _ ) - d) / nLength
+    }
   }
 
   def getSimplexNormalEquationParameters(points : Seq[GeometryVector], epsilon : Double) : (Seq[Double], Double, GeometryVector => Double) = {
@@ -89,12 +93,18 @@ object ManifoldUtils {
     val nLength = normalize(n)
     if (nLength.abs < epsilon) {
       val d = getDeterminant(points.map(_.lifted.coordinates))
-      return (n, d, (v : GeometryVector) => ((n, v.lifted.coordinates).zipped.map(_ * _).reduceLeft(_ + _) - d))
+      return (n, d, (v : GeometryVector) => {
+        assert(v.dimensions == points.head.dimensions + 1)
+        ((n, v.coordinates).zipped.map(_ * _).reduceLeft(_ + _) - d)
+      })
     }
 
     val nNormalized = n.map(_ / nLength)//todo: add zero check
     val d = getDeterminant(points.map(_.lifted.coordinates)) / nLength
-    (nNormalized, d, (v : GeometryVector) => ((nNormalized, v.lifted.coordinates).zipped.map(_ * _).reduceLeft(_ + _) - d))
+    (nNormalized, d, (v : GeometryVector) => {
+      assert(v.dimensions == points.head.dimensions + 1)
+      ((nNormalized, v.coordinates).zipped.map(_ * _).reduceLeft(_ + _) - d)
+    })
   }
 
   def updateSimplices(s : Simplex, v : GeometryVector, epsilon : Double) : Seq[Simplex] = {
@@ -108,7 +118,7 @@ object ManifoldUtils {
         testFunc(v.toSeq)*testFunc(p.toSeq) < epsilon
       }).head
       val temp = new Simplex(tr :+ v)
-      if (temp.getPosition(p)==PointPosition.LaysOutside)
+      if (temp.getPosition(p) == PointPosition.LaysOutside)
         return Seq(s, temp)
     }
 
@@ -158,112 +168,6 @@ object ManifoldUtils {
     //.map(x => new Simplex(x._2 ++ Seq(v)) ).toSet.toSeq
   }
 */
-  /** finds Hausdorff distance for discrete sets of n-dimentional euclidean space vectors, not between actual manifolds */
-  def getDiscreteHausdorffDistance(manifold1 : Seq[GeometryVector], manifold2: Seq[GeometryVector]) : Double = {
-    val pointsWithMinDistance = manifold1.foldLeft((
-        manifold1.head,
-        manifold2.head,
-        manifold1.head.distanceTo(manifold2.head)
-    )) {
-      case ((point1, point2, distance), currentPoint1 : GeometryVector) => {
-        val currentPoint2 = manifold2.minBy(currentPoint1.distanceTo(_))
-        if (currentPoint1.distanceTo(currentPoint2) < distance)
-        (currentPoint1, currentPoint2, currentPoint1.distanceTo(currentPoint2))
-        else (point1, point2, distance)
-      }
-    }
-    pointsWithMinDistance._3
-  }
-
-  /**helper method - temporary - gets all Simplices and returns list of line segments from them*/
-  def convertSimplicesToLines(manifold : Seq[Simplex]) : Seq[(GeometryVector, GeometryVector)] = {
-    manifold.flatMap(_.getLineSegments()).toSet.toSeq.map({
-      x : Set[GeometryVector] => x.toSeq }).map({
-      case Seq(x, y) => (x, y)
-    }).toSeq //there may be still equal line segments
-  }
-
-  /** helper method for finding preferred pairs of points with given metrics*/
-  def reduceLeftBy(sequence : Seq[(Double, Seq[(GeometryVector, GeometryVector)])],
-                   isFirstArgPreferredFunc : (Double, Double) => Boolean
-                   ) : (Double, Seq[(GeometryVector, GeometryVector)]) = sequence match {
-    case Seq() => null
-    case _ => {
-      sequence.tail.foldLeft(sequence.head) {
-        case ((currentNearestDistance, currentPairsOfNearestPoints), (distance, pairsOfPoints)) => {
-          if (isFirstArgPreferredFunc(distance, currentNearestDistance))
-          (distance, pairsOfPoints)
-          else {
-            if (isFirstArgPreferredFunc(currentNearestDistance, distance))
-            (currentNearestDistance, currentPairsOfNearestPoints)
-            else {
-              (currentNearestDistance, (pairsOfPoints ++ currentPairsOfNearestPoints).distinct)
-            }
-          }
-        }
-      }
-    }
-  }
-
-  def reduceLeftByMax(sequence : Seq[(Double, Seq[(GeometryVector, GeometryVector)] )] ) = reduceLeftBy(sequence, {case (x : Double, y : Double) => x > y})
-  def reduceLeftByMin(sequence : Seq[(Double, Seq[(GeometryVector, GeometryVector)] )] ) = reduceLeftBy(sequence, {case (x : Double, y : Double) => x < y})
-
-  /** simplest implementation with line segments and point. finds minimum distance to given manifold possible*/
-  def getHausdorffDistance(point : GeometryVector, manifold : Seq[Simplex]) : Double = {
-    val lineSegments = convertSimplicesToLines(manifold)
-    lineSegments.foldLeft(point.distanceTo(lineSegments.head._1)) {
-      case (nearestDistance, (point1, point2)) => {
-        Seq(nearestDistance, point.distanceTo(point1), point.distanceTo(point2)).min
-      }
-    }
-  }
-
-  /** */
-  def getHausdorffDistance(lineSegment : (GeometryVector, GeometryVector),
-                           manifold : Seq[(GeometryVector, GeometryVector)])
-        : (Double, Seq[(GeometryVector, GeometryVector)] ) = {
-    val points = manifold.map(x =>
-      getNearestPointsForHausdorffDistance(lineSegment._1, lineSegment._2, x._1, x._2)
-    ).map(x => (x._1.distanceTo(x._2), Seq(x) ))
-    reduceLeftByMax(points)
-  }
-
-  def getNearestPointsForHausdorffDistance(p1 : GeometryVector, p2 : GeometryVector,
-      p3 : GeometryVector, p4 : GeometryVector
-  ) = {
-    val nearestPoints = getNearestPoints(p1, p2, p3, p4)
-    if (nearestPoints._1.distanceTo(nearestPoints._2) < Seq(p1.distanceTo(p2), p3.distanceTo(p4)).max) {
-      Seq((p1, p3), (p2, p3), (p1, p4), (p2, p4)).maxBy(x => x._1.distanceTo(x._2))
-    }
-    else {
-      nearestPoints
-    }
-  }
-
-  /** finds Hausdorff distance for fiven set of Simplices (Tetrahedras, Triangles, etc.)*/
-  def getHausdorffDistanceDirect(manifold1 : Seq[Simplex], manifold2: Seq[Simplex])
-      : (Double, Seq[(GeometryVector, GeometryVector)]) = {
-    println("-in Hausdorff dist1")
-    val lineSegments1 = convertSimplicesToLines(manifold1)
-    val lineSegments2 = convertSimplicesToLines(manifold2)
-println("after converting to lines")
-    val minimalDistancesToPoints = lineSegments1.map(
-      getHausdorffDistance(_, lineSegments2) : (Double, Seq[(GeometryVector, GeometryVector)])
-    )
-//println("minimalDistancesToPoints " + minimalDistancesToPoints.size)
-    reduceLeftByMin(minimalDistancesToPoints)
-  }
-
-  /**method find symmetrical Hausdorff distance for given manifolds*/
-  def getHausdorffDistance(manifold1 : Seq[Simplex], manifold2: Seq[Simplex]) : (Double, Seq[(GeometryVector, GeometryVector)] ) = {
-    println("in Hausdorff dist")
-    reduceLeftByMin(
-      Seq(
-        getHausdorffDistanceDirect(manifold1, manifold2),
-        getHausdorffDistanceDirect(manifold2, manifold1)
-      )
-    )
-  }
 
   /**for given pair of vector, compute: 1. projection of 1st to 2nd; 2. orthogonal 1st part */
   def getProjections(v1 : GeometryVector, v2 : GeometryVector) = {
