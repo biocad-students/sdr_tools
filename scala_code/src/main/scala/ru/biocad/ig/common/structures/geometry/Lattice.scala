@@ -33,6 +33,8 @@ import java.io._
 import java.util.zip.GZIPInputStream
 
 case class Lattice(val settingsFile : File) {
+  def this(fileName: String) = this(new File(fileName))
+
   val settingsDirectory : String = settingsFile.getAbsoluteFile().getParent() match {
     case f : String => f
     case null => ""

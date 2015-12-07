@@ -33,7 +33,7 @@ class AminoacidsTests extends FlatSpec with Matchers {
   }
 
   it should "restore backbone atoms from alpha-carbons" in {
-    val lattice = new Lattice()
+    val lattice = new Lattice("config/lattice_params.json")
     val latticeMeshSize : Double = lattice.latticeConstants.meshSize
     val meshSize = 0.4
     val info = PDBAtomInfo(1, "CA", ' ',"ARG", 'L', 2, ' ',
