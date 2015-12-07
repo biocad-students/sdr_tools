@@ -14,6 +14,7 @@ class SimplexTests extends FlatSpec with Matchers {
     val t2 = new Tetrahedra(a, c, b, d)
     (t1) should equal (t2)
     (t2) should equal (t1)
+    (t1.hasVertex(Vector3d(0.0, 0, 0))) should be (true)
     /**
     println("finding distinct tetrahedras")
     println(Set(t1, t2))

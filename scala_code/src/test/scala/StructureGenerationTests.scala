@@ -13,7 +13,7 @@ import ru.biocad.ig.common.structures.geometry._
 class StructureGenerationTests extends FlatSpec with Matchers {
   it should "generate simplified structure from sequence" in {
     //val rotamerInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
-    val lattice = new Lattice()
+    val lattice = new Lattice("config/lattice_params.json")
     noException should be thrownBy{
       SimplifiedChain.fromSequence("GBARFIELD", lattice)
     }

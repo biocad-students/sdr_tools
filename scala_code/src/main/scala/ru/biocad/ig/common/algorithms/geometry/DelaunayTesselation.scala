@@ -63,7 +63,7 @@ class DelaunayTesselation {
     ).*/toSet
   }
 
-  def makeTesselation(points : Seq[GeometryVector]) : Unit = {
+  def makeTesselation(points : Seq[GeometryVector]) : Seq[Simplex] = {
     val startSimplex = prepareBoundingSimplex(points)
     var l = 0
     val tesselationResult = points.drop(4).foldLeft(Seq(startSimplex)) {
@@ -74,5 +74,6 @@ class DelaunayTesselation {
         }
     }
     simplices = removeBoundingSimplex(tesselationResult, startSimplex)
+    simplices.toSeq
   }
 }

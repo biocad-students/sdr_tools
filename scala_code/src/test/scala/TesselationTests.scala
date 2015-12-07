@@ -9,7 +9,7 @@ import ru.biocad.ig.common.algorithms.geometry._
 import java.util.concurrent.TimeUnit.NANOSECONDS
 
 import scala.io.Source
-/**
+
 class TesselationTests extends FlatSpec with Matchers {
   def time[R](block: => R, block_name : String = ""): R = {
       println("called method: " + block_name)
@@ -89,4 +89,4 @@ class TesselationTests extends FlatSpec with Matchers {
     println("testing dataset - 30 points and 10 points")
     testTriangulation(pointsL, pointsH, 10, 30)
   }
-}*/
+}
