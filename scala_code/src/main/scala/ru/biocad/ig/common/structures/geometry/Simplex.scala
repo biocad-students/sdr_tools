@@ -12,32 +12,10 @@ object PointPosition extends Enumeration {
 import PointPosition._
 
 
-/**
-  * the following class iterates through given simple structures of the Simplex class
-  */
-class GeometryVectorIterator(input_sequence : Seq[GeometryVector]) extends Iterator[(GeometryVector, Seq[GeometryVector])] {
-  var prefix : Seq[GeometryVector] = Seq()
-  var tailSequence : Seq[GeometryVector] = input_sequence
-
-  def hasNext : Boolean = !tailSequence.isEmpty
-
-  def next() : (GeometryVector, Seq[GeometryVector]) = {
-    if (hasNext) {
-      val element : GeometryVector = tailSequence.head
-      tailSequence = tailSequence.tail
-      val allExceptElement : Seq[GeometryVector] = tailSequence ++ prefix
-      prefix = prefix ++ Seq(element)
-      (element, allExceptElement)
-    } else {
-      null
-    }
-  }
-}
-
 class Simplex(val vertices : Seq[GeometryVector],
         val innerPoint : GeometryVector,
         val lowerPoint : GeometryVector) {
-  val EPSILON = 0.001
+  val EPSILON = 0.00001
   val dimensions : Int = vertices.head.dimensions
   //var innerPoint : GeometryVector = vertices.reduceLeft(_ + _) /vertices.size
   //var lowerPoint : GeometryVector = vertices.reduceLeft(_ + _) /vertices.size
@@ -64,7 +42,7 @@ class Simplex(val vertices : Seq[GeometryVector],
     vertices.foreach(println)
     println(normals)
     println(innerPoint)
-    normals.last*math.signum(distFunc(innerPoint)) > EPSILON
+    normals.last*math.signum(distFunc(innerPoint.lifted)) > EPSILON
   }
   //FIX: change naming of this later and also return distance instead
   def getPosition_(v : GeometryVector) : Double = {
@@ -81,7 +59,7 @@ class Simplex(val vertices : Seq[GeometryVector],
     }
   }
   def getDistance(point : GeometryVector) : Double = {
-    distFunc(point) * math.signum(distFunc(innerPoint))
+    distFunc(point.lifted) * math.signum(distFunc(innerPoint.lifted))
   }
 
   def isFlat : Boolean = testFunc(InfiniteVector(vertices.head.dimensions).toSeq).abs < EPSILON
@@ -127,7 +105,7 @@ class Simplex(val vertices : Seq[GeometryVector],
     vertices.sortWith(_.hashCode < _.hashCode).map(_.hashCode).reduceLeft(_ + _ * 100)
   }
 
-  override def toString = vertices.mkString("\n[ \n  ", ", \n  ", " ],")
+  override def toString = vertices.mkString("\n[ \n  ", ", \n  ", " ],") + innerPoint.toString + " " +lowerPoint.toString
 //  override def toString = vertices.mkString("\nSimplex[ \n  ", ", \n  ", " ]")
 }
 //todo: check if it useful to use getPosition for checking point position relative to different primitives

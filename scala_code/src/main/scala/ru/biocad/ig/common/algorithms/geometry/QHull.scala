@@ -10,22 +10,23 @@ class QHull(val dimensions : Int = 3) extends LazyLogging {
 
   var simplices = collection.mutable.Set[Simplex]()
   var neighbours = collection.mutable.Map[Simplex, collection.mutable.Set[Simplex]]()
-  var last_simplices : Seq[Simplex]= Seq()
+  var last_simplices : Seq[Simplex] = Seq()
 
   var adjacentByVertex   = collection.mutable.Map[GeometryVector, collection.mutable.Set[Simplex]]()
   var adjacentByEdge     = collection.mutable.Map[Set[GeometryVector], collection.mutable.Set[Simplex]]()
   var adjacentByTriangle = collection.mutable.Map[Set[GeometryVector], collection.mutable.Set[Simplex]]()
 
-  var outerSet = collection.mutable.Map[Simplex, Seq[GeometryVector]]()
-  //var outerSet = collection.mutable.Map[Simplex, (GeometryVector, Seq[GeometryVector])]()
+
 
   def removeSimplex(s : Simplex) = simplices.remove(s)
 
-  def appendPoint(new_point : GeometryVector) : Unit = { }
+  def appendPoint(new_point : GeometryVector) : Unit = { } //TODO: check why is it here
 
-  def addSimplex(s: Simplex) = simplices.add(s)
+  def addSimplex(s : Simplex) = simplices.add(s)
 
   def getHypervolume(pp : Seq[GeometryVector]) : Double = {
+    assert(pp.size == 5)
+    assert(pp.size == pp.head.dimensions + 2)
     ManifoldUtils.getDeterminant(pp.tail.map({
       line => (pp.head.lifted.coordinates, line.lifted.coordinates).zipped.map({(p0, p1) => p1 - p0})
     }))
@@ -50,7 +51,7 @@ class QHull(val dimensions : Int = 3) extends LazyLogging {
     if (getHypervolume(pp) > EPSILON) {
       pp = (Seq(pp.tail.head, pp.head) ++ pp.tail.tail)
     }
-    val innerPoint = pp.map(_.lifted).reduceLeft(_ + _)/(pp.size)
+    val innerPoint = pp.reduceLeft(_ + _)/(pp.size)
     (new GeometryVectorIterator(pp)).map({
       case s : (GeometryVector, Seq[GeometryVector]) => new Simplex(s._2, innerPoint, s._2.reduceLeft(_ + _)/s._2.size)
     }).toSeq
@@ -128,32 +129,63 @@ class QHull(val dimensions : Int = 3) extends LazyLogging {
     tetrahedras
   }
 
-  /**this implementation should be qhull-based*/
+  /** main method.
+    * performs tesselation for `points` sequence.
+    * In this class implementation of this method is QHull-based
+    * @param points sequence of points to process (one by one)
+    */
   def makeTesselation(points : Seq[GeometryVector]) : Unit = {
+    simplices.clear()
     val startSimplices = prepareStartSimplex(points.distinct)
     startSimplices.filter(addSimplex(_)).foreach(addNeighbours(_))
 
     logger.debug(startSimplices.toString)
     logger.info("starting simplex received")
-    var unprocessedPoints = points //.distinct.toSet
-    println(unprocessedPoints.size)
-
-    simplices.scanLeft(unprocessedPoints) ({
+    var unprocessedPoints = points.distinct.diff(startSimplices.flatMap(_.vertices).distinct) //.distinct.toSet
+    logger.info("got %d unprocessed points".format(unprocessedPoints.size))
+    var outerSet = collection.mutable.Map[Simplex, Seq[GeometryVector]]()
+    /*
+    //old code:
+    val belowPoints = simplices.foldLeft(unprocessedPoints) ({
       (unprocessedPoints, simplex) => {
         logger.info("new simplex")
+        logger.info("partitioning points near simplex " + simplex.toString)
         val (abovePoints, result) = unprocessedPoints.partition(point => {
-            logger.info(simplex.toString)
-            logger.info(point.toString)
-            logger.info(point.isAbove(simplex).toString + " " + simplex.getDistance(point).toString)
+            println(point.toString)
+            println(point.isAbove(simplex).toString + " " + simplex.getDistance(point).toString)
             point.isAbove(simplex)
           })
         if (abovePoints.nonEmpty)
             outerSet(simplex) = outerSet.getOrElse(simplex, Seq()) ++ abovePoints
         result
       }
+    })*/
+    //new code:
+    val result = startSimplices.scanLeft((unprocessedPoints, None : Option[(Simplex, Seq[GeometryVector])])) ({
+      case ((unprocessedPoints, _ ), simplex) => {
+        logger.info("new simplex")
+        logger.info("partitioning points near simplex " + simplex.toString)
+        val (abovePoints, result) = unprocessedPoints.partition(point => {
+            println(point.toString)
+            println(point.isAbove(simplex).toString + " " + simplex.getDistance(point).toString)
+            point.isAbove(simplex)
+          })
+        (result, Some((simplex, abovePoints)))
+      }
     })
+    outerSet ++= result.flatMap(_._2).filter(_._2.length > 0)
+    val belowPoints = result.last._1
+    /**end of new code*/
+    if (belowPoints.size > 0) {
+      logger.info("found %d points below start simplices.".format(belowPoints.size))
+      logger.info("There were %d points total.".format(unprocessedPoints.size))
+      logger.info(belowPoints.toString)
+      logger.info("simplices are:")
+      logger.info(startSimplices.toString)
+      return
+    }
 
-    logger.info(outerSet.toString)
+    logger.debug(outerSet.toString)
     //return
     logger.info("processing outer set...")
     while (!outerSet.isEmpty) {
@@ -167,7 +199,9 @@ class QHull(val dimensions : Int = 3) extends LazyLogging {
       logger.debug(simplices.head.innerPoint.toString)
       logger.debug(simplices.head.innerPoint.isAbove(simplices.head).toString)
       logger.debug(simplices.head.getDistance(simplices.head.innerPoint).toString)
-      while (!neighbourSet.isEmpty){
+
+
+      while (!neighbourSet.isEmpty) {
         val s = neighbourSet.head
         neighbourSet.remove(s)
         logger.debug(s.getDistance(point).toString)
