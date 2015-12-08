@@ -32,43 +32,15 @@ class TesselationTests extends FlatSpec with Matchers {
     }})
   }
 
-  def testTriangulation(pointsL : Seq[GeometryVector],
-      pointsH : Seq[GeometryVector], n : Int, m : Int) = {
-    println("start to process 1st set of n points")
-    val simplices1 = time(compare_timing_0(pointsL.take(n)), "delaunay triangulation")
-    println("start to process 2nd set of m points")
-    val simplices2 = time(compare_timing_1(pointsL.take(n)), "delaunay triangulation")
-    println("finished")
+  def testTriangulation(points : Seq[GeometryVector], n : Int) = {
+    println("start to process set of %d points".format(n))
+    val simplices1 = time(compare_timing(points.take(n)), "delaunay triangulation")
   }
 
-  def compare_timing_0(points : Seq[GeometryVector]) : Seq[Simplex] = {
-    var res = new DelaunayTesselation()
-    res.makeTesselation(points)
-    res.simplices.toSeq
-  }
-  def compare_timing_1(points : Seq[GeometryVector]) : Seq[Simplex] = {
+  def compare_timing(points : Seq[GeometryVector]) : Seq[Simplex] = {
     var res = new QHull()
     res.makeTesselation(points)
     res.simplices.toSeq
-  }
-
-  it should "create initial bounding simplex correctly"
-
-  it should "appendPoint to existing tesselation correctly" in {
-    val tesselation = new DelaunayTesselation()
-
-    var tetrahedras = Seq(new Tetrahedra(
-      Vector3d(0, 0, 0),
-      Vector3d(0, 0, 100),
-      Vector3d(100, 0, 0),
-      Vector3d(0, 100, 0)
-    ))
-
-    tesselation.appendPoint(tetrahedras, Vector3d(10, 10, 10))
-    println("testing 2")
-    println(
-      tesselation.appendPoint(tetrahedras, Vector3d(100, 100, 100))
-    )
   }
 
 
@@ -80,14 +52,10 @@ class TesselationTests extends FlatSpec with Matchers {
       ))
     println("got: ", pointsL.size, pointsH.size)
 
-    println("testing tiny dataset 10 points per chain")
-    testTriangulation(pointsL, pointsH, 10, 10)
-    println("testing bigger dataset - 25 points per chain")
-    testTriangulation(pointsL, pointsH, 25, 25)
-    println("testing dataset - 30 points and 10 points")
-    testTriangulation(pointsL, pointsH, 30, 10)
-    println("testing dataset - 30 points and 10 points")
-    testTriangulation(pointsL, pointsH, 10, 30)
+    testTriangulation(pointsL, 10)
+    testTriangulation(pointsL, 25)
+    testTriangulation(pointsL, 100)
+    testTriangulation(pointsL, 1000)
   }
 
   def validate_data(points : Seq[GeometryVector], tetrahedras : Seq[Simplex]) : Unit = {
@@ -139,12 +107,12 @@ class TesselationTests extends FlatSpec with Matchers {
     Seq(6, 10, 15, 20, 100, 200, 300, 500).foreach({
       n => {
         println("testing tiny datasets - %d points in chain".format(n))
-        val triangulationResult = compare_timing_1(pointsL.take(n))
+        val triangulationResult = compare_timing(pointsL.take(n))
         validate_data(pointsL.take(n), triangulationResult.toSeq)
       }
     })
     println("testing big dataset - %d points in chain".format(pointsL.size))
-    val triangulationResult = compare_timing_1(pointsL)
+    val triangulationResult = compare_timing(pointsL)
     validate_data(pointsL, triangulationResult.toSeq)
 
   }
@@ -170,19 +138,4 @@ class TesselationTests extends FlatSpec with Matchers {
 
   }
 
-  it should "be valid2" in {
-    val point = Vector3d(21.946, 52.459, -20.95)
-    val simplex = new Simplex(Seq(
-Vector3d(21.405, 51.524, -19.856),
-Vector3d(21.011, 54.571, -20.271),
-Vector3d(23.332, 52.901, -20.613),
-Vector3d(21.105, 52.204, -18.517))//,
- //new Vector(Seq(23.332, 52.901, -20.613, 3767.793794)),
-//Vector3d(21.71325, 52.800000000000004, -19.81425)
-)
-
-point.isAbove(simplex.reorient()) should be (true)
-point.isAbove(simplex) should be (true)
-
-  }
 }
