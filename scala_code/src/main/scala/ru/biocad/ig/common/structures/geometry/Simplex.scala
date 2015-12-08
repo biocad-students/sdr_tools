@@ -3,6 +3,7 @@ package ru.biocad.ig.common.structures.geometry
 import ru.biocad.ig.common.algorithms.geometry.ManifoldUtils
 
 import collection.immutable.Set
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
 object PointPosition extends Enumeration {
   type PointPosition = Value
@@ -13,15 +14,16 @@ import PointPosition._
 
 
 class Simplex(val vertices : Seq[GeometryVector],
-        val innerPoint : GeometryVector,
-        val lowerPoint : GeometryVector) {
-  val EPSILON = 0.00001
+        val lowerPoint : GeometryVector,
+        val innerPoint : GeometryVector
+      ) extends LazyLogging {
+  val EPSILON = 0.0000001
   val dimensions : Int = vertices.head.dimensions
   //var innerPoint : GeometryVector = vertices.reduceLeft(_ + _) /vertices.size
   //var lowerPoint : GeometryVector = vertices.reduceLeft(_ + _) /vertices.size
 
-  def this(vertices : Seq[GeometryVector], innerPoint : GeometryVector) = this(vertices, innerPoint, vertices.reduceLeft(_ + _)/vertices.size)
-  def this(vertices : Seq[GeometryVector]) = this(vertices, vertices.reduceLeft(_ + _)/vertices.size)
+  def this(vertices : Seq[GeometryVector], lowerPoint : GeometryVector) = this(vertices, lowerPoint, vertices.reduceLeft(_ + _)/vertices.size)
+  def this(vertices : Seq[GeometryVector]) = this(vertices, vertices.map(_.lifted).reduceLeft(_ + _)/vertices.size)
 
   val (normals: Seq[Double], dNorm : Double, distFunc) = ManifoldUtils.getSimplexNormalEquationParameters(vertices, EPSILON)
 
@@ -29,40 +31,71 @@ class Simplex(val vertices : Seq[GeometryVector],
   //private lazy val distFunc : Seq[Double] => Double =
   def reorient() : Simplex = {
     //return this
-    if (testFunc(InfiniteVector(dimensions).toSeq) > EPSILON && vertices.size >= 2) {
+    if (innerPoint.lifted.isBelow(this) && vertices.size >= 2) {
+      logger.debug("reorienting")
       new Simplex(Seq(vertices.tail.head, vertices.head) ++ vertices.tail.tail,
-          innerPoint, lowerPoint)
+          lowerPoint, innerPoint)
     }
     else {
     this
     }
   }
   def isInLowerConvHull() : Boolean = {
-    println("in lower conv hull check, got " + normals.last +" and "+ math.signum(distFunc(innerPoint.lifted)) )
-    vertices.foreach(println)
-    println(normals)
-    println(innerPoint)
-    normals.last*math.signum(distFunc(innerPoint.lifted)) > EPSILON
+    logger.debug("in lower conv hull check, got " + normals.last +" and "+
+      math.signum(distFunc(innerPoint.lifted))  + " and " + innerPoint.lifted.isAbove(this).toString)
+    //vertices.foreach(logger.debug)
+    //logger.debug(normals)
+    //logger.debug(innerPoint)
+    //innerPoint.lifted.isAbove(this)
+    //math.signum(distFunc(innerPoint.lifted)) > EPSILON //&& normals.last < 0
+    math.signum(distFunc(innerPoint.lifted)) < EPSILON
+    //normals.last*math.signum(distFunc(innerPoint.lifted)) < EPSILON
+    //normals.last*math.signum(distFunc(lowerPoint)) < - EPSILON
   }
   //FIX: change naming of this later and also return distance instead
   def getPosition_(v : GeometryVector) : Double = {
-    testFunc(v.toSeq) * math.signum(testFunc(InfiniteVector(dimensions).toSeq))
+    //normals.last*math.signum(distFunc(v.lifted))
+    getDistance(v)
+    //testFunc(v.toSeq) * math.signum(testFunc(InfiniteVector(dimensions).toSeq))
   }
   def getPosition(v : GeometryVector) : PointPosition = {
     val result : Double = getPosition_(v)//testFunc(v.toSeq) * flag//math.signum(testFunc(lowerPoint.toSeq))//InfiniteVector(dimensions).toSeq))
-    //println("result in getPosition: " + result)
-    if (result.abs <= EPSILON) //FIX: there should be comparision with near-zero value
-    LaysOnNSphere
-    else {
-      if (result > EPSILON) LaysOutside
-      else LaysInside
+    //logger.debug("result in getPosition: " + result)
+    if (v.isAbove(this)) {
+      logger.debug("Lays inside with %f %f %f".format(normals.last, distFunc(innerPoint.lifted),
+      getDistance(v)))
+      LaysInside
     }
-  }
-  def getDistance(point : GeometryVector) : Double = {
-    distFunc(point.lifted) * math.signum(distFunc(innerPoint.lifted))
+    else {
+      if (v.isBelow(this)) {
+        logger.debug("Lays outside with %f %f %f".format(normals.last, distFunc(innerPoint.lifted), getDistance(v)))
+
+        LaysOutside
+      }
+      else {
+        LaysOnNSphere
+      }
+
+    }
+    //if (result.abs <= EPSILON) //FIX: there should be comparision with near-zero value
+    //LaysOnNSphere
+    //else {
+    //  if (result > EPSILON) LaysOutside
+    //  else LaysInside
+    //}
   }
 
-  def isFlat : Boolean = testFunc(InfiniteVector(vertices.head.dimensions).toSeq).abs < EPSILON
+  def getDistance(point : GeometryVector) : Double = {
+    //normals.last*math.signum(distFunc(innerPoint.lifted))
+    if (point.dimensions < lowerPoint.dimensions){
+      distFunc(point.lifted) * math.signum(distFunc(lowerPoint))
+    }
+    else {
+      distFunc(point) * math.signum(distFunc(lowerPoint))
+    }
+  }
+
+  def isFlat : Boolean = dNorm.abs < EPSILON
 
   def hasVertex(point : GeometryVector) : Boolean = vertices.find(_.equals(point)) != None
 

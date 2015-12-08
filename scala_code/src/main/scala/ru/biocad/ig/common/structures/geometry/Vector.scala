@@ -8,7 +8,7 @@ import scala.math.sqrt
 import ru.biocad.ig.common.algorithms.geometry.ManifoldUtils
 
 sealed trait GeometryVector {
-  val EPSILON = 0.001
+  val EPSILON = 0.0000001
   def coordinates : Seq[Double]
   def length : Double
   def lengthSquared : Double
@@ -53,6 +53,9 @@ sealed trait GeometryVector {
   */
   def isAbove(hyperplane : Simplex) : Boolean = {
     !hyperplane.hasVertex(this) && (hyperplane.getDistance(this) < -EPSILON) //FIX: change to comparision with small value
+  }
+  def isBelow(hyperplane : Simplex) : Boolean = {
+    !hyperplane.hasVertex(this) && (hyperplane.getDistance(this) > EPSILON)
   }
 
   override def equals(other : Any) : Boolean = false
