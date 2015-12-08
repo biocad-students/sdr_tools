@@ -9,7 +9,7 @@ I wrote folding implementation, qhull-based tesselation code, and now I decided 
 
 There is still much to do - to move from folding to alascan, to refactor code... to kill zombie hidden in [[ru.biocad.ig.common.algorithms.geometry.QHull]], et cetera, et cetera, et cetera, but...
 
-[http://frontalot.com/media.php/531/MC_Frontalot_-_Zero_Day_-_03._Jacquelyn_Hyde_%5BTEASER%5D.mp3](I OFFICIALLY GIVE UP. I mean it.)
+[I OFFICIALLY GIVE UP. I mean it.](http://frontalot.com/media.php/531/MC_Frontalot_-_Zero_Day_-_03._Jacquelyn_Hyde_%5BTEASER%5D.mp3)
 
 Final remarks
 ===================
