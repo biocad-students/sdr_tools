@@ -37,6 +37,7 @@ class QHull(val dimensions : Int = 3) extends LazyLogging {
     * shouldn't be degenerate
     */
   def prepareStartSimplex(points : Seq[GeometryVector]) : Seq[Simplex] = {
+    assert(simplices.size == 0)
     var pp = Seq(points.maxBy(_.length), points.minBy(_.length))
     (0 to points.head.coordinates.size-1).foreach({ i=> {
       if (points.diff(pp).size > 0)
@@ -51,9 +52,11 @@ class QHull(val dimensions : Int = 3) extends LazyLogging {
     if (getHypervolume(pp) > EPSILON) {
       pp = (Seq(pp.tail.head, pp.head) ++ pp.tail.tail)
     }
-    val innerPoint = pp.reduceLeft(_ + _)/(pp.size)
+    val lowerPoint = pp.map(_.lifted).reduceLeft(_ + _)/pp.size
+    assert(simplices.size == 0)
     (new GeometryVectorIterator(pp)).map({
-      case s : (GeometryVector, Seq[GeometryVector]) => new Simplex(s._2, innerPoint, s._2.reduceLeft(_ + _)/s._2.size)
+      case s : (GeometryVector, Seq[GeometryVector]) =>
+      (new Simplex(s._2, lowerPoint)).reorient()
     }).toSeq
   }
 
@@ -89,26 +92,30 @@ class QHull(val dimensions : Int = 3) extends LazyLogging {
     })
   }
 
-  def getBorderLine(simplices : Seq[Simplex], point : GeometryVector) : Seq[Set[GeometryVector]] = {
+  def getBorderLine(visibleSimplices : Seq[Simplex], horizonSimplices : Seq[Simplex], point : GeometryVector) : Seq[Set[GeometryVector]] = {
     //val allRidges = simplices.flatMap(_.getRidges())
     //val uniqueRidges = allRidges.toSet.toSeq.diff(allRidges.diff(allRidges.toSet.toSeq).toSet.toSeq)
     //uniqueRidges
-    var horizonRidges = collection.mutable.Set[Set[GeometryVector]]()
-    simplices.foreach({ simplex =>
-      getNeighbours(simplex).filterNot(point.isAbove(_)).foreach({
+
+    /**
+    //was:
+    val horizonRidges : Set[Set[GeometryVector]] = simplices.flatMap({ simplex =>
+      getNeighbours(simplex).filter(point.isBelow(_)).flatMap({
           neighbour =>
             //println(simplex.getRidges().toSet.intersect(neigbour.getRidges().toSet))
-            horizonRidges ++= simplex.getRidges().toSet.intersect(neighbour.getRidges().toSet)
+             simplex.getRidges().toSet.intersect(neighbour.getRidges().toSet)
 
       })
-    })
-    logger.debug("in getBorderLine, ridges are:")
+    }).toSet*/
+    //now:
+    val horizonRidges : Set[Set[GeometryVector]] = visibleSimplices.flatMap(_.getRidges()).intersect(horizonSimplices.flatMap(_.getRidges())).toSet
+    logger.debug("++++\nin getBorderLine, ridges are:")
     logger.debug(horizonRidges.toSeq.toString)
     horizonRidges.toSeq
   }
 
   def getLowerConvexHull(simplices : collection.mutable.Set[Simplex]) : collection.mutable.Set[Simplex] = {
-    simplices.filter({ s => s.isInLowerConvHull() })
+    simplices.filter(_.isInLowerConvHull())
   }
 
   //todo: check if simplices points are lifed, or not
@@ -116,13 +123,13 @@ class QHull(val dimensions : Int = 3) extends LazyLogging {
     simplices.filter((new InfiniteVector(dimensions)).isAbove(_))
   }
 
-  def makeCone(horizonSimplices : Seq[Simplex], point : GeometryVector) : Seq[Simplex] = {
-    var ridges = getBorderLine(horizonSimplices, point)
+  def makeCone(visibleSimplices : Seq[Simplex], horizonSimplices : Seq[Simplex], point : GeometryVector) : Seq[Simplex] = {
+    var ridges = getBorderLine(visibleSimplices, horizonSimplices, point)
     logger.debug("in makeCone: ")
     logger.debug(point.toString)
     var newSimplices = collection.mutable.Set[Simplex]()
     var tetrahedras = ridges.map( {case ridge => {
-      (new Simplex(ridge.toSeq :+ point, horizonSimplices.head.innerPoint)).reorient()
+      (new Simplex(ridge.toSeq :+ point, visibleSimplices.head.lowerPoint)).reorient()
     }})
     tetrahedras.filter(addSimplex(_)).foreach(addNeighbours(_))
     logger.debug("tetrahedras: " + tetrahedras)
@@ -136,20 +143,23 @@ class QHull(val dimensions : Int = 3) extends LazyLogging {
     */
   def makeTesselation(points : Seq[GeometryVector]) : Unit = {
     simplices.clear()
+    adjacentByTriangle.clear()
     val startSimplices = prepareStartSimplex(points.distinct)
     startSimplices.filter(addSimplex(_)).foreach(addNeighbours(_))
+    assert(adjacentByTriangle.values.flatten.toSet.size == 5)
+    adjacentByTriangle.foreach({case (k, v) => assert(v.size == 2)})
 
     logger.debug(startSimplices.toString)
-    logger.info("starting simplex received")
+    logger.debug("starting simplex received")
     var unprocessedPoints = points.distinct.diff(startSimplices.flatMap(_.vertices).distinct) //.distinct.toSet
-    logger.info("got %d unprocessed points".format(unprocessedPoints.size))
+    logger.debug("got %d unprocessed points".format(unprocessedPoints.size))
     var outerSet = collection.mutable.Map[Simplex, Seq[GeometryVector]]()
     /*
     //old code:
     val belowPoints = simplices.foldLeft(unprocessedPoints) ({
       (unprocessedPoints, simplex) => {
-        logger.info("new simplex")
-        logger.info("partitioning points near simplex " + simplex.toString)
+        logger.debug("new simplex")
+        logger.debug("partitioning points near simplex " + simplex.toString)
         val (abovePoints, result) = unprocessedPoints.partition(point => {
             println(point.toString)
             println(point.isAbove(simplex).toString + " " + simplex.getDistance(point).toString)
@@ -163,11 +173,11 @@ class QHull(val dimensions : Int = 3) extends LazyLogging {
     //new code:
     val result = startSimplices.scanLeft((unprocessedPoints, None : Option[(Simplex, Seq[GeometryVector])])) ({
       case ((unprocessedPoints, _ ), simplex) => {
-        logger.info("new simplex")
-        logger.info("partitioning points near simplex " + simplex.toString)
+        logger.debug("new simplex")
+        logger.debug("partitioning points near simplex " + simplex.toString)
         val (abovePoints, result) = unprocessedPoints.partition(point => {
-            println(point.toString)
-            println(point.isAbove(simplex).toString + " " + simplex.getDistance(point).toString)
+            logger.debug(point.toString)
+            logger.debug(point.isAbove(simplex).toString + " " + simplex.getDistance(point).toString)
             point.isAbove(simplex)
           })
         (result, Some((simplex, abovePoints)))
@@ -177,17 +187,17 @@ class QHull(val dimensions : Int = 3) extends LazyLogging {
     val belowPoints = result.last._1
     /**end of new code*/
     if (belowPoints.size > 0) {
-      logger.info("found %d points below start simplices.".format(belowPoints.size))
-      logger.info("There were %d points total.".format(unprocessedPoints.size))
-      logger.info(belowPoints.toString)
-      logger.info("simplices are:")
-      logger.info(startSimplices.toString)
+      logger.debug("found %d points below start simplices.".format(belowPoints.size))
+      logger.debug("There were %d points total.".format(unprocessedPoints.size))
+      logger.debug(belowPoints.toString)
+      logger.debug("simplices are:")
+      logger.debug(startSimplices.toString)
       return
     }
 
     logger.debug(outerSet.toString)
     //return
-    logger.info("processing outer set...")
+    logger.debug("processing outer set...")
     while (!outerSet.isEmpty) {
       var (simplex, outerPoints) = outerSet.head
       val point = selectFurthest(simplex, outerPoints.toSeq)
@@ -195,7 +205,7 @@ class QHull(val dimensions : Int = 3) extends LazyLogging {
       var horizonSimplices = collection.mutable.Set[Simplex]()
       var visitedSimplices = collection.mutable.Set[Simplex]()
       var neighbourSet = collection.mutable.Set[Simplex](simplex)
-      logger.debug("simplices size: " + simplices.size)
+      logger.debug("----------\n simplices size: " + simplices.size)
       logger.debug(simplices.head.innerPoint.toString)
       logger.debug(simplices.head.innerPoint.isAbove(simplices.head).toString)
       logger.debug(simplices.head.getDistance(simplices.head.innerPoint).toString)
@@ -214,8 +224,19 @@ class QHull(val dimensions : Int = 3) extends LazyLogging {
           horizonSimplices ++= horizon
         }
       }
+      /*
+      logger.debug("horizon simplices: " + horizonSimplices.toString )
+      horizonSimplices.foreach({
+        s => logger.debug("for simplex in horizon:%s %s".format(s.toString, point.isAbove(s).toString))
+      })
 
-      val newSimplices = makeCone(horizonSimplices.toSeq, point)
+      visibleSet.foreach({
+        s => logger.debug("for simplex in visibleSet:%s %s".format(s.toString, point.isAbove(s).toString))
+      })
+      **/
+
+      val newSimplices = makeCone(visibleSet.toSeq, horizonSimplices.toSeq, point)
+      logger.debug("new Simplices: \n" + newSimplices.toString )
       //TODO: add links to newly created simplices from their neighbours
       //TODO: build outside points set for all visible Set once again
       var unprocessedPoints = visibleSet.flatMap(outerSet.getOrElse(_, Seq()))

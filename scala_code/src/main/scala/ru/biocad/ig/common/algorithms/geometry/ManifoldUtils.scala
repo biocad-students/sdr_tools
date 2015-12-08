@@ -71,16 +71,8 @@ object ManifoldUtils {
   def getNormals(points : Seq[Seq[Double]]) : Seq[Double] = normalVectors(points).map(getDeterminant(_))
 
   def getSimplexNormalEquation(points : Seq[GeometryVector]) : Seq[Double] => Double = {
-    /**
-    println("in getSimplexNormalEquation")
-    points.foreach(println)
-    println("normals: ")
-    */
     val n = getNormals(points.map(_.lifted.coordinates))
-    //n.foreach(println)
     val nLength = normalize(n)
-    //println(nLength)
-    //println("getting Det")
     val d = getDeterminant(points.map(_.lifted.coordinates))
     (v : Seq[Double]) => {
       assert(v.size == points.head.lifted.dimensions)

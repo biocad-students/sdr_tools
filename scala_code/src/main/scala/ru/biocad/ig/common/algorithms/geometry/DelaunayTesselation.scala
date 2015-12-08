@@ -69,7 +69,7 @@ class DelaunayTesselation {
     val tesselationResult = points.drop(4).foldLeft(Seq(startSimplex)) {
       case (simplices, point) => {
         l+=1;
-        println("processing point no: " + l);
+        //println("processing point no: " + l);
         appendPoint(simplices, point)
         }
     }
