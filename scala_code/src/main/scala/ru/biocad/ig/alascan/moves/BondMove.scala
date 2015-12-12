@@ -12,9 +12,14 @@ import ru.biocad.ig.alascan.constants.LatticeConstants
 /**there should be several kinds of bond makeMoves,
 this class takes number of bonds to makeMove, starting from zero*/
 class BondMove(val basicVectors :  Array[GeometryVector],
-        val numberOfBonds : Int, val precompute : Boolean = false, val latticeConstants : Option[LatticeConstants] = None) extends LatticeBasicMove with LazyLogging {
+               val rotamerLibrary : AminoacidLibrary[SidechainInfo],
+               val numberOfBonds : Int,
+               val precompute : Boolean = false,
+               val latticeConstants : Option[LatticeConstants] = None) extends LatticeBasicMove with LazyLogging {
+
   override val size = numberOfBonds - 1
-  override val typeName = "BondMove"
+
+  val rotamerMove = new RotamerMove(rotamerLibrary)
 
   lazy val precomputedMoveSet : Map[Seq[Int], IndexedSeq[Seq[GeometryVector]]] = if (precompute) computeMoves() else Map()
 
@@ -51,11 +56,17 @@ class BondMove(val basicVectors :  Array[GeometryVector],
       val distance = structure.getDistance(position, numberOfBonds).roundedCoordinates
       val allowedMoves = precomputedMoveSet(distance)
       val moveVectors = allowedMoves(nextInt(allowedMoves.size)).init
-      structure.moveFragment(moveVectors, position, numberOfBonds)
+      val newStructure = structure.moveFragment(moveVectors, position, numberOfBonds)
+      (position to position + numberOfBonds).foldLeft(newStructure) ({
+        (result, i) => rotamerMove.makeMove(result, i)
+      })
     }
     else {
       val moveVectors = getRandomVectors(numberOfBonds - 1)
-      structure.moveFragment(moveVectors, position, numberOfBonds)
+      val newStructure = structure.moveFragment(moveVectors, position, numberOfBonds)
+      (position to position + numberOfBonds).foldLeft(newStructure) ({
+        (result, i) => rotamerMove.makeMove(result, i)
+      })
     }
   }
 

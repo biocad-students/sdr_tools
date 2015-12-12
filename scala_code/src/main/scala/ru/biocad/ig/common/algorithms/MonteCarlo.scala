@@ -18,9 +18,11 @@ case class MonteCarlo(val lattice: Lattice) extends LazyLogging {
       val newStructure = move.makeMove(currentStructure, position)
       val oldE = getEnergy(currentStructure)
       val newE = getEnergy(newStructure)
+      val T = 1.85
+      val probability = if (newE < oldE) 1.0 else math.exp(-(newE - oldE)/T)
       //println("in attemptMove: ")
       //println(newE)
-      if (oldE < newE) {
+      if (probability >= Random.nextDouble()) {
         //println("accept new")
         newStructure
       }
@@ -65,7 +67,7 @@ case class MonteCarlo(val lattice: Lattice) extends LazyLogging {
       case (currentStructure, (shuffledMoves, time)) => {
         shuffledMoves.foldLeft(currentStructure) {
           case (current, move) => {
-            logger.debug("%d, %s".format(currentStructure.size - move.size, move.typeName))
+            //logger.debug("%d, %s".format(currentStructure.size - move.size, move.typeName))
             if (currentStructure.size - move.size < 0)
               currentStructure
             else{

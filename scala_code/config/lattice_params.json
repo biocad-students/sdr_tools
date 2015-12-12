@@ -7,8 +7,8 @@
     "max": 154
   },
   "caMinDistance": 4.05,
-  "eH": 0.5,
-  "eHH": 0.75,
+  "eH": -0.5,
+  "eHH": -0.75,
   "hBondR" : {
     "min": 4.8,
     "max": 7
