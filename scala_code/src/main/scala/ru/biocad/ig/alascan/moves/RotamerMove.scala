@@ -37,13 +37,14 @@ class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
   }
 
   override val size = 0
-  override val typeName = "RotamerMove"
 
 
-  override def makeMove(chain : SimplifiedChain, position : Int) : SimplifiedChain = {
-    logger.debug("in RotamerMove at position: " + position.toString)
-
-    val newRotamer = moveRotamer(chain.structure, position)
-    chain.replaceRotamer(newRotamer, position)
+  override def makeMove(chain : SimplifiedChain, position : Int) : SimplifiedChain = position match {
+    case position if position < 0 || position >= chain.size => chain
+    case _ => {
+      logger.debug("in RotamerMove at position: " + position.toString)
+      val newRotamer = moveRotamer(chain.structure, position)
+      chain.replaceRotamer(newRotamer, position)
+    }
   }
 }

@@ -9,5 +9,4 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 trait LatticeBasicMove {
   def makeMove(structure : SimplifiedChain, position : Int) : SimplifiedChain = ???
   def size : Int = ???
-  val typeName = "BasicMove"
 }
