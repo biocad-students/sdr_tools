@@ -57,7 +57,7 @@ case class SimplifiedChain(val structure : Array[SimplifiedAminoacid], val latti
     * only rotamer and aminoacid name should be replaced here.
     * slightly differs from replaceRotamer - aminoacid's name also gets changed
     */
-  def mutateAtPoint(newAminoacidName : String, newRotamer : GeometryVector, position : Int) : SimplifiedChain = {
+  def mutateAtPoint(newAminoacidName : String, position : Int, newRotamer : GeometryVector) : SimplifiedChain = {
     replaceAminoacid({_ == position},
       { case (aa, _) => SimplifiedAminoacid(newAminoacidName, aa.ca, newRotamer) })
   }

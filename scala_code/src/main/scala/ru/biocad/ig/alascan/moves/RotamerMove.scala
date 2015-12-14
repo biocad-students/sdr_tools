@@ -12,7 +12,9 @@ import ru.biocad.ig.common.structures.geometry.{Vector3d, GeometryVector}
 class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
         extends LatticeBasicMove with LazyLogging {
 
-  def moveRotamer(structure : Seq[SimplifiedAminoacid], i : Int ) : GeometryVector = {
+  def moveRotamer(structure : Seq[SimplifiedAminoacid], i : Int) : GeometryVector = moveRotamer(structure, i, structure(i).name)
+
+  def moveRotamer(structure : Seq[SimplifiedAminoacid], i : Int, aaName : String ) : GeometryVector = {
     val v1 = i match {
       case 0 => structure(i + 1).ca - structure(i).ca
       case _ => structure(i).ca - structure(i - 1).ca
@@ -29,7 +31,7 @@ class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
     val aa = structure(i)
     val (d1, d2, d3) = AminoacidUtils.getDistances(v1, v2, v3)
     val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(v1, v2, v3)
-    rotamerLibrary.restoreAminoacidInfo(aa.name, d1, d2, d3) match {
+    rotamerLibrary.restoreAminoacidInfo(aaName, d1, d2, d3) match {
       case Some(sidechainInfo) => sidechainInfo.changeRotamerToRandom(aa.rotamer, x, y, z)
       case None => Vector3d(0, 0, 0) //FIX: should decide if it shouldn't be zero
     }

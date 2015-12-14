@@ -110,22 +110,24 @@ case class MonteCarloRunner(val lattice : Lattice) extends LazyLogging {
     * Idea : in cycle change 1 aminoacid in sequence and perform 1 mc run. quite easy.
     * The main problem is to made genuine, informative report file.
     */
-  def scan(inputFile : File, mcTimeUnits : Int, outputFile : File, chain : Char = 'L') = {
+  def scan(inputFile : File, mcTimeUnits : Int, outputFile : File, chain : Char = 'L', cutoff = 0.5) = {
     println("start scan...")
     val (simplifiedChain, fullAtomChain) = loadStructure(inputFile, chain)
     logger.info("Energy before structure alascan: " + lattice.getEnergy(simplifiedChain).toString)
+    val MC = MonteCarlo(lattice)
+    val rMove = new RotamerMove(lattice.sidechainsInfo)
+    val startEnergy = lattice.getEnergy(simplifiedChain)
+    
+    (0 to simplifiedChain.size - 1).foreach({
+      i => {
+        val newStructure = simplifiedChain.mutateAtPoint("ALA", i, rMove.moveRotamer(simplifiedChain.structure, i, "ALA"))
+        val ch1 = MC.run(newStructure, getMovesForSequence(newStructure.size), x => lattice.getEnergy(x), mcTimeUnits)
+        if (startEnergy - lattice.getEnergy(ch1) >= cutoff) {
+          logger.info("mutation to ALA at position %d leads to change in chain energy".format(i) )
+        }
+      }
+    })
 
-    //println(Lattice.getEnergy(simplifiedChain))
-    val ch1 = MonteCarlo(lattice).run(simplifiedChain, getMovesForSequence(simplifiedChain.size),
-        x => lattice.getEnergy(x), mcTimeUnits)
-    logger.info("Energy after structure alascan: "+ lattice.getEnergy(ch1))
-    val result = lattice.toFullAtomRepresentation(ch1, fullAtomChain)
-    //val sidechainInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
-    val w = new PDBWriter(outputFile)
-    try
-      w.writeAtomInfo(result)
-    finally
-      w.close()
   }
 
   /** Converts structure from input file to simplified representation, when loads it to output file.
