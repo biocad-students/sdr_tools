@@ -43,7 +43,6 @@ case class MonteCarlo(val lattice: Lattice) extends LazyLogging {
   def run(structure : SimplifiedChain,
           moves : Seq[(LatticeBasicMove, Int)],
           getEnergy : SimplifiedChain => Double,
-          //ck_rule : Int => Double,
           mcTimeUnits : Int = 1000) = {
     val movesInTimeUnit : Int = moves.map(_._2).sum
     val accumulatedMoveNumbers = moves.map(_._2).scanLeft(0)(_+_).tail
@@ -57,15 +56,9 @@ case class MonteCarlo(val lattice: Lattice) extends LazyLogging {
           }
         }
       })
-
-    }
-    //  (
-        //Random.nextInt(structure.length),
-      //  Random.shuffle(moves)
-      //)
-    ).zipWithIndex.take(mcTimeUnits).foldLeft(structure) {
+    }).zipWithIndex.take(mcTimeUnits).foldLeft(structure) {
       case (currentStructure, (shuffledMoves, time)) => {
-        shuffledMoves.foldLeft(currentStructure) {
+        shuffledMoves.scanLeft(currentStructure) {
           case (current, move) => {
             //logger.debug("%d, %s".format(currentStructure.size - move.size, move.typeName))
             if (currentStructure.size - move.size < 0)
@@ -79,7 +72,7 @@ case class MonteCarlo(val lattice: Lattice) extends LazyLogging {
             }
 
           }
-        }
+        }.minBy(lattice.getEnergy)
 
       }
 
