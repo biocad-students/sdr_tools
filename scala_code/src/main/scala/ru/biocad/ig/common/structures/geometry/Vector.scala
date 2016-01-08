@@ -16,6 +16,11 @@ sealed trait GeometryVector {
 
   def roundedCoordinates : Seq[Int] = coordinates.map(_.toInt)
 
+  def round = this match {
+    case v : Vector => new Vector(coordinates.map(math.rint(_)))
+    case _ => this
+  }
+
   def unary_-() : GeometryVector = this match {
     case v : Vector => new Vector(coordinates.map(- _))
     case _ => this

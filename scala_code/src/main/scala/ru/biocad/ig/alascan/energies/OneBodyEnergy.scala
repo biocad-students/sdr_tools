@@ -17,14 +17,15 @@ class OneBodyEnergy(val lattice : Lattice) extends BasicEnergy {
   val eoneGlobular : EOneGlobular = lattice.loadFromFile[EOneGlobular](lattice.latticeConstants.energyTermsParameters("eoneGlobular"))
 
   //this is very-very SLOW implementation, should refactor
+  //TODO: check if this is in lattice units or not
   override def get(chain : SimplifiedChain) : Double = {
     val contactMap = chain.contactMap
     val gyrationRadius = 2.2*math.exp(0.38*math.log(chain.size))//estimated radius of gyration
     val centerOfMasses : GeometryVector = chain.foldLeft(Vector3d(0, 0, 0) : GeometryVector)({
-        case (result, aa) => result + aa.ca
+        case (result, aa) => result + aa.caInLatticeCoordinates
     }) / chain.size
     chain.map({
-      case aa => eoneGlobular.get(aa.name, (aa.ca - centerOfMasses).length, gyrationRadius)
+      case aa => eoneGlobular.get(aa.name, (aa.caInLatticeCoordinates - centerOfMasses).length, gyrationRadius)
     }).sum
   }
 }

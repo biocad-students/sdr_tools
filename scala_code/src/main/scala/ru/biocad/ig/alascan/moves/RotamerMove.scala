@@ -13,20 +13,20 @@ class RotamerMove(val rotamerLibrary: AminoacidLibrary[SidechainInfo])
         extends LatticeBasicMove with LazyLogging {
 
   def moveRotamer(structure : Seq[SimplifiedAminoacid], i : Int) : GeometryVector = moveRotamer(structure, i, structure(i).name)
-
+  //TODO: change this to call structure.vectors
   def moveRotamer(structure : Seq[SimplifiedAminoacid], i : Int, aaName : String ) : GeometryVector = {
     val v1 = i match {
-      case 0 => structure(i + 1).ca - structure(i).ca
-      case _ => structure(i).ca - structure(i - 1).ca
+      case 0 => structure(i + 1).caInLatticeCoordinates - structure(i).caInLatticeCoordinates
+      case _ => structure(i).caInLatticeCoordinates - structure(i - 1).caInLatticeCoordinates
     }
     val v2 = i match {
-      case i if i == structure.size - 1 => structure(i - 1).ca - structure(i - 2).ca
-      case _ => structure(i + 1).ca - structure(i).ca
+      case i if i == structure.size - 1 => structure(i - 1).caInLatticeCoordinates - structure(i - 2).caInLatticeCoordinates
+      case _ => structure(i + 1).caInLatticeCoordinates - structure(i).caInLatticeCoordinates
     }
     val v3 = i match {
-      case i if i == structure.size - 1 => structure(i).ca - structure(i - 1).ca
-      case i if i == structure.size - 2 => structure(i).ca - structure(i - 1).ca
-      case _ => structure(i + 2).ca - structure(i + 1).ca
+      case i if i == structure.size - 1 => structure(i).caInLatticeCoordinates - structure(i - 1).caInLatticeCoordinates
+      case i if i == structure.size - 2 => structure(i).caInLatticeCoordinates - structure(i - 1).caInLatticeCoordinates
+      case _ => structure(i + 2).caInLatticeCoordinates - structure(i + 1).caInLatticeCoordinates
     }
     val aa = structure(i)
     val (d1, d2, d3) = AminoacidUtils.getDistances(v1, v2, v3)

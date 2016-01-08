@@ -10,7 +10,8 @@ import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 /** hides sequence of simplified aminoacids and constructs them from various sources
   */
 case class SimplifiedChain(val structure : Array[SimplifiedAminoacid], val lattice : Lattice) extends Traversable[SimplifiedAminoacid] {
-  val vectors : Seq[GeometryVector] = (structure zip structure.tail).map({case (x, y) => y.ca - x.ca})
+  /**differences between consecutive Ca atoms in lattice units */
+  val vectors : Seq[GeometryVector] = (structure zip structure.tail).map({case (x, y) => y.caInLatticeCoordinates - x.caInLatticeCoordinates})
 
   override val size = structure.size
 
@@ -27,7 +28,7 @@ case class SimplifiedChain(val structure : Array[SimplifiedAminoacid], val latti
   }
 
   def replaceRotamer(newRotamer : GeometryVector, position : Int) : SimplifiedChain = {
-    replaceAminoacid({_ == position}, {case (aa, _) => new SimplifiedAminoacid(aa.name, aa.ca, newRotamer) })
+    replaceAminoacid({_ == position}, {case (aa, _) => aa.changeRotamerTo(newRotamer) })
   }
 
   def moveFragment(moveVectors : Seq[GeometryVector], position : Int, numberOfBonds : Int) : SimplifiedChain = {
@@ -48,7 +49,7 @@ case class SimplifiedChain(val structure : Array[SimplifiedAminoacid], val latti
     * @return distance as vector of lattice units between given aminoacids
     */
   def getDistance(position : Int, numberOfBonds : Int) : GeometryVector = {
-    structure(position + numberOfBonds).ca - structure(position).ca
+    structure(position + numberOfBonds).caInLatticeCoordinates - structure(position).caInLatticeCoordinates
   }
 
   /** represents part of one alanine scanning step -
@@ -59,7 +60,7 @@ case class SimplifiedChain(val structure : Array[SimplifiedAminoacid], val latti
     */
   def mutateAtPoint(newAminoacidName : String, position : Int, newRotamer : GeometryVector) : SimplifiedChain = {
     replaceAminoacid({_ == position},
-      { case (aa, _) => SimplifiedAminoacid(newAminoacidName, aa.ca, newRotamer) })
+      { case (aa, _) => SimplifiedAminoacid(newAminoacidName, aa.ca, newRotamer, aa.latticeSize) })
   }
 
   /*
@@ -108,10 +109,11 @@ object SimplifiedChain {
     val d : Seq[String] = sequence.flatMap(aa3letter.get(_))
     val vectors = lattice.prepareValidVectors(d.size - 1).scanLeft(Vector3d(0, 0, 0) : GeometryVector) (_ + _)
     val m = new RotamerMove(lattice.sidechainsInfo)
-    val s1 = (d, vectors).zipped.map({case (aaName, ca) => new SimplifiedAminoacid(aaName, ca, Vector3d(0, 0, 0))})
-    val s2 = (0 to s1.size - 1).map({i=> {
-      new SimplifiedAminoacid(s1(i).name, s1(i).ca, m.moveRotamer(s1, i))
-    }}).toArray
+    val s1 = (d, vectors).zipped.map({case (aaName, ca) =>
+      new SimplifiedAminoacid(aaName, ca*lattice.latticeConstants.meshSize, Vector3d(0, 0, 0), lattice.latticeConstants.meshSize)})
+    val s2 = s1.zipWithIndex.map({case (aa, i) =>
+        aa.changeRotamerTo(m.moveRotamer(s1, i))
+    }).toArray
     new SimplifiedChain(s2, lattice)
     //1. generate
   }

@@ -26,6 +26,8 @@ case class PDBAtomInfo(
     charge : String
   ) {
 
+    def toVector : GeometryVector = Vector3d(x, y, z)
+
   /** this method can be redefined if needed.
     * If you need PDB 'ATOM' string as stated in Protein Data Bank Format specification v.4, use serialize() method.
     * @return some PDB atom info string representation

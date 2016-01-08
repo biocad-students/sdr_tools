@@ -17,8 +17,9 @@ import ru.biocad.ig.alascan.constants._
 class HydrogenBondEnergy(val lattice : Lattice) extends BasicEnergy {
 
   //this returns true if they can, false otherwise - quite simple
+  //TODO: check if this condition is given in lattice units or not
   def canFormHBond(chain : SimplifiedChain, i : Int, j : Int) : Boolean = {
-    val r_ij = chain(j).ca - chain(i).ca
+    val r_ij = chain(j).caInLatticeCoordinates - chain(i).caInLatticeCoordinates
     if (i == 0 || j == 0 || i >= chain.vectors.size || j >= chain.vectors.size)
       return false
     val b_i_b_i_1 = chain.vectors(i - 1) - chain.vectors(i)
