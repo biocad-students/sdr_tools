@@ -43,12 +43,12 @@ class AminoacidsTests extends FlatSpec with Matchers {
     val info2 = PDBAtomInfo(2, "C", ' ',"ARG", 'L', 2, ' ',
             info.x + 0.5, info.y + 0.5, info.z + 0.5, 0, 0, "", "C", "")
     val aa = SimplifiedAminoacid(Seq(info, info2), latticeMeshSize)
-    val updatedAA = aa.getUpdatedAtomInfo("CA", aa.ca * latticeMeshSize, Map(
+    val updatedAA = aa.getUpdatedAtomInfo("CA", aa.caInLatticeCoordinates * latticeMeshSize, Map(
       "CA" ->  PDBAtomInfo(1, "CA", ' ', "ARG", 'L', 2, ' ', 0, 0, 0, 0, 0, "", "C", "")
     ))
-    (updatedAA.x) should equal (aa.ca.coordinates(0) * latticeMeshSize +- 0.1)
-    (updatedAA.y) should equal (aa.ca.coordinates(1) * latticeMeshSize +- 0.1)
-    (updatedAA.z) should equal (aa.ca.coordinates(2) * latticeMeshSize +- 0.1)
+    (updatedAA.x) should equal (aa.caInLatticeCoordinates.coordinates(0) * latticeMeshSize +- 0.1)
+    (updatedAA.y) should equal (aa.caInLatticeCoordinates.coordinates(1) * latticeMeshSize +- 0.1)
+    (updatedAA.z) should equal (aa.caInLatticeCoordinates.coordinates(2) * latticeMeshSize +- 0.1)
 
     (updatedAA.x) should equal (info.x +- 0.1)
     (updatedAA.y) should equal (info.y +- 0.1)

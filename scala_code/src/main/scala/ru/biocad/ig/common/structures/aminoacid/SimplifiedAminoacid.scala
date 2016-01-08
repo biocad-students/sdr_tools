@@ -13,11 +13,13 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
   * @param name aminoacid 3-letter IUPAC identity name (like ALA, GLU, etc.)
   * @param ca coordinates of C_\alpha center, defined in lattice units
   * @param rotamer vector from C_\alpha to center of united atom (which appears to be center of mass for sidechain) in off-lattice coordinates
-  * @param meshSize lattice mesh size if aminoacid is projected to some, otherwise 1.0
+  * @param latticeSize lattice mesh size if aminoacid is projected to some, otherwise 1.0
   */
 case class SimplifiedAminoacid(val name : String,
                                val ca : GeometryVector,
-                               val rotamer : GeometryVector) {
+                               val rotamer : GeometryVector,
+                               val latticeSize : Double) {
+  val caInLatticeCoordinates = (ca / latticeSize).round
 
   //TODO : check if it is useful
   def getUpdatedAtomInfo(atom : String, updatedCoordinates : GeometryVector,
@@ -29,24 +31,22 @@ case class SimplifiedAminoacid(val name : String,
       }
   }
 
-  //TODO: should add relative coords, filter atoms to include only rotamer atoms
-
   def isInContactWith(aa : SimplifiedAminoacid, distance_cutoff : Double = 4.2) : Boolean = {
-    /*atoms.forall({case atom => {
-      val atom_vector = Vector3d(atom.x, atom.y, atom.z)
-      val len = aa.atoms.map({case atom2 => (atom_vector - Vector3d(atom2.x, atom2.y, atom2.z)).length}).min
-      len > distance_cutoff
-    }})*/
     // when we use reduced representation, we can compute 'contact' between rotamer's centers of masses
     (rotamer - aa.rotamer).length < distance_cutoff
-    //return false
-    //TODO: should implement
   }
 
   override def toString = Seq(name, "ca: " + ca.toString,
     "rotamer: " + rotamer.toString).mkString("SimplifiedAminoacid{", ",  ", "}")
 
-  def move(shift : GeometryVector) : SimplifiedAminoacid = new SimplifiedAminoacid(name, ca + shift, rotamer)
+  /** moves CA atom to shift vector given in lattice units
+    *
+    * @param shift shift vector given in lattice units
+    * @return new aminoacid with `caInLatticeCoordinates` value shifted by `shift` vector
+    */
+  def move(shift : GeometryVector) : SimplifiedAminoacid = new SimplifiedAminoacid(name, ca + shift * latticeSize, rotamer, latticeSize)
+
+  def changeRotamerTo(newRotamer : GeometryVector) = new SimplifiedAminoacid(name, ca, newRotamer, latticeSize)
 }
 
 object SimplifiedAminoacid extends LazyLogging {
@@ -58,40 +58,22 @@ object SimplifiedAminoacid extends LazyLogging {
   */
   //rotamer has off-lattice coordinates vs. Ca's are projected onto lattice
   //TODO: fix this (ca, should be center of masses)
-  private def computeRotamerCenterCoordinates(atoms : Seq[PDBAtomInfo]) : GeometryVector = {
-    val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
+  private def computeRotamerCenterCoordinates(atomsMap : Map[String, PDBAtomInfo], ca : GeometryVector) : GeometryVector = {
     logger.info("in computeCenterCoordinates")
-    val ca : GeometryVector = Vector3d(
-        math.round(atomsMap("CA").x ),
-        math.round(atomsMap("CA").y ),
-        math.round(atomsMap("CA").z )
-        )
-    val rotamerAtoms  = atoms.filterNot({
-        s => Seq("N", "H", "CA", "C", "O").contains(s.atom)
-      }).map({
-        a => Vector3d(a.x, a.y, a.z) - ca
-        })
-    val center = rotamerAtoms.size match {
+    val rotamerAtoms  = atomsMap.filterKeys(!Set("N", "H", "C", "O").contains(_)).values.map(_.toVector - ca)
+    //note: "CA" atoms is accounted in computed rotamer position, as stated in [Feig at al.], that's why it is not excluded
+    rotamerAtoms.size match {
       case 0 => Vector3d(0, 0, 0)
       case n => rotamerAtoms.reduceLeft(_ + _) / n
     }
-    center
   }
 
-  def apply(atoms : Seq[PDBAtomInfo], meshSize : Double = 1) = {
-
+  def apply(atoms : Seq[PDBAtomInfo], latticeSize : Double = 1.0) = {
     val name : String = if (atoms.size > 0) atoms.head.resName else ""
     val atomsMap = atoms.map(atom => atom.atom -> atom).toMap
+    val ca : GeometryVector = atomsMap("CA").toVector
 
-    val ca : GeometryVector = Vector3d(
-        math.round(atomsMap("CA").x / meshSize),
-        math.round(atomsMap("CA").y / meshSize),
-        math.round(atomsMap("CA").z / meshSize)
-        )
-
-    //val atomsVectorMap = atomsMap.map(x => (x._1, Vector3d(x._2.x, x._2.y, x._2.z) - ca))
-
-    new SimplifiedAminoacid(name, ca, computeRotamerCenterCoordinates(atoms))
+    new SimplifiedAminoacid(name, ca, computeRotamerCenterCoordinates(atomsMap, ca), latticeSize)
   }
 
   def getUpdatedAtomInfo(updatedCoordinates : GeometryVector,

@@ -38,8 +38,8 @@ class PairEnergy(val lattice : Lattice) extends BasicEnergy {
       i => (i + 4 to aminoacids.size - 3).map({
         j => {
           //TODO: check actual +- 2 for f
-          val ui_uj = (aminoacids(i + 2).ca - aminoacids(i - 2).ca).normalize *
-                      (aminoacids(j + 2).ca - aminoacids(j - 2).ca).normalize
+          val ui_uj = (aminoacids(i + 2).caInLatticeCoordinates - aminoacids(i - 2).caInLatticeCoordinates).normalize *
+                      (aminoacids(j + 2).caInLatticeCoordinates - aminoacids(j - 2).caInLatticeCoordinates).normalize
           val f = 1.0 - math.pow(ui_uj * ui_uj - constAngle20, 2)
           get_E_two(i, j, aminoacids(i), aminoacids(j), f)
         }

@@ -30,7 +30,7 @@ case class SidechainInfo (
         val localV = AminoacidUtils.getLocalCoordinates(Seq(x, y, z), aminoacid.rotamer)
         val a = findNearestRepresentativeByDistanceTo(localV)
         a.atoms.map({case (k, v) =>
-        (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.ca*1.22) )}).map({
+        (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.caInLatticeCoordinates * meshSize) )}).map({
           case (k, v) => aminoacid.getUpdatedAtomInfo(k, v, atomsMap)
         }).toSeq
 
@@ -44,7 +44,7 @@ case class SidechainInfo (
         val localV = AminoacidUtils.getLocalCoordinates(Seq(x, y, z), aminoacid.rotamer)
         val a = findNearestRepresentativeByDistanceTo(localV)
         a.atoms.map({
-          case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.ca * meshSize) )
+          case (k, v) => (k, AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), v.coordinates, aminoacid.caInLatticeCoordinates * meshSize) )
           //TODO: fix this
         })
     }
@@ -73,8 +73,8 @@ case class SidechainInfo (
         val localV = AminoacidUtils.getLocalCoordinates(Seq(x, y, z), aminoacidToModify.rotamer)
         val a = findNearestRepresentativeByDistanceTo(localV)
         val index = Random.nextInt(representatives.length)
-        val rest = AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), representatives(index).rotamer)
-        new SimplifiedAminoacid(aminoacidToModify.name, aminoacidToModify.ca, rest)
+        val newRotamer = AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), representatives(index).rotamer)
+        aminoacidToModify.changeRotamerTo(newRotamer)
     }
 
     def changeRotamerToRandom(rotamerToModify : GeometryVector, x : GeometryVector, y : GeometryVector, z : GeometryVector) : GeometryVector = {
@@ -82,7 +82,6 @@ case class SidechainInfo (
             return rotamerToModify
         //val a = findNearestRepresentativeByDistanceTo(rotamerToModify)
         val index = Random.nextInt(representatives.length)
-        val rest = AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), representatives(index).rotamer)
-        rest
+        AminoacidUtils.getGlobalCoordinates(Seq(x, y, z), representatives(index).rotamer)
     }
 }

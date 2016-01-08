@@ -81,24 +81,20 @@ case class AminoacidLibrary[T <: AminoacidFragment](
             d1 : Double, d2 : Double, d3 : Double,
             x : GeometryVector, y : GeometryVector, z : GeometryVector,
             atomsMap : Map[String, PDBAtomInfo], lattice : Lattice) : Seq[PDBAtomInfo] = {
-        //val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
         restoreAminoacidInfo(aminoacid.name, d1, d2, d3) match {
           case Some(coordinatesMap) => coordinatesMap.getPDBAtomInfo(aminoacid, x, y, z, atomsMap, lattice.latticeConstants.meshSize)
           case None => Seq() // TODO: add some check to avoid problems
         }
-        //val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
     }
 
     def restoreCoordinates(aminoacid : SimplifiedAminoacid,
             d1 : Double, d2 : Double, d3 : Double,
             x : GeometryVector, y : GeometryVector, z : GeometryVector, lattice : Lattice
           ) : Map[String, GeometryVector] = {
-        //val (d1, d2, d3) = AminoacidUtils.getDistances(a1.ca, a2.ca, a3.ca, a4.ca)
         restoreAminoacidInfo(aminoacid.name, d1, d2, d3) match {
           case Some(coordinatesMap) => coordinatesMap.getCoordinatesMap(aminoacid, x, y, z, lattice.latticeConstants.meshSize)
           case None => Map[String, GeometryVector]()
         }
-        //val (x, y, z) = AminoacidUtils.getLocalCoordinateSystem(a1.ca, a2.ca, a3.ca, a4.ca)
 
     }
 

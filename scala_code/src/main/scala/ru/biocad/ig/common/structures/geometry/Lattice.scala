@@ -92,7 +92,7 @@ case class Lattice(val settingsFile : File) {
     val vectorsWithEdgeOnes = (chain.vectors.head +: chain.vectors) ++ Seq(chain.vectors.init.last, chain.vectors.last)
     val pdbData = (chain.structure, vectorsWithEdgeOnes.sliding(3, 1).toSeq, originalFullAtomChain).zipped.flatMap({
       case (aa, Seq(v1, v2, v3), atoms) => {
-        val updatedMap = Map("CA" -> aa.ca * latticeConstants.meshSize) ++
+        val updatedMap = Map("CA" -> aa.caInLatticeCoordinates * latticeConstants.meshSize) ++
             restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) ++
             restoreInfoCoordinates(aa, v1, v2, v3, sidechainsInfo)
         atoms.map({atom =>
@@ -113,7 +113,7 @@ case class Lattice(val settingsFile : File) {
     val backboneAtomsOrder = Seq("N", "CA", "C", "O")
     val pdbData = (chain.structure, vectorsWithEdgeOnes.sliding(3, 1).toSeq, Stream from 1).zipped.flatMap({
       case (aa, Seq(v1, v2, v3), aaIndex) => {
-        val updatedMap : Map[String, GeometryVector] = Map("CA" -> aa.ca * latticeConstants.meshSize) ++
+        val updatedMap : Map[String, GeometryVector] = Map("CA" -> aa.caInLatticeCoordinates * latticeConstants.meshSize) ++
             restoreInfoCoordinates(aa, v1, v2, v3, backboneInfo) ++
             restoreInfoCoordinates(aa, v1, v2, v3, sidechainsInfo)
 
@@ -168,8 +168,8 @@ case class Lattice(val settingsFile : File) {
       i => {
         (i + 2 to structure.size - 1).forall({
           j => {
-            val a1 = structure(i).ca
-            val a2 = structure(j).ca
+            val a1 = structure(i).caInLatticeCoordinates
+            val a2 = structure(j).caInLatticeCoordinates
             a1.distanceTo(a2) >= latticeConstants.caMinDistance //TODO: check if here should be different value, vas 3.45 instead of 4.05
           }
         })

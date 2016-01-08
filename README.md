@@ -2,23 +2,28 @@
 
 This repo originally was supposed to contain code for finding specificity determining regions (with draft code in Scala).
 
-I planned to use this repo for my thesis scripts, and decided to open MS_thesis instead, and to use this repo for saving files & code in Scala I promised to write.
-I'll put final code version after refactoring to zmactep/ig-toolkit, this repo will contain some additional benchmarks and test scripts.
+Here are files & code in Scala I (@latticetower) promised to write.
 
 I wrote folding implementation, qhull-based tesselation code, and now I decided to officially give up.
 
-There is still much to do - to move from folding to alascan, to refactor code... to kill zombie hidden in [[ru.biocad.ig.common.algorithms.geometry.QHull]], et cetera, et cetera, et cetera, but...
+There is still much to do - to move from folding to alascan, to refactor code, et cetera, et cetera, et cetera, but...
 
-[I OFFICIALLY GIVE UP. I mean it.](http://frontalot.com/media.php/531/MC_Frontalot_-_Zero_Day_-_03._Jacquelyn_Hyde_%5BTEASER%5D.mp3)
+Currently is repo is not actively maintained, because I decided there is no point to continue writing something to person who don't even respect me as a software developer and who don't treat me as a friend (yeah, we Russians are like bears: we prefer to work for free for someone who respects us, or who pretends to be our friend; promises given to those people are sacred). So-called zombie in code isn't a real reason to stop. There is only one reason for giving up in something - it's people.
 
-Final remarks
+I wrote that code to some point and transferred it to person to whom I promised to write it. @zmactep, I hope you'll feel ashamed. If not, than open my ugly code and feel ashamed because I transferred it to you, and it is kind-a yours now.
+
+Because of you I'll always remember that in some moment everything my so-called friends/collegues tell me - even that they like my code - could turn up to be just a cruel joke. That's why I'll never have ones. You ruined my career, my life. I just want to die.
+
+I'll forgive you if you apologize.
+
+License
+===================
+Future or current @zmactep's collegues can do whatever they want (but since than they are considered to be evil bastards), everyone else should ask them. I still reserve the right to commit sometimes, not because I promised it, but because being unemployed housewife makes me sad, writing code makes me feel better. I'm considered to be cursed to, because I'm a useless housewife (and remain to be unemployed - because in Russia 30-years old women without kids in practice can't get any job, especially if they don't want to try, because even their best friends betrayed them and lied to them).
+
+Remarks
 ===================
 
 Some of todos can be found in `scala_code/README.md` (in russian). There is also option to add specificity determining residues guessing algorithm to old code in python (branch `python_proto`).
-
-QHull.scala is a huge, ugly, undead zombie who killed me. There is a comparision-with-zero weapon he used against me. I think there is a chance that it can be destroyed, but I'm already dead. There is an option to take smaller EPSILON value (my tests passed).
-
-Other implementations of tesselation should be forgotten.
 
 Branch `bond-restore` has slightly different implementation of backbone reconstruction: it restores atoms laying on `bond`, not belonging to aminoacid. Worths mention: bond atoms are counted for aminoacid type closer to C-terminus (because I looked at proline and thought that aminoacid would be reconstructed better in that case). Anyway, with that type of reconstruction appearance of blank intervals, closer atoms triangles is still possible. [Feig et al.,2000] states that this type of reconstruction errors is typical for lattice models. That's why I decided not to merge that reconstruction to master branch, but decided to keep it there.
 
