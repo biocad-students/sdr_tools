@@ -8,11 +8,13 @@ This script generates both backbone and rotamer libraries for full-atom model re
 Sample call:
 
 ```
-julia backbone_statistics.jl -i list.txt -m 0.25 -b backbone.json -s sidechain.json
+julia backbone_statistics.jl -i list.txt -m 0.25 -b backbone.json.gz -s sidechain.json.gz
 ```
 When gets called with no arguments, shows all available options and their meanings.
 
 Input file (`-i` key) contains list of PDB IDs, one per line, which gets loaded to custom directory (which can be set with `-d` key).
+
+Generated files with backbone information and sidechain rotamers are saved to json and then gzipped.
 
 
 

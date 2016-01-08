@@ -20,8 +20,8 @@ class PairEnergy(val lattice : Lattice) extends BasicEnergy {
 
   //TODO: rewrite later
   def get_E_two(i : Int, j : Int, ai : SimplifiedAminoacid, aj : SimplifiedAminoacid, f : Double) : Double = {
-    val rRepulsive = lattice.rotamerRadiusInfo.getRrep(ai.name, aj.name)
-    val rInteraction = lattice.rotamerRadiusInfo.getR(ai.name, aj.name)
+    val rRepulsive = lattice.rotamerRadiusInfo.getRrep(ai.name, aj.name, lattice.latticeConstants.meshSize)
+    val rInteraction = lattice.rotamerRadiusInfo.getR(ai.name, aj.name, lattice.latticeConstants.meshSize)
     val pairEnergy = epair.get(ai.name, aj.name)
     (ai.rotamer - aj.rotamer).length match {
       case x if x < rRepulsive => lattice.rotamerRadiusInfo.eRepulsive
