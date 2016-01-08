@@ -3,19 +3,20 @@ import org.scalatest.{Matchers, FlatSpec}
 import spray.json._
 import scala.io.Source
 
-import ru.biocad.ig.alascan.constants.json.SidechainLibraryJsonProtocol
-import ru.biocad.ig.alascan.constants.json.SidechainLibraryJsonProtocol._
+import ru.biocad.ig.common.structures.geometry._
 
 import ru.biocad.ig.alascan.constants.{AminoacidLibrary, SidechainInfo}
 import ru.biocad.ig.common.structures.aminoacid.SimplifiedAminoacid
-import ru.biocad.ig.common.structures.geometry._
+
 import ru.biocad.ig.common.io.pdb.PDBAtomInfo
 
 class RotamerLibraryTests extends FlatSpec with Matchers {
   it should "restore coordinates with given meshSize" in {
-    val rotamerInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
-    println(rotamerInfo.data("GLY"))
-    (rotamerInfo.data("GLY").size) should equal (0)
+    val lattice = new Lattice("config/lattice_params.json")
+    val rotamerInfo = lattice.sidechainsInfo
+    //println(rotamerInfo.data("GLY"))
+    //(rotamerInfo.data("GLY").size) should not equal (0)
+    //glycine has data, because it has 1 atom - Ca - which is counted in rotamer representation
     //(rotamerInfo.data("LEU")(20)(22)(-32)) should equal (
     //  rotamerInfo.restoreAminoacidInfo("LEU",
     //    20*rotamerInfo.meshSize, 22*rotamerInfo.meshSize, -32*rotamerInfo.meshSize))
@@ -34,7 +35,8 @@ class RotamerLibraryTests extends FlatSpec with Matchers {
   }
 
   "Rotamer database" should "contain data only with non-zero representatives and non-zero vectors" in {
-    val rotamerInfo = JsonParser(Source.fromURL(getClass.getResource("/sidechains.json")).getLines().mkString("")).convertTo[AminoacidLibrary[SidechainInfo]]
+    val lattice = new Lattice("config/lattice_params.json")
+    val rotamerInfo = lattice.sidechainsInfo
     rotamerInfo.data.foreach({case (k, v) =>
       v.values.foreach(
         _.values.foreach(

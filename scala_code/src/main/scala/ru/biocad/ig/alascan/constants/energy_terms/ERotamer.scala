@@ -10,9 +10,9 @@ case class ERotamer(
       val energies : Map[String, Map[Int, Seq[Double]]]) {
 
   def get(current : SimplifiedAminoacid, prev : SimplifiedAminoacid, next : SimplifiedAminoacid) : Double = {
-    val v1 : GeometryVector = prev.ca - current.ca
-    val v2 : GeometryVector = next.ca - current.ca
-    val distance : Int = (prev.ca - next.ca).lengthSquared.toInt
+    val v1 : GeometryVector = prev.caInLatticeCoordinates - current.caInLatticeCoordinates
+    val v2 : GeometryVector = next.caInLatticeCoordinates - current.caInLatticeCoordinates
+    val distance : Int = (prev.caInLatticeCoordinates - next.caInLatticeCoordinates).lengthSquared.toInt
     //println(distance)
     if (phi.contains(distance)) {
       val angle = Math.round(Math.toDegrees(Math.acos((v1*v2) /(v1.length*v2.length))))

@@ -73,13 +73,10 @@ case class SimplifiedChain(val structure : Array[SimplifiedAminoacid], val latti
       (0 to size - 1).filter({
         i2 => {
           val aa2 = structure(i2)
-          aa2.isInContactWith(aa1, lattice.rotamerRadiusInfo.getR(aa1.name, aa2.name))
+          aa2.isInContactWith(aa1, lattice.rotamerRadiusInfo.getR(aa1.name, aa2.name, lattice.latticeConstants.meshSize))
           }
       })
     } }).toArray
-    //this.map({case aa1 => this.map({
-    //  aa2 => aa2.isInContactWith(aa1, lattice.rotamerRadiusInfo.getR(aa1.name, aa2.name))
-    //}).toArray}).toArray
   }
 
   val contactMap = buildContactMap()

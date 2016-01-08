@@ -39,7 +39,6 @@ case class Lattice(val settingsFile : File) {
     case f : String => f
     case null => ""
   }
-  println(settingsDirectory)
 
   def loadFromFile[T : JsonReader](fileName : String) : T = {
     val filePath = Seq(settingsDirectory, fileName).mkString(File.separatorChar.toString)
