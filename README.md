@@ -8,6 +8,23 @@ Currently is repo is not actively maintained.
 
 There is still much to do - to move from folding to alascan, to refactor code, etc. But no one needs it.
 
+
+some common, high-level TODOs
+-----------------------------
+
+I decided to make something for my own, evil purposes - probably I will implement these in `experimental` branch only and won't merge them to `master` branch (not too fast, because nobody needs it except me):
+
+- [ ] in Julia: make scripts for parameters generation from PDB sources. Currently these parameters are taken from MCDP dataset, converted to JSON.
+
+- [ ] in Scala: make visualizer. There is rcsb viewer for proteins, I want to try to add optional visualization for folding process with that viewer.
+
+- [ ] in Scala: it would be nice to reimplement some moves or to make them optional.
+
+- [ ] in Scala: it would be nice to implement fragment-based moves (to understand them better).
+
+- [ ] in Scala: there is always option to make algo much more faster - by implementing kd-tree or using some sort of hashing
+
+
 License
 ===================
 
