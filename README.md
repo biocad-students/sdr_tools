@@ -1,5 +1,7 @@
 # sdr_tools
 
+[![Build Status](https://travis-ci.org/biocad/sdr_tools.svg?branch=master)](https://travis-ci.org/biocad/sdr_tools)
+
 This repo originally was supposed to contain code for finding specificity determining regions (in Scala). But now it contains folding algorithm implementation+qhull implementation. Original idea was given by my scientific advisor and it is still unclear, the name of the repo left unchanged.
 
 Here are files & code in Scala I promised to write.
