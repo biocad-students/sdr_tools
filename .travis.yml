@@ -1,0 +1,6 @@
+language: scala
+script: cd scala_code/ && sbt test
+
+branches:
+  only:
+    - master
