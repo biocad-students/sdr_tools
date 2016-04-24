@@ -4,7 +4,7 @@ import scala.io.Source
 import ru.biocad.ig.common.io.common.SourceReader
 
 /** Reads file in Protein Data Bank format v.4.
-  * Currently only 'ATOM' section is process, anything else is ignored.
+  * Currently only 'ATOM' section is processed, anything else is ignored.
   * I mean, ANYTHING. It's importaint!
   * Because PDB file can contain:
   * - several structures with several chains,

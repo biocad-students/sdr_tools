@@ -25,7 +25,7 @@ I decided to make something for my own, evil purposes - probably I will implemen
 
 - [ ] in Scala: it would be nice to implement fragment-based moves (to understand them better).
 
-- [ ] in Scala: there is always option to make algo much more faster - by implementing kd-tree or using some sort of hashing
+- [ ] in Scala: there is always option to make algo much more faster - by implementing kd-tree or using some sort of hashing. This article might be useful: http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3576911/
 
 
 License
