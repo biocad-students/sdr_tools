@@ -77,3 +77,11 @@ URL: ftp://ftp.scripps.edu/pub/brooks/MCDP/
 
 [milik1997] Mariusz Milik, Andrzej Kolinski, Jeffrey Skolnick. Algorithm for rapid reconstruction of protein backbone from alpha carbon coordinates. Journal of computational chemistry, 18: 80-85, 1997.
 URL: http://www.researchgate.net/publication/220417855_Algorithm_for_rapid_reconstruction_of_protein_backbone_from_alpha_carbon_coordinates
+
+
+Другие полезные материалы, которые никак не используются в коде
+---------------------------------------------------------------
+
+1. Daan Frenkel, Berend Smit. Understanding Molecular Simulation: From Algorithms to Applications.
+
+2. Lu He, Fabio Vandin, Gopal Pandurangan, Chris Bailey-Kellogg. ballast: A Ball-based Algorithm for Structural Motifs. URL: http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3576911/
