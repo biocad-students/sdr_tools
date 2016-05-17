@@ -1,8 +1,19 @@
 # sdr_tools
 
-[![Build Status](https://travis-ci.org/biocad/sdr_tools.svg?branch=master)](https://travis-ci.org/biocad/sdr_tools)
-[![Build Status](https://travis-ci.org/biocad/sdr_tools.svg?branch=experimental)](https://travis-ci.org/biocad/sdr_tools)
+* Master branch: [![Build Status](https://travis-ci.org/biocad/sdr_tools.svg?branch=master)](https://travis-ci.org/biocad/sdr_tools?branch=master)
+* Experimental branch: [![Build Status](https://travis-ci.org/biocad/sdr_tools.svg?branch=experimental)](https://travis-ci.org/biocad/sdr_tools?branch=experimental)
 
+Disclaimer
+===========
+
+I DON'T HAVE ANY IDEA WHAT TYPES OF PROTEINS THIS IMPLEMENTATION SHOULD BE USED FOR, THAT'S WHY I SOLELY RELY ON ARTICLES (which apply folding to globular proteins - for details see readme.md in `scala_code` subfolder). ALSO I HAVE NO IDEA ABOUT HOW MANY CHAINS THEY HAVE (currently there is 1 chain) OR AVERAGE CHAIN LENGTH (that's why `SimplifiedAminoacid` class is made as simple as possible). Other details are selected because of articles used.
+
+In future everything might have changed - i.e. if I implement alascan, I'll probably handle  proteins with many chains.
+
+It would be good if you add your remarks/bugreports to [Issues](https://github.com/biocad/sdr_tools/issues). Any type of code review will also be appreciated.
+
+Description
+============
 This repo originally was supposed to contain code for finding specificity determining regions (in Scala). But now it contains classical folding algorithm implementation+qhull implementation. Original idea was given by my scientific advisor and it is still unclear, the name of the repo left unchanged.
 
 Currently this repo is not actively maintained.
@@ -31,7 +42,9 @@ I decided to make something for my own, evil purposes - probably I will implemen
 License
 ===================
 
-MIT
+MIT license for code (at first I thought I should use beerware-like license, but... dude, I prefer coffee to beer and most probably we won't meet => sad squirrel gets no free coffee, alas! Sir Roland to The Dark Tower came and said - "SOOOO WAT??". ok, I see, you don't get stupid jokes).
+
+MCDP_dataset currently used in energy function parameters estimates might have different license. In future I plan to write scripts to recalculate these estimates from collection of .pdb files.
 
 Remarks
 ===================
@@ -40,7 +53,7 @@ Some of todos can be found in `scala_code/README.md` (in russian). There is also
 
 Branch `bond-restore` has slightly different implementation of backbone reconstruction: it restores atoms laying on `bond`, not belonging to aminoacid. Worths mention: bond atoms are counted for aminoacid type closer to C-terminus (because I looked at proline and thought that aminoacid would be reconstructed better in that case). Anyway, with that type of reconstruction appearance of blank intervals, closer atoms triangles is still possible. [Feig et al.,2000] states that this type of reconstruction errors is typical for lattice models. That's why I decided not to merge that reconstruction to master branch, but decided to keep it there.
 
-Latest changes will appear in `experimental` branch, some of them will be merged to master, others won't.
+Latest changes will appear in `experimental` branch, some of them will be merged to master, other won't.
 
 Additional references
 =======================
@@ -51,3 +64,12 @@ julia_scripts
 ======================
 
 It turned out that there is no information on pdb backbone vectors statistics, at least I couldn't find any. Method of obtaining such information is well-defined - that's why I added helper script for collecting such information from protein data bank files (in folder julia_scripts).
+
+Project home page
+=================
+
+The latest version of code can be found at:
+
+http://github.com/biocad/sdr_tools
+
+Feel free to report about any problems and bugs via [Issues page](https://github.com/biocad/sdr_tools/issues).
