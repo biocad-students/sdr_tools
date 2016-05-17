@@ -85,3 +85,5 @@ URL: http://www.researchgate.net/publication/220417855_Algorithm_for_rapid_recon
 1. Daan Frenkel, Berend Smit. Understanding Molecular Simulation: From Algorithms to Applications.
 
 2. Lu He, Fabio Vandin, Gopal Pandurangan, Chris Bailey-Kellogg. ballast: A Ball-based Algorithm for Structural Motifs. URL: http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3576911/
+
+3. http://stackoverflow.com/questions/20456830/looking-for-a-mature-m-tree-implementation (или статья про M-tree на википедии).
